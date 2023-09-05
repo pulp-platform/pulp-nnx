@@ -1,5 +1,6 @@
 /*
  * Luka Macan <luka.macan@unibo.it>
+ * Arpan Prasad <prasadar@iis.ee.ethz.ch>
  *
  * Copyright 2023 ETH Zurich and University of Bologna
  *
