@@ -63,7 +63,7 @@ Github repo [link](https://github.com/pulp-platform/ne16).
 
 You can find information about testing in the dedicated [README](test/README.md).
 
-## Contribution
+## Contributing
 
 Bug reports and feature requests should be reported through issues.
 All the development should be done through forks and merged onto the `dev` branch with pull requests.
@@ -75,6 +75,12 @@ The library will follow the [Semantic Versioning](https://semver.org/).
 ## Citing
 
 *TBA*
+
+## Contributors
+
+* Luka Macan <[luka.macan@unibo.it](mailto:luka.macan@unibo.it)>
+* Francesco Conti <[fconti@unibo.it](mailto:fconti@unibo.it)>
+* Arpan Prasad <[prasadar@iis.ee.ethz.ch](mailto:prasadar@iis.ee.ethz.ch)>
 
 ## License
 
