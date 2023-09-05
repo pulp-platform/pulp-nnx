@@ -1,0 +1,29 @@
+{
+    "in_height": 8,
+    "in_width": 14,
+    "in_channel": 14,
+    "in_type": "uint8",
+    "out_channel": 32,
+    "out_type": "int8",
+    "depthwise": false,
+    "kernel_shape": {
+        "height": 3,
+        "width": 3
+    },
+    "weight_type": "int8",
+    "scale_type": "uint8",
+    "bias_type": "int32",
+    "stride": {
+        "height": 2,
+        "width": 2
+    },
+    "padding": {
+        "top": 1,
+        "bottom": 1,
+        "left": 1,
+        "right": 1
+    },
+    "has_norm_quant": true,
+    "has_bias": true,
+    "has_relu": false
+}

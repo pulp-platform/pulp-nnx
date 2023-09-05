@@ -1,0 +1,42 @@
+# Single test configuration
+
+# For valid configuration values, look into
+# Ne16TestClasses.py:Ne16TestConf:check_valid()
+
+# Input dimensions
+in_height = 3
+in_width = 3
+in_channel = 8
+
+# Output dimensions
+# - height and width calculated from input dimensions
+out_channel = 8
+
+# If depthwise, group == in_channel
+depthwise = false
+
+# Kernel shape
+kernel_shape.height = 3
+kernel_shape.width = 3
+
+# Stride
+stride.height = 1
+stride.width = 1
+
+# Padding
+padding.top = 0
+padding.bottom = 0
+padding.left = 0
+padding.right = 0
+
+# Types
+in_type = "uint8"
+out_type = "uint8"
+weight_type = "int8"
+scale_type = "uint8"
+bias_type = "int32"
+
+# Flags
+has_norm_quant = true
+has_bias = true
+has_relu = true
