@@ -188,14 +188,16 @@ class Ne16Test:
         self.global_shift = global_shift
 
     def is_valid(self):
-        return all([
-            self.input is not None,
-            self.output is not None,
-            self.weight is not None,
-            implies(self.conf.has_norm_quant, self.scale is not None),
-            implies(self.conf.has_bias, self.bias is not None),
-            implies(self.conf.has_norm_quant, self.global_shift is not None)
-        ])
+        return all(
+            [
+                self.input is not None,
+                self.output is not None,
+                self.weight is not None,
+                implies(self.conf.has_norm_quant, self.scale is not None),
+                implies(self.conf.has_bias, self.bias is not None),
+                implies(self.conf.has_norm_quant, self.global_shift is not None),
+            ]
+        )
 
     def save_conf(self, path: Union[str, os.PathLike]) -> None:
         os.makedirs(path, exist_ok=True)
