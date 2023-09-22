@@ -172,9 +172,9 @@ class Ne16Test:
     def __init__(
         self,
         conf: Ne16TestConf,
-        input: torch.Tensor,
-        output: torch.Tensor,
-        weight: torch.Tensor,
+        input: Optional[torch.Tensor],
+        output: Optional[torch.Tensor],
+        weight: Optional[torch.Tensor],
         scale: Optional[torch.Tensor] = None,
         bias: Optional[torch.Tensor] = None,
         global_shift: Optional[torch.Tensor] = torch.Tensor([0]),
@@ -187,11 +187,24 @@ class Ne16Test:
         self.bias = bias
         self.global_shift = global_shift
 
-    def save(self, path: Union[str, os.PathLike]) -> None:
+    def is_valid(self):
+        return all([
+            self.input is not None,
+            self.output is not None,
+            self.weight is not None,
+            implies(self.conf.has_norm_quant, self.scale is not None),
+            implies(self.conf.has_bias, self.bias is not None),
+            implies(self.conf.has_norm_quant, self.global_shift is not None)
+        ])
+
+    def save_conf(self, path: Union[str, os.PathLike]) -> None:
         os.makedirs(path, exist_ok=True)
 
         with open(os.path.join(path, Ne16Test._CONF_NAME), "w") as fp:
             fp.write(self.conf.model_dump_json(indent=4))
+
+    def save_data(self, path: Union[str, os.PathLike]) -> None:
+        os.makedirs(path, exist_ok=True)
 
         torch.save(self.input, os.path.join(path, Ne16Test._INPUT_NAME))
         torch.save(self.output, os.path.join(path, Ne16Test._OUTPUT_NAME))
@@ -205,17 +218,14 @@ class Ne16Test:
                 self.global_shift, os.path.join(path, Ne16Test._GLOBAL_SHIFT_NAME)
             )
 
+    def save(self, path: Union[str, os.PathLike]) -> None:
+        self.save_conf(path)
+        self.save_data(path)
+
     @staticmethod
     def is_test_dir(path: Union[str, os.PathLike]) -> bool:
         fileset = set(os.listdir(path))
-        required_fileset = set(
-            [
-                Ne16Test._CONF_NAME,
-                Ne16Test._INPUT_NAME,
-                Ne16Test._OUTPUT_NAME,
-                Ne16Test._WEIGHT_NAME,
-            ]
-        )
+        required_fileset = set([Ne16Test._CONF_NAME])
         return required_fileset.issubset(fileset)
 
     @classmethod
@@ -227,26 +237,23 @@ class Ne16Test:
         with open(os.path.join(path, Ne16Test._CONF_NAME), "r") as fp:
             conf = Ne16TestConf.model_validate_json(fp.read())
 
-        input = torch.load(os.path.join(path, Ne16Test._INPUT_NAME))
-        output = torch.load(os.path.join(path, Ne16Test._OUTPUT_NAME))
-        weight = torch.load(os.path.join(path, Ne16Test._WEIGHT_NAME))
-        if os.path.isfile(os.path.join(path, Ne16Test._SCALE_NAME)):
-            scale = torch.load(os.path.join(path, Ne16Test._SCALE_NAME))
-        else:
-            scale = None
-        if os.path.isfile(os.path.join(path, Ne16Test._BIAS_NAME)):
-            bias = torch.load(os.path.join(path, Ne16Test._BIAS_NAME))
-        else:
-            bias = None
-        if os.path.isfile(os.path.join(path, Ne16Test._GLOBAL_SHIFT_NAME)):
-            global_shift = torch.load(os.path.join(path, Ne16Test._GLOBAL_SHIFT_NAME))
-        else:
-            global_shift = None
+        def load_if_exist(filename: str) -> Optional[torch.Tensor]:
+            filepath = os.path.join(path, filename)
+            return torch.load(filepath) if os.path.isfile(filepath) else None
+
+        input = load_if_exist(Ne16Test._INPUT_NAME)
+        output = load_if_exist(Ne16Test._OUTPUT_NAME)
+        weight = load_if_exist(Ne16Test._WEIGHT_NAME)
+        scale = load_if_exist(Ne16Test._SCALE_NAME)
+        bias = load_if_exist(Ne16Test._BIAS_NAME)
+        global_shift = load_if_exist(Ne16Test._GLOBAL_SHIFT_NAME)
 
         return cls(conf, input, output, weight, scale, bias, global_shift)
 
 
 class Ne16TestGenerator:
+    _DEFAULT_SEED = 0
+
     @staticmethod
     def _global_shift(
         tensor: torch.Tensor, out_type: IntegerType, has_relu: bool
@@ -283,6 +290,8 @@ class Ne16TestGenerator:
         bias: Optional[torch.Tensor] = None,
         global_shift: Optional[torch.Tensor] = None,
     ) -> Ne16Test:
+        torch.manual_seed(Ne16TestGenerator._DEFAULT_SEED)
+
         if input is None:
             input = Ne16TestGenerator._random_data(
                 _type=conf.in_type,
@@ -391,6 +400,7 @@ class Ne16TestHeaderGenerator:
         self.header_writer = HeaderWriter(headers_dir)
 
     def generate(self, test_name: str, test: Ne16Test):
+        assert test.input is not None and test.output is not None
         _, in_channel, in_height, in_width = test.input.shape
         _, out_channel, out_height, out_width = test.output.shape
 
@@ -412,6 +422,7 @@ class Ne16TestHeaderGenerator:
         )
 
         # Render weights
+        assert test.weight is not None
         weight_type = test.conf.weight_type
         weight_bits = weight_type._bits
         assert weight_bits > 1 and weight_bits <= 8
