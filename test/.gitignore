@@ -5,3 +5,4 @@ __pycache__
 app/gen_inc
 **/compile_commands.json
 **/*.log
+**/*.pt

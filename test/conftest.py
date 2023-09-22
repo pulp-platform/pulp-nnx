@@ -18,7 +18,7 @@
 
 import os
 from typing import Union
-from Ne16TestClasses import Ne16Test
+from Ne16TestClasses import Ne16Test, Ne16TestGenerator
 
 
 def pytest_addoption(parser):
@@ -39,6 +39,12 @@ def pytest_addoption(parser):
         default=False,
         help="Recursively search for tests in given test directories.",
     )
+    parser.addoption(
+        "--regenerate",
+        action="store_true",
+        default=False,
+        help="Save the generated test data to their respective folders."
+    )
 
 
 def _find_test_dirs(path: Union[str, os.PathLike]):
@@ -48,11 +54,19 @@ def _find_test_dirs(path: Union[str, os.PathLike]):
 def pytest_generate_tests(metafunc):
     test_dirs = metafunc.config.getoption("test_dirs")
     recursive = metafunc.config.getoption("recursive")
+    regenerate = metafunc.config.getoption("regenerate")
 
     if recursive:
         tests_dirs = test_dirs
         test_dirs = []
         for tests_dir in tests_dirs:
             test_dirs.extend(_find_test_dirs(tests_dir))
+
+    # (Re)Generate test data
+    for test_dir in test_dirs:
+        test = Ne16Test.load(test_dir)
+        if not test.is_valid() or regenerate:
+            test = Ne16TestGenerator.from_conf(test.conf)
+            test.save_data(test_dir)
 
     metafunc.parametrize("path", test_dirs)

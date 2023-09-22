@@ -32,6 +32,8 @@ from Ne16TestClasses import (
 def headers_gen(args, test: Optional[Ne16Test] = None):
     if test is None:
         test = Ne16Test.load(args.test_dir)
+    if not test.is_valid():
+        test = Ne16TestGenerator.from_conf(test.conf)
     Ne16TestHeaderGenerator().generate(args.test_dir, test)
 
 
