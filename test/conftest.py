@@ -43,7 +43,7 @@ def pytest_addoption(parser):
         "--regenerate",
         action="store_true",
         default=False,
-        help="Save the generated test data to their respective folders."
+        help="Save the generated test data to their respective folders.",
     )
 
 
