@@ -55,14 +55,16 @@ void execute_nnx_layer(void *unused_args) {
       STRIDE_HEIGHT);
 
   if (STRIDE_HEIGHT == 1) {
-    nnx_task_set_dims(&task, INPUT_WIDTH, INPUT_CHANNEL, OUTPUT_HEIGHT,
-                      OUTPUT_WIDTH, OUTPUT_CHANNEL, PADDING_TOP, PADDING_BOTTOM,
-                      PADDING_RIGHT, PADDING_LEFT);
+    nnx_task_set_dims(&task, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH,
+                      INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH,
+                      OUTPUT_CHANNEL, OUTPUT_WIDTH, OUTPUT_CHANNEL, PADDING_TOP,
+                      PADDING_BOTTOM, PADDING_RIGHT, PADDING_LEFT);
   } else {
-    nnx_task_set_dims_stride2x2(&task, INPUT_HEIGHT, INPUT_WIDTH, INPUT_CHANNEL,
-                                OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL,
-                                WEIGHT_HEIGHT, WEIGHT_WIDTH, PADDING_TOP,
-                                PADDING_BOTTOM, PADDING_RIGHT, PADDING_LEFT);
+    nnx_task_set_dims_stride2x2(
+        &task, INPUT_HEIGHT, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH,
+        INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL,
+        OUTPUT_WIDTH, OUTPUT_CHANNEL, WEIGHT_HEIGHT, WEIGHT_WIDTH, PADDING_TOP,
+        PADDING_BOTTOM, PADDING_RIGHT, PADDING_LEFT);
   }
 
   nnx_task_set_ptrs(&task, input, INPUT_WIDTH, INPUT_CHANNEL, INPUT_BITS,
@@ -79,8 +81,9 @@ void execute_nnx_layer(void *unused_args) {
   if (STRIDE_HEIGHT == 1) {
     nnx_dispatch_task(&task);
   } else {
-    nnx_dispatch_task_stride2x2(&task, INPUT_WIDTH, INPUT_CHANNEL,
-                                OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL,
+    nnx_dispatch_task_stride2x2(&task, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH,
+                                INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH,
+                                OUTPUT_CHANNEL, OUTPUT_WIDTH, OUTPUT_CHANNEL,
                                 WEIGHT_HEIGHT, WEIGHT_WIDTH);
   }
   // nnx_resolve_check_blocking(&task);
