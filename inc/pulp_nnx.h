@@ -51,21 +51,25 @@ void nnx_task_set_ptrs(nnx_task_t *task, uint32_t input_ptr, uint32_t w_in,
                        uint32_t weights_ptr, uint32_t scale_ptr,
                        uint32_t shift_ptr, uint32_t bias_ptr);
 void nnx_task_set_dims(nnx_task_t *task, const uint32_t w_in,
-                       const uint32_t k_in, const uint32_t h_out,
+                       const uint32_t k_in, const uint32_t w_in_stride,
+                       const uint32_t k_in_stride, const uint32_t h_out,
                        const uint32_t w_out, const uint32_t k_out,
+                       const uint32_t w_out_stride, const uint32_t k_out_stride,
                        const uint8_t padding_top, const uint8_t padding_bottom,
                        const uint8_t padding_right, const uint8_t padding_left);
-void nnx_task_set_dims_stride2x2(nnx_task_t *task, const uint32_t h_in,
-                                 const uint32_t w_in, const uint32_t k_in,
-                                 const uint32_t h_out, const uint32_t w_out,
-                                 const uint32_t k_out, const uint8_t h_ker,
-                                 const uint8_t w_ker, const uint8_t padding_top,
-                                 const uint8_t padding_bottom,
-                                 const uint8_t padding_right,
-                                 const uint8_t padding_left);
-void nnx_dispatch_task_stride2x2(nnx_task_t *task, const uint32_t w_in,
-                                 const uint32_t k_in, const uint32_t h_out,
-                                 const uint32_t w_out, const uint32_t k_out,
-                                 const uint8_t h_ker, const uint8_t w_ker);
+void nnx_task_set_dims_stride2x2(
+    nnx_task_t *task, const uint32_t h_in, const uint32_t w_in,
+    const uint32_t k_in, const uint32_t w_in_stride, const uint32_t k_in_stride,
+    const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
+    const uint32_t w_out_stride, const uint32_t k_out_stride,
+    const uint8_t h_ker, const uint8_t w_ker, const uint8_t padding_top,
+    const uint8_t padding_bottom, const uint8_t padding_right,
+    const uint8_t padding_left);
+void nnx_dispatch_task_stride2x2(
+    nnx_task_t *task, const uint32_t w_in, const uint32_t k_in,
+    const uint32_t w_in_stride, const uint32_t k_in_stride,
+    const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
+    const uint32_t w_out_stride, const uint32_t k_out_stride,
+    const uint8_t h_ker, const uint8_t w_ker);
 
 #endif // __PULP_NNX_H__
