@@ -93,14 +93,14 @@ def assert_message(
     return retval
 
 
-def test(path: str):
+def test(path: str, timeout: int):
     test_name = path
     test = Ne16Test.load(path)
 
     Ne16TestHeaderGenerator().generate(test_name, test)
 
     cmd = f"make -C app all run platform=gvsoc"
-    passed, msg, stdout, stderr = execute_command(cmd=cmd, timeout=120)
+    passed, msg, stdout, stderr = execute_command(cmd=cmd, timeout=timeout)
 
     assert passed, assert_message(msg, test_name, cmd, stdout, stderr)
 

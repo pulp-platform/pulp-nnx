@@ -45,6 +45,12 @@ def pytest_addoption(parser):
         default=False,
         help="Save the generated test data to their respective folders.",
     )
+    parser.addoption(
+        "--timeout",
+        type=int,
+        default=120,
+        help="Execution timeout in seconds. Default: 120s"
+    )
 
 
 def _find_test_dirs(path: Union[str, os.PathLike]):
@@ -55,6 +61,7 @@ def pytest_generate_tests(metafunc):
     test_dirs = metafunc.config.getoption("test_dirs")
     recursive = metafunc.config.getoption("recursive")
     regenerate = metafunc.config.getoption("regenerate")
+    timeout = metafunc.config.getoption("timeout")
 
     if recursive:
         tests_dirs = test_dirs
@@ -70,3 +77,4 @@ def pytest_generate_tests(metafunc):
             test.save_data(test_dir)
 
     metafunc.parametrize("path", test_dirs)
+    metafunc.parametrize("timeout", [timeout])
