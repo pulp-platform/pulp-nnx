@@ -155,7 +155,8 @@ void nnx_task_set_dims_stride2x2(
   ne16_task_set_strides(task, k_in, w_in_stride, k_in_stride, w_out_stride,
                         k_out_stride);
   ne16_task_set_counters(task, k_in, h_out > 1 ? 3 : 1, w_out > 1 ? 3 : 1,
-                         k_out, 0, 0);
+                         k_out, h_in + padding_top >= 5 ? 0 : padding_bottom,
+                         0/*w_out > 2 ? 0 : padding_right*/);
 
   const uint8_t padding_bottom_new =
       (h_in + padding_top - h_ker) % stride == 0 ? 0 : padding_bottom;
