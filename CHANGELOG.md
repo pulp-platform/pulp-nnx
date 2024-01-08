@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1] - 2024-01-08
+
+### Fixed
+
+- Stridded 2x2 mode needed to propagate `padding_bottom` when input height is smaller then 5
+- Test requirements where missing the toml dependency and
+
 ## [0.2.0] - 2023-10-25
 
 ### Added
