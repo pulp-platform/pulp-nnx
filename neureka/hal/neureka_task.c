@@ -76,8 +76,8 @@ void neureka_task_init(neureka_task_t *task, const uint8_t kernel_shape,
       NEUREKA_FLAG_NORM_QUANT | quant.function | quant.mode |
       (quant.shift_amount << 16) | quant.flag_rounding << NEUREKA_SHIFT_ROUNDING |
       norm.mode | norm.flag_bias << NEUREKA_SHIFT_FLAG_NORM_BIAS |
-      norm.flag_shift << NEUREKA_SHIFT_FLAG_NORM_SHIFT | weights_offset_mode |
-      flag_mode | flag_mode16 | (weights_bits - 1) | flag_stride2x2;
+      norm.flag_shift << NEUREKA_SHIFT_FLAG_NORM_SHIFT | NEUREKA_FLAG_USE_TCDM |
+      weights_offset_mode | flag_mode | flag_mode16 | (weights_bits - 1) | flag_stride2x2;
 
   task->data.cfg.weight_offset_factor = weights_offset_factor;
 }
