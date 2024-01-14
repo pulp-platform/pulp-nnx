@@ -6,14 +6,35 @@ A kernel library targeting Neural Network Accelerators developed in the PULP gro
 
 This library is considered unstable and might go through major changes until a stable release of v1.0.0.
 
+## NNX Interface
+
+The interface to each accelerator consists of these functions:
+
+```c
+void <accelerator>_nnx_init(<accelerator>_dev_t *dev, <accelerator>_pulp_conf_t *conf);
+void <accelerator>_nnx_term(<accelerator>_dev_t *dev);
+int <accelerator>_nnx_dispatch(<accelerator>_dev_t *dev, <accelerator>_task_t *task);
+int <accelerator>_nnx_dispatch_check(<accelerator>_dev_t *dev);
+void <accelerator>_nnx_dispatch_wait(<accelerator>_dev_t *dev);
+int <accelerator>_nnx_resolve_check(<accelerator>_dev_t *dev, <accelerator>_task_t *task);
+void <accelerator>_nnx_resolve_wait(<accelerator>_dev_t *dev, <accelerator>_task_t *task);
+```
+
+Each accelerator has their own named function in case there exist multiple types of accelerators on a same board.
+
+Each function accepts a pointer to a `<accelerator>_dev_t` type which to discern between each accelerator.
+
+_Note: The accelerator can provide additional helper functions if needed._
+
 ## Repository structure
 
-- inc: interface to the library
-- src: implementations of the interface for specific accelerators
+- inc: nnx interface for each accelerator
+- src: implementation for each accelerator
 - util: utilities used by all the accelerators
 - &lt;accelerator>:
     - hal: hardware abstraction layer
     - gvsoc: gvsoc-specific functions
+    - bsp: board support package for each board that has the accelerator
 - test: testing folder ([more info](test/README.md))
 
 ## Accelerators
