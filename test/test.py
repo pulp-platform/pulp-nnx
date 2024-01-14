@@ -22,6 +22,7 @@ from typing import Union, Optional, Tuple
 import locale
 import subprocess
 from Ne16TestClasses import Ne16Test, Ne16TestHeaderGenerator
+from pathlib import Path
 
 HORIZONTAL_LINE = "\n" + "-" * 100 + "\n"
 
@@ -99,6 +100,7 @@ def test(path: str, timeout: int):
 
     Ne16TestHeaderGenerator().generate(test_name, test)
 
+    Path("app/src/nnx_layer.c").touch()
     cmd = f"make -C app all run platform=gvsoc"
     passed, msg, stdout, stderr = execute_command(cmd=cmd, timeout=timeout)
 

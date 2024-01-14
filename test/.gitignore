@@ -2,7 +2,7 @@ BUILD
 __pycache__
 .cache
 .pytest_cache
-app/gen_inc
+app/gen
 **/compile_commands.json
 **/*.log
 **/*.pt

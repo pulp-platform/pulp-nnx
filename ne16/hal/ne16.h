@@ -18,38 +18,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <pmsis.h>
+#ifndef __NE16_H__
+#define __NE16_H__
 
-#include "layer_util.h"
-#include "nnx_layer.h"
-#include "output.h"
+#include "hwpe.h"
+#include <stdint.h>
 
-int main() {
-  struct pi_device cl_dev;
-  struct pi_cluster_conf cl_conf;
-  struct pi_cluster_task cl_task;
+typedef struct ne16_dev_t {
+  hwpe_dev_t hwpe_dev; /* Implements the HWPE device interface */
+} ne16_dev_t;
 
-  printf("\n");
-  printf("Test %s starting\n", TEST_NAME);
+int ne16_task_queue_size(ne16_dev_t *dev);
+int ne16_task_queue_tasks_in_flight(ne16_dev_t *dev);
+int ne16_task_queue_empty(ne16_dev_t *dev);
+int ne16_task_queue_full(ne16_dev_t *dev);
 
-  printf("\n");
-  layer_info();
-
-  pi_cluster_conf_init(&cl_conf);
-  pi_open_from_conf(&cl_dev, &cl_conf);
-  if (pi_cluster_open(&cl_dev)) {
-    printf("ERROR: Failed to open cluster.\n");
-    pmsis_exit(-1);
-  }
-  pi_cluster_send_task_to_cl(
-      &cl_dev, pi_cluster_task(&cl_task, execute_nnx_layer, NULL));
-  pi_cluster_close(&cl_dev);
-
-  printf("\n");
-  printf("Test %s finished\n", TEST_NAME);
-
-  printf("\n");
-  check_output();
-
-  return 0;
-}
+#endif // __NE16_H__

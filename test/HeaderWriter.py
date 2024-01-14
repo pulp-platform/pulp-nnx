@@ -20,8 +20,11 @@ import os
 
 
 class HeaderWriter:
-    def __init__(self, incdir, tabwidth=4):
-        self.incdir = incdir
+    def __init__(self, gendir, tabwidth=4):
+        self.incdir = os.path.join(gendir, "inc")
+        os.makedirs(self.incdir, exist_ok=True)
+        self.srcdir = os.path.join(gendir, "src")
+        os.makedirs(self.srcdir, exist_ok=True)
         self.tabwidth = tabwidth
 
     def header_guard_begin(self, filename):
@@ -60,7 +63,7 @@ class HeaderWriter:
     def vector_declaration(self, name, size, _type):
         retval = ""
         retval += self.define(f"{name}_size", size)
-        retval += f"PI_L1 {_type} {name}[{name.upper()}_SIZE]"
+        retval += f"{_type} {name}[{name.upper()}_SIZE]"
         return retval
 
     def vector_initial_value(self, data, elements_per_row=10):
@@ -92,8 +95,11 @@ class HeaderWriter:
         retval += self.vector_end()
         return retval
 
+    def check_declaration(self, name):
+        return f"void check_{name}();\n\n"
+
     def check(self, name):
-        return f"""static void check_{name}() {{
+        return f"""void check_{name}() {{
         printf("Checking the {name} vector:\\n");
 
         int n_err = 0;
@@ -126,15 +132,41 @@ class HeaderWriter:
             file.write(filerender)
 
     def generate_vector_header(self, name, size, _type, init=None, golden=None):
-        bodyrender = ""
-        bodyrender += self.includes
-        bodyrender += self.render_vector(name, _type, size, init=init)
+        render = ""
+        render += self.includes
+        render += self.render_vector(name, "extern " + _type, size)
 
         if golden is not None:
-            bodyrender += self.render_vector("golden_" + name, _type, size, init=golden)
-            bodyrender += self.check(name)
+            render += self.render_vector("golden_" + name, "extern " + _type, size)
+            render += self.check_declaration(name)
 
-        self.generate_header(name, bodyrender)
+        self.generate_header(name, render)
+
+    def generate_source(self, name, body):
+        filename = name + ".c"
+        filepath = os.path.join(self.srcdir, filename)
+
+        print(f"Generating source file -> {filepath}")
+
+        with open(filepath, "w") as file:
+            file.write(body)
+
+    def generate_vector_source(self, name, size, _type, init=None, golden=None):
+        render = ""
+        render += f'#include "{name}.h"\n\n'
+        render += self.render_vector(name, "PI_L1 " + _type, size, init=init)
+
+        if golden is not None:
+            render += self.render_vector(
+                "golden_" + name, "PI_L1 " + _type, size, init=golden
+            )
+            render += self.check(name)
+
+        self.generate_source(name, render)
+
+    def generate_vector_files(self, name, size, _type, init=None, golden=None):
+        self.generate_vector_source(name, size, _type, init, golden)
+        self.generate_vector_header(name, size, _type, init, golden)
 
     def render_dims(self, name, dims):
         retval = ""

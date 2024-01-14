@@ -16,7 +16,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import List, Union, Sequence, Optional, Set
+from __future__ import annotations
+from typing import List, Union, Optional, Set, Tuple
 import torch
 import numpy as np
 import torch.nn.functional as F
@@ -101,15 +102,15 @@ class Ne16TestConf(BaseModel):
             Ne16TestConf._check_type("bias_type", v, ["int32"])
         return v
 
-    @model_validator(mode="after")
-    def check_valid_out_channel_with_stride_2x2(self) -> "Ne16TestConf":
+    @model_validator(mode="after")  # type: ignore
+    def check_valid_out_channel_with_stride_2x2(self) -> Ne16TestConf:
         assert implies(
             self.stride == Stride(height=2, width=2), self.out_channel % 2 == 0
         ), f"With stride 2x2 supported only even output channel sizes. Given output channel {self.out_channel}"
         return self
 
-    @model_validator(mode="after")
-    def check_valid_depthwise(self) -> "Ne16TestConf":
+    @model_validator(mode="after")  # type: ignore
+    def check_valid_depthwise(self) -> Ne16TestConf:
         assert implies(
             self.depthwise, self.kernel_shape == KernelShape(height=3, width=3)
         ), f"Depthwise supported only on 3x3 kernel shape. Given kernel shape {self.kernel_shape}."
@@ -119,8 +120,8 @@ class Ne16TestConf(BaseModel):
         )
         return self
 
-    @model_validator(mode="after")
-    def check_valid_padding_with_kernel_shape_1x1(self) -> "Ne16TestConf":
+    @model_validator(mode="after")  # type: ignore
+    def check_valid_padding_with_kernel_shape_1x1(self) -> Ne16TestConf:
         assert implies(
             self.kernel_shape == KernelShape(height=1, width=1),
             self.padding == Padding(top=0, bottom=0, left=0, right=0),
@@ -133,16 +134,16 @@ class Ne16TestConf(BaseModel):
         assert v == True, f"Untested without has_norm_quant."
         return v
 
-    @model_validator(mode="after")
-    def check_valid_norm_quant_types_when_has_norm_qunat(self) -> "Ne16TestConf":
+    @model_validator(mode="after")  # type: ignore
+    def check_valid_norm_quant_types_when_has_norm_qunat(self) -> Ne16TestConf:
         if self.has_norm_quant:
             assert self.scale_type is not None, "Scale type was not provided."
             if self.has_bias:
                 assert self.bias_type is not None, "Bias type was not provided."
         return self
 
-    @model_validator(mode="after")
-    def check_valid_out_type_with_flags(self) -> "Ne16TestConf":
+    @model_validator(mode="after")  # type: ignore
+    def check_valid_out_type_with_flags(self) -> Ne16TestConf:
         assert implies(
             not self.has_norm_quant, self.out_type == Ne16.ACCUMULATOR_TYPE
         ), (
@@ -271,7 +272,7 @@ class Ne16TestGenerator:
         return global_shift
 
     @staticmethod
-    def _random_data(_type: IntegerType, shape: Sequence[int]):
+    def _random_data(_type: IntegerType, shape: Tuple[int, int, int, int]):
         return torch.randint(_type.min, _type.max, size=shape)
 
     @staticmethod
@@ -393,12 +394,11 @@ class Ne16TestGenerator:
 
 
 class Ne16TestHeaderGenerator:
-    DEFAULT_HEADERS_DIR = "app/gen_inc"
+    DEFAULT_HEADERS_DIR = "app/gen"
 
     def __init__(self, headers_dir: Optional[Union[str, os.PathLike]] = None):
         if headers_dir is None:
             headers_dir = Ne16TestHeaderGenerator.DEFAULT_HEADERS_DIR
-        os.makedirs(headers_dir, exist_ok=True)
         self.header_writer = HeaderWriter(headers_dir)
 
     def generate(self, test_name: str, test: Ne16Test):
@@ -409,14 +409,14 @@ class Ne16TestHeaderGenerator:
         # Render input
         in_ctype = test.conf.in_type.ctype()
         in_data = test.input.permute(0, 2, 3, 1).ravel()
-        self.header_writer.generate_vector_header(
+        self.header_writer.generate_vector_files(
             "input", _type=in_ctype, size=in_data.numel(), init=in_data
         )
 
         # Render output
         out_ctype = test.conf.out_type.ctype()
         out_data_golden = test.output.permute(0, 2, 3, 1).ravel()
-        self.header_writer.generate_vector_header(
+        self.header_writer.generate_vector_files(
             "output",
             _type=out_ctype,
             size=out_data_golden.numel(),
@@ -436,7 +436,7 @@ class Ne16TestHeaderGenerator:
             weight_type._bits,
             depthwise=test.conf.depthwise,
         )
-        self.header_writer.generate_vector_header(
+        self.header_writer.generate_vector_files(
             "weight", _type="uint8_t", size=weight_init.size, init=weight_init
         )
 
@@ -444,7 +444,7 @@ class Ne16TestHeaderGenerator:
         if test.scale is not None:
             assert test.conf.scale_type is not None
             scale_ctype = test.conf.scale_type.ctype()
-            self.header_writer.generate_vector_header(
+            self.header_writer.generate_vector_files(
                 "scale",
                 _type=scale_ctype,
                 size=test.scale.numel(),
@@ -455,7 +455,7 @@ class Ne16TestHeaderGenerator:
         if test.bias is not None:
             assert test.conf.bias_type is not None
             bias_ctype = test.conf.bias_type.ctype()
-            self.header_writer.generate_vector_header(
+            self.header_writer.generate_vector_files(
                 "bias", _type=bias_ctype, size=test.bias.numel(), init=test.bias.ravel()
             )
 
