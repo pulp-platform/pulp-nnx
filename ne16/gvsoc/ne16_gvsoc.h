@@ -18,15 +18,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef __NE16_GVSOC_LOGGING_H__
-#define __NE16_GVSOC_LOGGING_H__
+#ifndef __NE16_GVSOC_H__
+#define __NE16_GVSOC_H__
 
-#include "ne16_hal.h"
+#include "ne16.h"
+#include "ne16_task.h"
 
-typedef enum ne16_gvsoc_logging_format_e {
-  NE16_GVSOC_LOGGING_FORMAT_DECIMAL = 0,
-  NE16_GVSOC_LOGGING_FORMAT_HEXADECIMAL = 3
-} ne16_gvsoc_logging_format_e;
+#define NE16_REG_GVSOC_LOG_LEVEL 24
+#define NE16_REG_GVSOC_LOG_FORMAT 25
+
+typedef enum ne16_gvsoc_log_format_e {
+  NE16_GVSOC_LOG_FORMAT_DECIMAL = 0,
+  NE16_GVSOC_LOG_FORMAT_HEXADECIMAL = 3
+} ne16_gvsoc_log_format_e;
 
 typedef enum ne16_gvsoc_log_level_e {
   NE16_GVSOC_LOG_LEVEL_CONFIG = 0,
@@ -35,15 +39,16 @@ typedef enum ne16_gvsoc_log_level_e {
   NE16_GVSOC_LOG_LEVEL_ALL = 3
 } ne16_gvsoc_log_level_e;
 
-static inline void
-ne16_activate_gvsoc_logging(ne16_gvsoc_log_level_e log_level,
-                            ne16_gvsoc_logging_format_e format) {
-  NE16_WRITE_IO_REG(sizeof(nnx_task_data_t), log_level);
-  NE16_WRITE_IO_REG(sizeof(nnx_task_data_t) + 4, format);
+static void ne16_gvsoc_log_activate(ne16_dev_t *dev,
+                                    ne16_gvsoc_log_level_e log_level,
+                                    ne16_gvsoc_log_format_e format) {
+  hwpe_task_reg_write(&dev->hwpe_dev, NE16_REG_GVSOC_LOG_LEVEL, log_level);
+  hwpe_task_reg_write(&dev->hwpe_dev, NE16_REG_GVSOC_LOG_FORMAT, format);
 }
 
-static inline void ne16_deactivate_gvsoc_logging() {
-  NE16_WRITE_IO_REG(sizeof(nnx_task_data_t), 0);
+static void ne16_gvsoc_log_deactivate(ne16_dev_t *dev) {
+  hwpe_task_reg_write(&dev->hwpe_dev, NE16_REG_GVSOC_LOG_LEVEL,
+                      NE16_GVSOC_LOG_LEVEL_CONFIG);
 }
 
-#endif // __NE16_GVSOC_LOGGING_H__
+#endif // __NE16_GVSOC_H__

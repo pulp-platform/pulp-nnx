@@ -16,43 +16,49 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-APP := main
+# Set runner_args="--trace=ne16" if you want to trace what is happening in the ne16
 
+ACCELERATOR ?= ne16
+
+APP := main
 LIBDIR := $(abspath ../..)
+ACC_DIR := $(LIBDIR)/$(ACCELERATOR)
 
 
 # Include directories
 
 ## Test
-INC_DIRS += inc gen_inc
+INC_DIRS += inc
 
-## PULP-NNX
-INC_DIRS += $(LIBDIR)/inc
+## Library
+INC_DIRS += $(LIBDIR)/inc $(LIBDIR)/util
 
-## NE16
-INC_DIRS += $(LIBDIR)/ne16/hal $(LIBDIR)/ne16/gvsoc
+## Accelerator
+INC_DIRS += $(ACC_DIR)/hal $(ACC_DIR)/gvsoc $(ACC_DIR)/bsp
 
-## Util
-INC_DIRS += $(LIBDIR)/util
+## Generated 
+INC_DIRS += gen/inc
 
 INC_FLAGS += $(addprefix -I,$(INC_DIRS))
-
 
 # Source files
 
 ## Test
 APP_SRCS += $(wildcard src/*.c)
 
-## PULP-NNX
-APP_SRCS += $(LIBDIR)/src/pulp_nnx_ne16.c
+## Library
+APP_SRCS += $(LIBDIR)/src/pulp_nnx_$(ACCELERATOR).c $(wildcard $(LIBDIR)/util/*.c)
 
-## NE16
-APP_SRCS += $(wildcard $(LIBDIR)/ne16/hal/*.c) $(wildcard $(LIBDIR)/ne16/gvsoc/*.c)
+## Accelerator
+APP_SRCS += $(wildcard $(ACC_DIR)/hal/*.c) $(wildcard $(ACC_DIR)/gvsoc/*.c) $(wildcard $(ACC_DIR)/bsp/*.c)
 
-## Util
-APP_SRCS += $(LIBDIR)/util/pulp_nnx_util.c
+## Generated 
+APP_SRCS += $(wildcard gen/src/*.c)
 
 
-APP_CFLAGS += $(INC_FLAGS) -O2 -w
+# Flags
+
+APP_CFLAGS += $(INC_FLAGS) -O2 -w -Wall -Werror -flto
+APP_LDFLAGS += -flto
 
 include $(RULES_DIR)/pmsis_rules.mk
