@@ -1,5 +1,28 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- New Hardware Processing Engine (HWPE) device in `util/hwpe.h`
+- A device structure for ne16 `ne16_dev_t` in `ne16/hal/ne16.h` which extends the hwpe device
+- Test app Makefile has now an `ACCELERATOR` variable to specify which accelerator is used
+
+### Changed
+
+- Library functions no longer start with a generic `nnx_` prefix but with `<accelerator>_nnx_` prefix
+  to allow for usage of multiple kinds of accelerators in the same system
+- Decoupled board specific functionality into `ne16/bsp` which also contains constant global structures
+  to the implementations of the `ne16_dev_t` structure
+- Moved all task related functions (`nnx_task_set_dims*`) into `ne16/hal/ne16_task.c`
+- Tests adjusted for the new interface
+- Test data generation moved into source files with extern declarations to check the output from the main
+
+### Fixed
+
+- pyright errors
+- formatting errors
+
 ## [0.2.1] - 2024-01-08
 
 ### Fixed
