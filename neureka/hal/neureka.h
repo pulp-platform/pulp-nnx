@@ -18,13 +18,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "pulp_nnx_util.h"
-#include "pulp_nnx_hal.h"
+#ifndef __NEUREKA_H__
+#define __NEUREKA_H__
 
-void nnx_activate_gvsoc_logging(int log_level) {
-  NEUREKA_WRITE_IO_REG(NEUREKA_REG_GVSOC_TRACE, log_level);
-}
+#include "hwpe.h"
+#include <stdint.h>
 
-void nnx_deactivate_gvsoc_logging() {
-  NEUREKA_WRITE_IO_REG(NEUREKA_REG_GVSOC_TRACE, 0);
-}
+typedef struct neureka_dev_t {
+  hwpe_dev_t hwpe_dev; /* Implements the HWPE device interface */
+} neureka_dev_t;
+
+int neureka_task_queue_size(neureka_dev_t *dev);
+int neureka_task_queue_tasks_in_flight(neureka_dev_t *dev);
+int neureka_task_queue_empty(neureka_dev_t *dev);
+int neureka_task_queue_full(neureka_dev_t *dev);
+
+#endif // __NEUREKA_H__
