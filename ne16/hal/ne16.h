@@ -1,0 +1,34 @@
+/*
+ * Luka Macan <luka.macan@unibo.it>
+ *
+ * Copyright 2023 University of Bologna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef __NE16_H__
+#define __NE16_H__
+
+#include "hwpe.h"
+#include <stdint.h>
+
+typedef struct ne16_dev_t {
+  hwpe_dev_t hwpe_dev; /* Implements the HWPE device interface */
+} ne16_dev_t;
+
+int ne16_task_queue_size(ne16_dev_t *dev);
+int ne16_task_queue_tasks_in_flight(ne16_dev_t *dev);
+int ne16_task_queue_empty(ne16_dev_t *dev);
+int ne16_task_queue_full(ne16_dev_t *dev);
+
+#endif // __NE16_H__

@@ -18,153 +18,61 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "ne16_hal.h"
-#include "pmsis.h"
-#include "pulp_nnx.h"
+#include "pulp_nnx_ne16.h"
+#include "hwpe.h"
+#include "ne16.h"
 #include "pulp_nnx_util.h"
+#include <pmsis.h>
 #include <stdint.h>
+#include <sys/types.h>
 
-inline void nnx_init(uint32_t max_stall) {
-  ne16_cg_enable();
-  ne16_setpriority_ne16();
-  ne16_set_max_stall(max_stall);
-  ne16_soft_clear();
+void ne16_nnx_init(ne16_dev_t *dev, ne16_pulp_conf_t *conf) {
+  ne16_pulp_open(conf);
+  hwpe_soft_clear(&dev->hwpe_dev);
 }
 
-inline void nnx_term() {
-  ne16_soft_clear();
-  ne16_setpriority_core();
-  ne16_reset_max_stall();
-  ne16_cg_disable();
+void ne16_nnx_term(ne16_dev_t *dev) {
+  hwpe_soft_clear(&dev->hwpe_dev);
+  ne16_pulp_close();
 }
 
-/** nnx_dispatch_check
- *
- * Check whether you can dispatch to the accelerator.
- */
-inline int nnx_dispatch_check() { return !ne16_full(); }
+int ne16_nnx_dispatch_check(ne16_dev_t *dev) {
+  return !ne16_task_queue_full(dev);
+}
 
-/** nnx_dispatch_check_blocking
- *
- * Block until you can dispatch to the accelerator.
- */
-inline void nnx_dispatch_check_blocking() {
-  while (!nnx_dispatch_check()) {
-    ne16_event_wait();
+void ne16_nnx_dispatch_wait(ne16_dev_t *dev) {
+  while (!ne16_nnx_dispatch_check(dev)) {
+    ne16_pulp_event_wait_and_clear();
   }
 }
 
-/** nnx_dispatch_task
- *
- * Dispatch a task to the accelerator, assuming it
- * was checked before.
- */
-inline void nnx_dispatch_task(nnx_task_t *task) {
-  task->id = ne16_acquire();
-  ne16_task_offload(task);
-  ne16_run_async();
+int ne16_nnx_dispatch(ne16_dev_t *dev, ne16_task_t *task) {
+  if (hwpe_task_queue_acquire_task(&dev->hwpe_dev, &task->id)) {
+    return 1;
+  }
+  hwpe_task_queue_write_task(&dev->hwpe_dev, (uint32_t *)&task->data,
+                             (int)(sizeof(ne16_task_data_t) / 4));
+  hwpe_task_queue_release_and_run(&dev->hwpe_dev);
+  return 0;
 }
 
-/** nnx_resolve_check
- *
- * Check whether the task has been resolved.
- */
-inline int nnx_resolve_check(nnx_task_t *task) {
+int ne16_nnx_resolve_check(ne16_dev_t *dev, ne16_task_t *task) {
+#if __PLATFORM__ == ARCHI_PLATFORM_GVSOC
+  // GVSOC model has a broken running_id so resolve_check
+  // conservativly looks if the task queue is empty.
+  return ne16_task_queue_empty(dev);
+#else
   uint8_t prev_task_id = task->id - 1;
-  return !(ne16_last_task_id() == prev_task_id ||
-           (ne16_last_task_id() == task->id && !ne16_empty()));
+  return !(hwpe_last_task_id(&dev->hwpe_dev) == prev_task_id ||
+           (hwpe_last_task_id(&dev->hwpe_dev) == task->id &&
+            !ne16_task_queue_empty(dev)));
+#endif
 }
 
-/** nnx_resolve_check_blocking
- *
- * Block until you can resolve the task.
- */
-inline void nnx_resolve_check_blocking(nnx_task_t *task) {
-  while (!nnx_resolve_check(task)) {
-    ne16_event_wait();
+void ne16_nnx_resolve_wait(ne16_dev_t *dev, ne16_task_t *task) {
+  while (!ne16_nnx_resolve_check(dev, task)) {
+    ne16_pulp_event_wait_and_clear();
   }
-}
-
-inline void nnx_task_init(nnx_task_t *task, const uint8_t kernel_shape,
-                          const uint8_t depthwise, const uint8_t input_bits,
-                          const uint8_t output_bits, const uint8_t weights_bits,
-                          nnx_weight_offset_mode_e weights_offset_mode,
-                          const uint32_t weights_offset_factor,
-                          nnx_quant_t quant, nnx_norm_t norm,
-                          const uint8_t stride) {
-
-  ne16_task_init(task, kernel_shape, depthwise, input_bits, output_bits,
-                 weights_bits, weights_offset_mode, weights_offset_factor,
-                 quant, norm, stride);
-}
-
-/** nnx_pad_ptr
- *
- * Calculate the pointer to the start of the ptr as if
- * it was the start to the padded data.
- * Necessary for input pointer when it's padded.
- */
-inline uint32_t nnx_pad_ptr(uint32_t ptr, const uint32_t width,
-                            const uint32_t channel, const uint8_t bits,
-                            const uint8_t padding_top,
-                            const uint8_t padding_left) {
-  return ptr - (padding_top * width + padding_left) * channel * bits / 8;
-}
-
-inline void nnx_task_set_ptrs(nnx_task_t *task, uint32_t input_ptr,
-                              uint32_t w_in, uint32_t k_in, uint8_t bits_in,
-                              uint8_t padding_top, uint8_t padding_left,
-                              uint32_t output_ptr, uint32_t weights_ptr,
-                              uint32_t scale_ptr, uint32_t shift_ptr,
-                              uint32_t bias_ptr) {
-  task->data.infeat_ptr =
-      nnx_pad_ptr(input_ptr, w_in, k_in, bits_in, padding_top, padding_left);
-  task->data.outfeat_ptr = output_ptr;
-  task->data.weights_ptr = weights_ptr;
-  task->data.scale_ptr = scale_ptr;
-  task->data.scale_shift_ptr = shift_ptr;
-  task->data.scale_bias_ptr = bias_ptr;
-}
-
-void nnx_task_set_dims(nnx_task_t *task, const uint32_t w_in,
-                       const uint32_t k_in, const uint32_t w_in_stride,
-                       const uint32_t k_in_stride, const uint32_t h_out,
-                       const uint32_t w_out, const uint32_t k_out,
-                       const uint32_t w_out_stride, const uint32_t k_out_stride,
-                       const uint8_t padding_top, const uint8_t padding_bottom,
-                       const uint8_t padding_right,
-                       const uint8_t padding_left) {
-  ne16_task_set_strides(task, k_in, w_in_stride, k_in_stride, w_out_stride,
-                        k_out_stride);
-  ne16_task_set_counters(task, k_in, h_out, w_out, k_out, padding_bottom,
-                         padding_right);
-  ne16_task_set_padding(task, padding_top, padding_bottom, padding_left,
-                        padding_right, 0);
-}
-
-void nnx_task_set_dims_stride2x2(
-    nnx_task_t *task, const uint32_t h_in, const uint32_t w_in,
-    const uint32_t k_in, const uint32_t w_in_stride, const uint32_t k_in_stride,
-    const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
-    const uint32_t w_out_stride, const uint32_t k_out_stride,
-    const uint8_t h_ker, const uint8_t w_ker, const uint8_t padding_top,
-    const uint8_t padding_bottom, const uint8_t padding_right,
-    const uint8_t padding_left) {
-  const uint8_t stride = 2;
-
-  ne16_task_set_strides(task, k_in, w_in_stride, k_in_stride, w_out_stride,
-                        k_out_stride);
-  ne16_task_set_counters(task, k_in, h_out > 1 ? 3 : 1, w_out > 1 ? 3 : 1,
-                         k_out, h_in + padding_top >= 5 ? 0 : padding_bottom,
-                         0/*w_out > 2 ? 0 : padding_right*/);
-
-  const uint8_t padding_bottom_new =
-      (h_in + padding_top - h_ker) % stride == 0 ? 0 : padding_bottom;
-  const uint8_t padding_right_new =
-      (w_in + padding_left - w_ker) % stride == 0 ? 0 : padding_right;
-
-  ne16_task_set_padding(task, padding_top, padding_bottom_new, padding_left,
-                        padding_right_new, 0);
 }
 
 static inline uint32_t _get_tile_ptr(uint32_t ptr, int i, int j, int size_i,
@@ -179,15 +87,8 @@ static inline uint32_t _get_tile_ptr(uint32_t ptr, int i, int j, int size_i,
          (j * (size_j - overlap_j) - offset_j) * stride_k * data_size / 8;
 }
 
-/** nnx_dispatch_task_stride2x2
- *
- * It uses NE16's 2x2 strided mode which reduces the number of writes NE16 does.
- * This mode doesn't stride the NE16's subtile input pointer, so we have to
- * tile the tile to the subtile's spatial dimensions (in this case 3x3 output).
- * Works only if the k_out is divisible by 2.
- */
-void nnx_dispatch_task_stride2x2(
-    nnx_task_t *task, const uint32_t w_in, const uint32_t k_in,
+void ne16_nnx_dispatch_stride2x2(
+    ne16_dev_t *dev, ne16_task_t *task, const uint32_t w_in, const uint32_t k_in,
     const uint32_t w_in_stride, const uint32_t k_in_stride,
     const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
     const uint32_t w_out_stride, const uint32_t k_out_stride,
@@ -221,8 +122,10 @@ void nnx_dispatch_task_stride2x2(
       task->data.cfg.padding =
           ne16_get_tile_padding(tile_padding, i, j, n_h, n_w);
 
-      nnx_dispatch_check_blocking();
-      nnx_dispatch_task(task);
+      // Altered dispatch to wait if cannot acquire
+      while (ne16_nnx_dispatch(dev, task)) {
+        ne16_pulp_event_wait_and_clear();
+      }
     }
   }
 }

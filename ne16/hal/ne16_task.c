@@ -1,7 +1,7 @@
 /*
  * Luka Macan <luka.macan@unibo.it>
  *
- * Copyright 2023 ETH Zurich and University of Bologna
+ * Copyright 2023 University of Bologna
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,66 +14,11 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <stdint.h>
-
-#include "ne16_defs.h"
-#include "ne16_hal.h"
-#include "pmsis.h"
+#include "ne16_task.h"
+#include "ne16_task_defs.h"
 #include "pulp_nnx_util.h"
-
-inline void ne16_cg_enable() {
-  *(volatile uint32_t *)CLUSTER_CTRL_HWPE_ADDR |= CLUSTER_CTRL_HWPE_MASK_CG_EN;
-}
-
-inline void ne16_cg_disable() {
-  *(volatile uint32_t *)CLUSTER_CTRL_HWPE_ADDR &= ~CLUSTER_CTRL_HWPE_MASK_CG_EN;
-}
-
-inline void ne16_setpriority_ne16() {
-  *(volatile uint32_t *)CLUSTER_CTRL_HWPE_ADDR |=
-      CLUSTER_CTRL_HWPE_MASK_HCI_PRIO;
-}
-
-inline void ne16_setpriority_core() {
-  *(volatile uint32_t *)CLUSTER_CTRL_HWPE_ADDR &=
-      ~CLUSTER_CTRL_HWPE_MASK_HCI_PRIO;
-}
-
-inline void ne16_reset_max_stall() {
-  *(volatile uint32_t *)CLUSTER_CTRL_HWPE_ADDR &=
-      ~CLUSTER_CTRL_HWPE_MASK_HCI_MAXSTALL;
-}
-
-inline void ne16_set_max_stall(uint32_t max_stall) {
-  *(volatile uint32_t *)CLUSTER_CTRL_HWPE_ADDR |=
-      max_stall & CLUSTER_CTRL_HWPE_MASK_HCI_MAXSTALL;
-}
-
-inline void ne16_soft_clear() {
-  NE16_WRITE(NE16_SOFT_CLEAR, 0);
-  for (volatile int i = 0; i < 10; i++)
-    ;
-}
-
-inline int ne16_empty() { return NE16_READ(NE16_STATUS) == 0; }
-
-inline int ne16_full() { return NE16_READ(NE16_STATUS) == NE16_STATUS_FULL; }
-
-inline uint8_t ne16_last_task_id() { return NE16_READ(NE16_RUNNING_JOB); }
-
-inline void ne16_event_wait() { eu_evt_maskWaitAndClr(NE16_EVT0); }
-
-inline uint8_t ne16_acquire() { return NE16_READ(NE16_ACQUIRE); }
-
-inline void ne16_run_async() { NE16_WRITE(NE16_TRIGGER, 0); }
-
-inline void ne16_commit() {
-  NE16_WRITE(NE16_TRIGGER, 1); // commit, no trigger
-}
 
 inline uint32_t ne16_get_tile_padding(uint32_t padding, uint32_t i_height,
                                       uint32_t i_width, uint32_t n_height,
@@ -94,16 +39,16 @@ inline uint32_t ne16_get_tile_padding(uint32_t padding, uint32_t i_height,
   return tile_padding;
 }
 
-void ne16_task_init(nnx_task_t *task, const uint8_t kernel_shape,
+void ne16_task_init(ne16_task_t *task, const uint8_t kernel_shape,
                     const uint8_t depthwise, const uint8_t input_bits,
                     const uint8_t output_bits, const uint8_t weights_bits,
-                    const nnx_weight_offset_mode_e weights_offset_mode,
-                    const uint32_t weights_offset_factor, nnx_quant_t quant,
-                    nnx_norm_t norm, const uint8_t stride) {
+                    const ne16_weight_offset_mode_e weights_offset_mode,
+                    const uint32_t weights_offset_factor, ne16_quant_t quant,
+                    ne16_norm_t norm, const uint8_t stride) {
   const uint32_t flag_mode16 =
       input_bits == 16 ? NE16_FLAG_MODE16 : NE16_FLAG_MODE_BASIC;
 
-  *task = (nnx_task_t){
+  *task = (ne16_task_t){
       .outbytes = output_bits / 8,
       .weight_d0_stride = flag_mode16 ? NE16_WEIGHT_D0_STRIDE_MODE16
                                       : NE16_WEIGHT_D0_STRIDE_MODE8,
@@ -131,14 +76,42 @@ void ne16_task_init(nnx_task_t *task, const uint8_t kernel_shape,
   task->data.cfg.weight_offset_factor = weights_offset_factor;
 }
 
-void ne16_task_set_strides(nnx_task_t *task, const uint32_t k_in,
+/** ne16_pad_ptr
+ *
+ * Calculate the pointer to the start of the ptr as if
+ * it was the start to the padded data.
+ * Necessary for input pointer when it's padded.
+ */
+inline uint32_t ne16_pad_ptr(uint32_t ptr, const uint32_t width,
+                             const uint32_t channel, const uint8_t bits,
+                             const uint8_t padding_top,
+                             const uint8_t padding_left) {
+  return ptr - (padding_top * width + padding_left) * channel * bits / 8;
+}
+
+inline void ne16_task_set_ptrs(ne16_task_t *task, uint32_t input_ptr,
+                               uint32_t w_in, uint32_t k_in, uint8_t bits_in,
+                               uint8_t padding_top, uint8_t padding_left,
+                               uint32_t output_ptr, uint32_t weights_ptr,
+                               uint32_t scale_ptr, uint32_t shift_ptr,
+                               uint32_t bias_ptr) {
+  task->data.infeat_ptr =
+      ne16_pad_ptr(input_ptr, w_in, k_in, bits_in, padding_top, padding_left);
+  task->data.outfeat_ptr = output_ptr;
+  task->data.weights_ptr = weights_ptr;
+  task->data.scale_ptr = scale_ptr;
+  task->data.scale_shift_ptr = shift_ptr;
+  task->data.scale_bias_ptr = bias_ptr;
+}
+
+void ne16_task_set_strides(ne16_task_t *task, const uint32_t k_in,
                            const uint32_t w_in_stride,
                            const uint32_t k_in_stride,
                            const uint32_t w_out_stride,
                            const uint32_t k_out_stride) {
   const uint32_t num_k_in = divnceil(k_in, NE16_INPUT_CHANNEL_THROUGHPUT);
 
-  const nnx_stride_t input_stride = {
+  const ne16_stride_t input_stride = {
       .d0 = k_in_stride,
       .d1 = k_in_stride * w_in_stride,
       .d2 = task->depthwise ? 0
@@ -147,7 +120,7 @@ void ne16_task_set_strides(nnx_task_t *task, const uint32_t k_in,
   task->data.cfg.input_stride = input_stride;
 
   // WARNING: Stride works only for even output channel sizes (divisible by 2)
-  const nnx_stride_t output_stride = {
+  const ne16_stride_t output_stride = {
       .d0 = 32,
       .d1 = (k_out_stride * task->outbytes) >> task->stride_shift,
       .d2 =
@@ -174,7 +147,7 @@ void ne16_task_set_strides(nnx_task_t *task, const uint32_t k_in,
   }
 }
 
-void ne16_task_set_counters(nnx_task_t *task, const uint32_t k_in,
+void ne16_task_set_counters(ne16_task_t *task, const uint32_t k_in,
                             const uint32_t h_out, const uint32_t w_out,
                             const uint32_t k_out, const uint8_t padding_bottom,
                             const uint8_t padding_right) {
@@ -192,7 +165,7 @@ void ne16_task_set_counters(nnx_task_t *task, const uint32_t k_in,
   const uint16_t rem_Wi =
       (task->kernel_shape == 1 ? rem_Wo : rem_Wo + 2) - padding_right;
 
-  const nnx_subtile_t subtile = {
+  const ne16_subtile_t subtile = {
       .number = {.KoKi = concat_half(num_Ko, num_Ki),
                  .HoWo = concat_half(num_Ho, num_Wo)},
       .remainder = {.KoKi = concat_half(rem_Ko, rem_Ki),
@@ -201,7 +174,7 @@ void ne16_task_set_counters(nnx_task_t *task, const uint32_t k_in,
   task->data.cfg.subtile = subtile;
 }
 
-inline void ne16_task_set_padding(nnx_task_t *task, const uint8_t top,
+inline void ne16_task_set_padding(ne16_task_t *task, const uint8_t top,
                                   const uint8_t bottom, const uint8_t left,
                                   const uint8_t right, const uint8_t value) {
   task->data.cfg.padding = ((top & 0xf) << 28) | ((right & 0xf) << 24) |
@@ -209,16 +182,49 @@ inline void ne16_task_set_padding(nnx_task_t *task, const uint8_t top,
                            (value & 0xff);
 }
 
-inline void ne16_task_set_mask_filter(nnx_task_t *task, const uint8_t top,
+inline void ne16_task_set_mask_filter(ne16_task_t *task, const uint8_t top,
                                       const uint8_t right, const uint8_t bottom,
                                       const uint8_t left) {
   task->data.cfg.filter_mask = ((top & 0xff) << 24) | ((right & 0xff) << 16) |
                                ((bottom & 0xff) << 8) | ((left & 0xff) << 0);
 }
 
-inline void ne16_task_offload(nnx_task_t *task) {
-  uint32_t *task_data = (uint32_t *)&task->data;
-  for (int i = 0; i < sizeof(nnx_task_data_t) / 4; ++i) {
-    NE16_WRITE_IO_REG(i * 4, task_data[i]);
-  }
+void ne16_task_set_dims(ne16_task_t *task, const uint32_t w_in,
+                        const uint32_t k_in, const uint32_t w_in_stride,
+                        const uint32_t k_in_stride, const uint32_t h_out,
+                        const uint32_t w_out, const uint32_t k_out,
+                        const uint32_t w_out_stride, const uint32_t k_out_stride,
+                        const uint8_t padding_top, const uint8_t padding_bottom,
+                        const uint8_t padding_right,
+                        const uint8_t padding_left) {
+  ne16_task_set_strides(task, k_in, w_in_stride, k_in_stride, w_out_stride,
+                        k_out_stride);
+  ne16_task_set_counters(task, k_in, h_out, w_out, k_out, padding_bottom,
+                         padding_right);
+  ne16_task_set_padding(task, padding_top, padding_bottom, padding_left,
+                        padding_right, 0);
+}
+
+void ne16_task_set_dims_stride2x2(
+    ne16_task_t *task, const uint32_t h_in, const uint32_t w_in,
+    const uint32_t k_in, const uint32_t w_in_stride, const uint32_t k_in_stride,
+    const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
+    const uint32_t w_out_stride, const uint32_t k_out_stride,
+    const uint8_t h_ker, const uint8_t w_ker, const uint8_t padding_top,
+    const uint8_t padding_bottom, const uint8_t padding_right,
+    const uint8_t padding_left) {
+  const uint8_t stride = 2;
+
+  ne16_task_set_strides(task, k_in, w_in_stride, k_in_stride, w_out_stride,
+                        k_out_stride);
+  ne16_task_set_counters(task, k_in, h_out > 1 ? 3 : 1, w_out > 1 ? 3 : 1,
+                         k_out, h_in + padding_top >= 5 ? 0 : padding_bottom, 0);
+
+  const uint8_t padding_bottom_new =
+      (h_in + padding_top - h_ker) % stride == 0 ? 0 : padding_bottom;
+  const uint8_t padding_right_new =
+      (w_in + padding_left - w_ker) % stride == 0 ? 0 : padding_right;
+
+  ne16_task_set_padding(task, padding_top, padding_bottom_new, padding_left,
+                        padding_right_new, 0);
 }

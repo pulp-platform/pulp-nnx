@@ -22,8 +22,9 @@
 
 #include "layer_util.h"
 #include "nnx_layer.h"
+#include "output.h"
 
-void app_kickoff(void *args) {
+int main() {
   struct pi_device cl_dev;
   struct pi_cluster_conf cl_conf;
   struct pi_cluster_task cl_task;
@@ -47,7 +48,8 @@ void app_kickoff(void *args) {
   printf("\n");
   printf("Test %s finished\n", TEST_NAME);
 
-  pmsis_exit(0);
-}
+  printf("\n");
+  check_output();
 
-int main() { return pmsis_kickoff((void *)app_kickoff); }
+  return 0;
+}

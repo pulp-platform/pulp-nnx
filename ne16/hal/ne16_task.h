@@ -1,0 +1,170 @@
+/*
+ * Luka Macan <luka.macan@unibo.it>
+ *
+ * Copyright 2023 University of Bologna
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef __NE16_TASK_H__
+#define __NE16_TASK_H__
+
+#include "ne16_task_defs.h"
+#include <stdint.h>
+
+typedef enum ne16_task_flag_e {
+  ne16TaskFlagFalse = 0,
+  ne16TaskFlagTrue = 1
+} ne16_task_flag_e;
+
+typedef enum ne16_weight_offset_mode_e {
+  weightOffsetModeSymmetric = NE16_FLAG_WEIGHT_OFFSET_SYMMETRIC,
+  weightOffsetModeLayerWise = NE16_FLAG_WEIGHT_OFFSET_LAYER_WISE
+} ne16_weight_offset_mode_e;
+
+typedef enum {
+  normMode8Bit = NE16_NORM_MODE_8BIT,
+  normMode16Bit = NE16_NORM_MODE_16BIT,
+  normMode32Bit = NE16_NORM_MODE_32BIT
+} ne16_norm_mode_e;
+
+typedef struct ne16_norm_t {
+  ne16_norm_mode_e mode;
+  int flag_bias;
+  int flag_shift;
+} ne16_norm_t;
+
+typedef enum ne16_quant_mode_e {
+  quantMode8Bit = NE16_QUANT_MODE_8BIT,
+  quantMode16Bit = NE16_QUANT_MODE_16BIT,
+  quantMode32Bit = NE16_QUANT_MODE_32BIT
+} ne16_quant_mode_e;
+
+typedef enum ne16_quant_function_e {
+  quantFunctionIdentity = NE16_FLAG_QUANT_FUNCTION_IDENTITY,
+  quantFunctionRelu = NE16_FLAG_QUANT_FUNCTION_RELU
+} ne16_quant_function_e;
+
+typedef struct ne16_quant_t {
+  // Shift amount must be in range 0x00-0x1F
+  unsigned shift_amount;
+  ne16_quant_mode_e mode;
+  ne16_quant_function_e function;
+  int flag_rounding;
+} ne16_quant_t;
+
+typedef struct ne16_stride_t {
+  uint32_t d0;
+  uint32_t d1;
+  uint32_t d2;
+} ne16_stride_t;
+
+typedef struct ne16_subtile_remainder_t {
+  uint32_t KoKi;
+  uint32_t HoWo;
+  uint32_t HiWi;
+} ne16_subtile_remainder_t;
+
+typedef struct ne16_subtile_number_t {
+  uint32_t KoKi;
+  uint32_t HoWo;
+} ne16_subtile_number_t;
+
+typedef struct ne16_subtile_t {
+  ne16_subtile_remainder_t remainder;
+  ne16_subtile_number_t number;
+} ne16_subtile_t;
+
+typedef struct ne16_cfg_t {
+  ne16_stride_t input_stride;
+  ne16_stride_t output_stride;
+  ne16_stride_t weights_stride;
+  ne16_subtile_t subtile;
+  uint32_t padding;
+  uint32_t weight_offset_factor;
+  uint32_t filter_mask;
+  uint32_t conf0;
+} ne16_cfg_t;
+
+typedef struct ne16_task_data_t {
+  uint32_t weights_ptr;
+  uint32_t infeat_ptr;
+  uint32_t outfeat_ptr;
+  uint32_t scale_ptr;
+  uint32_t scale_shift_ptr;
+  uint32_t scale_bias_ptr;
+  ne16_cfg_t cfg;
+} ne16_task_data_t;
+
+typedef struct ne16_task_t {
+  ne16_task_data_t data;
+  uint8_t outbytes;
+  uint8_t weight_d0_stride;
+  uint8_t qw;
+  uint8_t stride_shift;
+  uint8_t output_channel_throughput;
+  uint8_t kernel_shape;
+  uint8_t depthwise;
+  uint8_t id;
+} ne16_task_t;
+
+void ne16_task_init(ne16_task_t *task, const uint8_t kernel_shape,
+                    const uint8_t depthwise, const uint8_t input_bits,
+                    const uint8_t output_bits, const uint8_t weights_bits,
+                    const ne16_weight_offset_mode_e weights_offset_mode,
+                    const uint32_t weights_offset_factor, ne16_quant_t quant,
+                    ne16_norm_t norm, const uint8_t stride);
+uint32_t ne16_get_tile_padding(uint32_t padding, uint32_t i_height,
+                               uint32_t i_width, uint32_t n_height,
+                               uint32_t n_width);
+uint32_t ne16_pad_ptr(uint32_t ptr, const uint32_t width,
+                      const uint32_t channel, const uint8_t bits,
+                      const uint8_t padding_top, const uint8_t padding_left);
+void ne16_task_set_ptrs(ne16_task_t *task, uint32_t input_ptr, uint32_t w_in,
+                        uint32_t k_in, uint8_t bits_in, uint8_t padding_top,
+                        uint8_t padding_left, uint32_t output_ptr,
+                        uint32_t weights_ptr, uint32_t scale_ptr,
+                        uint32_t shift_ptr, uint32_t bias_ptr);
+void ne16_task_set_strides(ne16_task_t *task, const uint32_t k_in,
+                           const uint32_t w_in_stride,
+                           const uint32_t k_in_stride,
+                           const uint32_t w_out_stride,
+                           const uint32_t k_out_stride);
+void ne16_task_set_counters(ne16_task_t *task, const uint32_t k_in,
+                            const uint32_t h_out, const uint32_t w_out,
+                            const uint32_t k_out, const uint8_t padding_bottom,
+                            const uint8_t padding_right);
+void ne16_task_set_padding(ne16_task_t *task, const uint8_t top,
+                           const uint8_t bottom, const uint8_t left,
+                           const uint8_t right, const uint8_t value);
+void ne16_task_set_mask_filter(ne16_task_t *task, const uint8_t top,
+                               const uint8_t right, const uint8_t bottom,
+                               const uint8_t left);
+void ne16_task_set_dims(ne16_task_t *task, const uint32_t w_in,
+                        const uint32_t k_in, const uint32_t w_in_stride,
+                        const uint32_t k_in_stride, const uint32_t h_out,
+                        const uint32_t w_out, const uint32_t k_out,
+                        const uint32_t w_out_stride, const uint32_t k_out_stride,
+                        const uint8_t padding_top, const uint8_t padding_bottom,
+                        const uint8_t padding_right,
+                        const uint8_t padding_left);
+void ne16_task_set_dims_stride2x2(
+    ne16_task_t *task, const uint32_t h_in, const uint32_t w_in,
+    const uint32_t k_in, const uint32_t w_in_stride, const uint32_t k_in_stride,
+    const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
+    const uint32_t w_out_stride, const uint32_t k_out_stride,
+    const uint8_t h_ker, const uint8_t w_ker, const uint8_t padding_top,
+    const uint8_t padding_bottom, const uint8_t padding_right,
+    const uint8_t padding_left);
+
+#endif // !__NE16_TASK_H__
