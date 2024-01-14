@@ -52,7 +52,7 @@ class Padding(BaseModel):
 class IntegerType(BaseModel):
     name: str
 
-    @model_validator(mode="before")
+    @model_validator(mode="before")  # type: ignore
     @classmethod
     def model_validate_before(cls, data: Any) -> Dict:
         if isinstance(data, str):
@@ -122,5 +122,5 @@ class IntegerType(BaseModel):
             exclude_none: bool = False,
             round_trip: bool = False,
             warnings: bool = True,
-        ) -> str:
+        ) -> dict[str, Any]:
             ...
