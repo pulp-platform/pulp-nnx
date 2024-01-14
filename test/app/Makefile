@@ -40,6 +40,8 @@ INC_DIRS += $(ACC_DIR)/hal $(ACC_DIR)/gvsoc $(ACC_DIR)/bsp
 INC_DIRS += gen/inc
 
 INC_FLAGS += $(addprefix -I,$(INC_DIRS))
+APP_CFLAGS += $(INC_FLAGS)
+
 
 # Source files
 
@@ -58,7 +60,10 @@ APP_SRCS += $(wildcard gen/src/*.c)
 
 # Flags
 
-APP_CFLAGS += $(INC_FLAGS) -O2 -w -Wall -Werror -flto
+ACCELERATOR_UPPERCASE := $(shell echo $(ACCELERATOR) | tr [:lower:] [:upper:])
+APP_CFLAGS += -DNNX_ACCELERATOR=$(ACCELERATOR) -DNNX_$(ACCELERATOR_UPPERCASE)
+
+APP_CFLAGS += -O2 -w -Wall -Werror -flto
 APP_LDFLAGS += -flto
 
 include $(RULES_DIR)/pmsis_rules.mk
