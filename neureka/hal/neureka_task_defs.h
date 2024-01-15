@@ -89,7 +89,8 @@
 #define NEUREKA_FLAG_ACTIVATION_PREFETCH (1 << 10)
 #define NEUREKA_FLAG_USE_WMEM (1 << 9)
 #define NEUREKA_FLAG_USE_TCDM (0 << 9)
-#define NEUREKA_FLAG_STRIDE_2x2 (1 << 8) // TODO: Check if the `STRIDED` mode is still `STRIDE_2x2`
+#define NEUREKA_FLAG_STRIDE_2x2                                                \
+  (1 << 8) // TODO: Check if the `STRIDED` mode is still `STRIDE_2x2`
 #define NEUREKA_FLAG_LINEAR_MODE (1 << 7)
 #define NEUREKA_FLAG_MODE_3x3 (0 << 5)
 #define NEUREKA_FLAG_MODE_3x3_DW (1 << 5)

@@ -195,8 +195,9 @@ void ne16_task_set_dims(ne16_task_t *task, const uint32_t w_in,
                         const uint32_t k_in, const uint32_t w_in_stride,
                         const uint32_t k_in_stride, const uint32_t h_out,
                         const uint32_t w_out, const uint32_t k_out,
-                        const uint32_t w_out_stride, const uint32_t k_out_stride,
-                        const uint8_t padding_top, const uint8_t padding_bottom,
+                        const uint32_t w_out_stride,
+                        const uint32_t k_out_stride, const uint8_t padding_top,
+                        const uint8_t padding_bottom,
                         const uint8_t padding_right,
                         const uint8_t padding_left) {
   ne16_task_set_strides(task, k_in, w_in_stride, k_in_stride, w_out_stride,
@@ -220,7 +221,8 @@ void ne16_task_set_dims_stride2x2(
   ne16_task_set_strides(task, k_in, w_in_stride, k_in_stride, w_out_stride,
                         k_out_stride);
   ne16_task_set_counters(task, k_in, h_out > 1 ? 3 : 1, w_out > 1 ? 3 : 1,
-                         k_out, h_in + padding_top >= 5 ? 0 : padding_bottom, 0);
+                         k_out, h_in + padding_top >= 5 ? 0 : padding_bottom,
+                         0);
 
   const uint8_t padding_bottom_new =
       (h_in + padding_top - h_ker) % stride == 0 ? 0 : padding_bottom;

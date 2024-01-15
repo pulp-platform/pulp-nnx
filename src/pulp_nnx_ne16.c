@@ -88,8 +88,8 @@ static inline uint32_t _get_tile_ptr(uint32_t ptr, int i, int j, int size_i,
 }
 
 void ne16_nnx_dispatch_stride2x2(
-    ne16_dev_t *dev, ne16_task_t *task, const uint32_t w_in, const uint32_t k_in,
-    const uint32_t w_in_stride, const uint32_t k_in_stride,
+    ne16_dev_t *dev, ne16_task_t *task, const uint32_t w_in,
+    const uint32_t k_in, const uint32_t w_in_stride, const uint32_t k_in_stride,
     const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
     const uint32_t w_out_stride, const uint32_t k_out_stride,
     const uint8_t h_ker, const uint8_t w_ker) {

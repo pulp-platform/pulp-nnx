@@ -43,7 +43,8 @@ void neureka_nnx_dispatch_wait(neureka_dev_t *dev);
 /** neureka_nnx_dispatch
  *
  * Dispatch a task to the accelerator.
- * Fails with return code 1 if the task cannot be dispatched. Otherwise returns 0.
+ * Fails with return code 1 if the task cannot be dispatched. Otherwise returns
+ * 0.
  */
 int neureka_nnx_dispatch(neureka_dev_t *dev, neureka_task_t *task);
 
@@ -59,19 +60,18 @@ int neureka_nnx_resolve_check(neureka_dev_t *dev, neureka_task_t *task);
  */
 void neureka_nnx_resolve_wait(neureka_dev_t *dev, neureka_task_t *task);
 
-
 /* Additional helper functions */
 
 /** neureka_nnx_dispatch_stride2x2
  *
- * It uses Neureka's 2x2 strided mode which reduces the number of writes Neureka does.
- * This mode doesn't stride the Neureka's subtile input pointer, so we have to
- * tile the tile to the subtile's spatial dimensions (in this case 3x3 output).
- * Works only if the k_out is divisible by 2.
+ * It uses Neureka's 2x2 strided mode which reduces the number of writes Neureka
+ * does. This mode doesn't stride the Neureka's subtile input pointer, so we
+ * have to tile the tile to the subtile's spatial dimensions (in this case 3x3
+ * output). Works only if the k_out is divisible by 2.
  */
 void neureka_nnx_dispatch_stride2x2(
-    neureka_dev_t *dev, neureka_task_t *task, const uint32_t w_in, const uint32_t k_in,
-    const uint32_t w_in_stride, const uint32_t k_in_stride,
+    neureka_dev_t *dev, neureka_task_t *task, const uint32_t w_in,
+    const uint32_t k_in, const uint32_t w_in_stride, const uint32_t k_in_stride,
     const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
     const uint32_t w_out_stride, const uint32_t k_out_stride,
     const uint8_t h_ker, const uint8_t w_ker);

@@ -105,17 +105,17 @@ typedef neureka_siracusa_conf_t nnx_bsp_conf_t;
 
 static void task_prepare(nnx_task_t *task) {
   nnx_task_init(task, WEIGHT_HEIGHT, GROUPS > 1, INPUT_BITS, OUTPUT_BITS,
-                 WEIGHT_BITS, weightOffsetModeLayerWise, WEIGHT_OFFSET,
-                 (neureka_quant_t){.shift_amount = OUTSHIFT,
-                                .mode = quantMode8Bit,
-                                .function = HAS_RELU ? quantFunctionRelu
-                                                     : quantFunctionIdentity,
-                                .flag_rounding = nnxTaskFlagFalse},
-                 (neureka_norm_t){.mode = normMode8Bit,
-                               .flag_bias = HAS_BIAS ? nnxTaskFlagTrue
-                                                     : nnxTaskFlagFalse,
-                               .flag_shift = nnxTaskFlagFalse},
-                 STRIDE_HEIGHT);
+                WEIGHT_BITS, weightOffsetModeLayerWise, WEIGHT_OFFSET,
+                (neureka_quant_t){.shift_amount = OUTSHIFT,
+                                  .mode = quantMode8Bit,
+                                  .function = HAS_RELU ? quantFunctionRelu
+                                                       : quantFunctionIdentity,
+                                  .flag_rounding = nnxTaskFlagFalse},
+                (neureka_norm_t){.mode = normMode8Bit,
+                                 .flag_bias = HAS_BIAS ? nnxTaskFlagTrue
+                                                       : nnxTaskFlagFalse,
+                                 .flag_shift = nnxTaskFlagFalse},
+                STRIDE_HEIGHT);
 
   if (STRIDE_WIDTH == 2 && STRIDE_HEIGHT == 2) {
     nnx_task_set_dims_stride2x2(
@@ -125,18 +125,18 @@ static void task_prepare(nnx_task_t *task) {
         PADDING_BOTTOM, PADDING_RIGHT, PADDING_LEFT);
   } else {
     nnx_task_set_dims(task, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH,
-                       INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH,
-                       OUTPUT_CHANNEL, OUTPUT_WIDTH, OUTPUT_CHANNEL, PADDING_TOP,
-                       PADDING_BOTTOM, PADDING_RIGHT, PADDING_LEFT);
+                      INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH,
+                      OUTPUT_CHANNEL, OUTPUT_WIDTH, OUTPUT_CHANNEL, PADDING_TOP,
+                      PADDING_BOTTOM, PADDING_RIGHT, PADDING_LEFT);
   }
 
   nnx_task_set_ptrs(task, (uint32_t)input, INPUT_WIDTH, INPUT_CHANNEL,
-                     INPUT_BITS, PADDING_TOP, PADDING_LEFT, (uint32_t)output,
-                     (uint32_t)weight, (uint32_t)scale, NULL,
+                    INPUT_BITS, PADDING_TOP, PADDING_LEFT, (uint32_t)output,
+                    (uint32_t)weight, (uint32_t)scale, NULL,
 #if HAS_BIAS == 1
-                     (uint32_t)bias
+                    (uint32_t)bias
 #else
-                     NULL
+                    NULL
 #endif
   );
 }
@@ -145,7 +145,7 @@ static void task_execute(nnx_task_t *task) {
   nnx_dev_t *dev = nnx_bsp_get_dev();
 
   nnx_gvsoc_log_activate(dev, NNX_GVSOC_LOG_LEVEL_CONFIG,
-                          NNX_GVSOC_LOG_FORMAT_HEXADECIMAL);
+                         NNX_GVSOC_LOG_FORMAT_HEXADECIMAL);
 
   nnx_bsp_conf_t conf = {.max_stall = 8};
   nnx_init(dev, &conf);
@@ -154,9 +154,9 @@ static void task_execute(nnx_task_t *task) {
 
   if (STRIDE_WIDTH == 2 && STRIDE_HEIGHT == 2) {
     nnx_dispatch_stride2x2(dev, task, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH,
-                                INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH,
-                                OUTPUT_CHANNEL, OUTPUT_WIDTH, OUTPUT_CHANNEL,
-                                WEIGHT_HEIGHT, WEIGHT_WIDTH);
+                           INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH,
+                           OUTPUT_CHANNEL, OUTPUT_WIDTH, OUTPUT_CHANNEL,
+                           WEIGHT_HEIGHT, WEIGHT_WIDTH);
   } else {
     nnx_dispatch(dev, task);
   }

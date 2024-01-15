@@ -122,45 +122,47 @@ typedef struct neureka_task_t {
 } neureka_task_t;
 
 void neureka_task_init(neureka_task_t *task, const uint8_t kernel_shape,
-                    const uint8_t depthwise, const uint8_t input_bits,
-                    const uint8_t output_bits, const uint8_t weights_bits,
-                    const neureka_weight_offset_mode_e weights_offset_mode,
-                    const uint32_t weights_offset_factor, neureka_quant_t quant,
-                    neureka_norm_t norm, const uint8_t stride);
+                       const uint8_t depthwise, const uint8_t input_bits,
+                       const uint8_t output_bits, const uint8_t weights_bits,
+                       const neureka_weight_offset_mode_e weights_offset_mode,
+                       const uint32_t weights_offset_factor,
+                       neureka_quant_t quant, neureka_norm_t norm,
+                       const uint8_t stride);
 uint32_t neureka_get_tile_padding(uint32_t padding, uint32_t i_height,
-                               uint32_t i_width, uint32_t n_height,
-                               uint32_t n_width);
+                                  uint32_t i_width, uint32_t n_height,
+                                  uint32_t n_width);
 uint32_t neureka_pad_ptr(uint32_t ptr, const uint32_t width,
-                      const uint32_t channel, const uint8_t bits,
-                      const uint8_t padding_top, const uint8_t padding_left);
-void neureka_task_set_ptrs(neureka_task_t *task, uint32_t input_ptr, uint32_t w_in,
-                        uint32_t k_in, uint8_t bits_in, uint8_t padding_top,
-                        uint8_t padding_left, uint32_t output_ptr,
-                        uint32_t weights_ptr, uint32_t scale_ptr,
-                        uint32_t shift_ptr, uint32_t bias_ptr);
+                         const uint32_t channel, const uint8_t bits,
+                         const uint8_t padding_top, const uint8_t padding_left);
+void neureka_task_set_ptrs(neureka_task_t *task, uint32_t input_ptr,
+                           uint32_t w_in, uint32_t k_in, uint8_t bits_in,
+                           uint8_t padding_top, uint8_t padding_left,
+                           uint32_t output_ptr, uint32_t weights_ptr,
+                           uint32_t scale_ptr, uint32_t shift_ptr,
+                           uint32_t bias_ptr);
 void neureka_task_set_strides(neureka_task_t *task, const uint32_t k_in,
-                           const uint32_t w_in_stride,
-                           const uint32_t k_in_stride,
-                           const uint32_t w_out_stride,
-                           const uint32_t k_out_stride);
+                              const uint32_t w_in_stride,
+                              const uint32_t k_in_stride,
+                              const uint32_t w_out_stride,
+                              const uint32_t k_out_stride);
 void neureka_task_set_counters(neureka_task_t *task, const uint32_t k_in,
-                            const uint32_t h_out, const uint32_t w_out,
-                            const uint32_t k_out, const uint8_t padding_bottom,
-                            const uint8_t padding_right);
+                               const uint32_t h_out, const uint32_t w_out,
+                               const uint32_t k_out,
+                               const uint8_t padding_bottom,
+                               const uint8_t padding_right);
 void neureka_task_set_padding(neureka_task_t *task, const uint8_t top,
-                           const uint8_t bottom, const uint8_t left,
-                           const uint8_t right, const uint8_t value);
+                              const uint8_t bottom, const uint8_t left,
+                              const uint8_t right, const uint8_t value);
 void neureka_task_set_mask_filter(neureka_task_t *task, const uint8_t top,
-                               const uint8_t right, const uint8_t bottom,
-                               const uint8_t left);
-void neureka_task_set_dims(neureka_task_t *task, const uint32_t w_in,
-                        const uint32_t k_in, const uint32_t w_in_stride,
-                        const uint32_t k_in_stride, const uint32_t h_out,
-                        const uint32_t w_out, const uint32_t k_out,
-                        const uint32_t w_out_stride, const uint32_t k_out_stride,
-                        const uint8_t padding_top, const uint8_t padding_bottom,
-                        const uint8_t padding_right,
-                        const uint8_t padding_left);
+                                  const uint8_t right, const uint8_t bottom,
+                                  const uint8_t left);
+void neureka_task_set_dims(
+    neureka_task_t *task, const uint32_t w_in, const uint32_t k_in,
+    const uint32_t w_in_stride, const uint32_t k_in_stride,
+    const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
+    const uint32_t w_out_stride, const uint32_t k_out_stride,
+    const uint8_t padding_top, const uint8_t padding_bottom,
+    const uint8_t padding_right, const uint8_t padding_left);
 void neureka_task_set_dims_stride2x2(
     neureka_task_t *task, const uint32_t h_in, const uint32_t w_in,
     const uint32_t k_in, const uint32_t w_in_stride, const uint32_t k_in_stride,

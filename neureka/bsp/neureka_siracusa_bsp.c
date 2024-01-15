@@ -23,8 +23,9 @@
 
 #define NEUREKA_SIRACUSA_CLUSTER_CTRL_BASE_ADDR (0x00200000)
 #define NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_OFFS 0x18
-#define NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_ADDR                                       \
-  (NEUREKA_SIRACUSA_CLUSTER_CTRL_BASE_ADDR + NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_OFFS)
+#define NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_ADDR                                \
+  (NEUREKA_SIRACUSA_CLUSTER_CTRL_BASE_ADDR +                                   \
+   NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_OFFS)
 #define NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_MASK_CG_EN 0x800
 #define NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_MASK_HCI_PRIO 0x100
 #define NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_MASK_HCI_MAXSTALL 0xff
@@ -89,4 +90,6 @@ static const neureka_dev_t neureka_siracusa_dev = {
     .hwpe_dev = (struct hwpe_dev_t){
         .base_addr = (volatile uint32_t *)NEUREKA_SIRACUSA_BASE_ADDR}};
 
-const neureka_dev_t *neureka_siracusa_get_dev() { return &neureka_siracusa_dev; }
+const neureka_dev_t *neureka_siracusa_get_dev() {
+  return &neureka_siracusa_dev;
+}
