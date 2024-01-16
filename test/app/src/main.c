@@ -23,6 +23,15 @@
 #include "layer_util.h"
 #include "nnx_layer.h"
 #include "output.h"
+#include "input.h"
+#include "bias.h"
+#include "scale.h"
+#include "weight.h"
+
+#define memcpy(dst, src, size) \
+for (int i = 0; i < size; i++) { \
+  dst[i] = src[i]; \
+}
 
 int main() {
   struct pi_device cl_dev;
@@ -34,6 +43,11 @@ int main() {
 
   printf("\n");
   layer_info();
+
+  memcpy(input, input_l2, INPUT_SIZE);
+  memcpy(bias, bias_l2, BIAS_SIZE);
+  memcpy(scale, scale_l2, SCALE_SIZE);
+  memcpy(weight, weight_l2, WEIGHT_SIZE);
 
   pi_cluster_conf_init(&cl_conf);
   pi_open_from_conf(&cl_dev, &cl_conf);
@@ -49,6 +63,7 @@ int main() {
   printf("Test %s finished\n", TEST_NAME);
 
   printf("\n");
+  memcpy(output, output_l2, OUTPUT_SIZE);
   check_output();
 
   return 0;
