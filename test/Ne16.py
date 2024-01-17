@@ -84,7 +84,7 @@ class Ne16:
         Cin_minor_bytes = int(np.ceil(Cin_minor / 8))
 
         weight = weight.reshape(Cout, Cin_major, bits, H * W, Cin_minor_bytes, 1)
-        weight = np.unpackbits(weight, axis=-1, count=bits, bitorder="little")
+        weight = np.unpackbits(weight, axis=-1, count=8, bitorder="little")
         weight = weight.reshape(Cout, Cin_major, bits, H * W, Cin_minor)
         weight = weight.transpose(0, 1, 4, 3, 2)
         weight = np.packbits(weight, axis=-1, bitorder="little")
