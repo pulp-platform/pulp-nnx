@@ -76,7 +76,6 @@ typedef neureka_siracusa_conf_t nnx_bsp_conf_t;
 
 #define nnx_task_init neureka_task_init
 #define nnx_task_set_dims neureka_task_set_dims
-#define nnx_task_set_dims_stride2x2 neureka_task_set_dims_stride2x2
 #define nnx_task_set_ptrs neureka_task_set_ptrs
 
 #define NNX_GVSOC_LOG_LEVEL NEUREKA_GVSOC_LOG_LEVEL_ALL
@@ -88,7 +87,6 @@ typedef neureka_siracusa_conf_t nnx_bsp_conf_t;
 
 #define nnx_init neureka_nnx_init
 #define nnx_dispatch_wait neureka_nnx_dispatch_wait
-#define nnx_dispatch_stride2x2 neureka_nnx_dispatch_stride2x2
 #define nnx_dispatch neureka_nnx_dispatch
 #define nnx_resolve_wait neureka_nnx_resolve_wait
 #define nnx_term neureka_nnx_term
@@ -117,18 +115,18 @@ static void task_prepare(nnx_task_t *task) {
                    .flag_shift = nnxTaskFlagFalse},
       STRIDE_HEIGHT);
 
-  if (STRIDE_WIDTH == 2 && STRIDE_HEIGHT == 2) {
+#if STRIDE_HEIGHT == 2 && STRIDE_WIDTH == 2
     nnx_task_set_dims_stride2x2(
         task, INPUT_HEIGHT, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH,
         INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL,
         OUTPUT_WIDTH, OUTPUT_CHANNEL, WEIGHT_HEIGHT, WEIGHT_WIDTH, PADDING_TOP,
         PADDING_BOTTOM, PADDING_RIGHT, PADDING_LEFT);
-  } else {
+#else
     nnx_task_set_dims(task, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH,
                       INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH,
                       OUTPUT_CHANNEL, OUTPUT_WIDTH, OUTPUT_CHANNEL, PADDING_TOP,
                       PADDING_BOTTOM, PADDING_RIGHT, PADDING_LEFT);
-  }
+#endif
 
   nnx_task_set_ptrs(task, (uint32_t)input, INPUT_WIDTH, INPUT_CHANNEL,
                     INPUT_BITS, PADDING_TOP, PADDING_LEFT, (uint32_t)output,
@@ -151,14 +149,14 @@ static void task_execute(nnx_task_t *task) {
 
   nnx_dispatch_wait(dev);
 
-  if (STRIDE_WIDTH == 2 && STRIDE_HEIGHT == 2) {
+#if STRIDE_HEIGHT == 2 && STRIDE_WIDTH == 2
     nnx_dispatch_stride2x2(dev, task, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH,
                            INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH,
                            OUTPUT_CHANNEL, OUTPUT_WIDTH, OUTPUT_CHANNEL,
                            WEIGHT_HEIGHT, WEIGHT_WIDTH);
-  } else {
+#else
     nnx_dispatch(dev, task);
-  }
+#endif
 
   nnx_resolve_wait(dev, task);
 
