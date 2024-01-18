@@ -109,16 +109,13 @@ def assert_message(
 
 
 def test(
-    path: str,
+    nnxTestAndName: Tuple[NnxTest, str],
     timeout: int,
     nnxName: str,
     nnxCls: Union[Type[Ne16], Type[Neureka]],
-    nnxTestConfCls: Type[NnxTestConf],
 ):
-    test_name = path
-    test = NnxTest.load(nnxTestConfCls, path)
-
-    NnxTestHeaderGenerator(nnxCls.weight_unroll).generate(test_name, test)
+    nnxTest, nnxTestName = nnxTestAndName
+    NnxTestHeaderGenerator(nnxCls.weight_unroll).generate(nnxTestName, nnxTest)
 
     Path("app/src/nnx_layer.c").touch()
     cmd = f"make -C app all run platform=gvsoc"
@@ -126,18 +123,18 @@ def test(
         cmd=cmd, timeout=timeout, envflags={"ACCELERATOR": nnxName}
     )
 
-    assert passed, assert_message(msg, test_name, cmd, stdout, stderr)
+    assert passed, assert_message(msg, nnxTestName, cmd, stdout, stderr)
 
     match_success = re.search(r"> Success! No errors found.", stdout)
     match_fail = re.search(r"> Failure! Found (\d*)/(\d*) errors.", stdout)
 
     assert match_success or match_fail, assert_message(
-        "No regexes matched.", test_name, cmd, stdout
+        "No regexes matched.", nnxTestName, cmd, stdout
     )
 
     assert not match_fail, assert_message(
         f"Errors found: {match_fail.group(1)}/{match_fail.group(2)}",
-        test_name,
+        nnxTestName,
         cmd,
         stdout,
     )

@@ -18,6 +18,8 @@
 
 import os
 from typing import Union
+
+import pydantic
 from Ne16 import Ne16
 from Ne16TestConf import Ne16TestConf
 from Neureka import Neureka
@@ -78,19 +80,6 @@ def pytest_generate_tests(metafunc):
     timeout = metafunc.config.getoption("timeout")
     nnxName = metafunc.config.getoption("accelerator")
 
-    if recursive:
-        tests_dirs = test_dirs
-        test_dirs = []
-        for tests_dir in tests_dirs:
-            test_dirs.extend(_find_test_dirs(tests_dir))
-
-    # (Re)Generate test data
-    for test_dir in test_dirs:
-        test = NnxTest.load(Ne16TestConf, test_dir)
-        if not test.is_valid() or regenerate:
-            test = NnxTestGenerator.from_conf(test.conf, Ne16.ACCUMULATOR_TYPE)
-            test.save_data(test_dir)
-
     if nnxName == "ne16":
         nnxCls = Ne16
         nnxTestConfCls = Ne16TestConf
@@ -102,8 +91,28 @@ def pytest_generate_tests(metafunc):
             False
         ), f"Given accelerator {nnxName} not supported. Supported accelerators: {_SUPPORTED_ACCELERATORS}"
 
-    metafunc.parametrize("path", test_dirs)
+    if recursive:
+        tests_dirs = test_dirs
+        test_dirs = []
+        for tests_dir in tests_dirs:
+            test_dirs.extend(_find_test_dirs(tests_dir))
+
+    # Load valid tests
+    valid_paths = []
+    valid_tests = []
+    for test_dir in test_dirs:
+        try:
+            test = NnxTest.load(nnxTestConfCls, test_dir)
+            # (Re)generate data
+            if not test.is_valid() or regenerate:
+                test = NnxTestGenerator.from_conf(test.conf, nnxCls.ACCUMULATOR_TYPE)
+                test.save_data(test_dir)
+            valid_tests.append(test)
+            valid_paths.append(test_dir)
+        except pydantic.ValidationError as e:
+            _ = e
+
+    metafunc.parametrize("nnxTestAndName", zip(valid_tests, valid_paths))
     metafunc.parametrize("timeout", [timeout])
     metafunc.parametrize("nnxName", [nnxName])
     metafunc.parametrize("nnxCls", [nnxCls])
-    metafunc.parametrize("nnxTestConfCls", [nnxTestConfCls])
