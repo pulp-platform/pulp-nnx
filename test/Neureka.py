@@ -1,4 +1,5 @@
 # Luka Macan <luka.macan@unibo.it>
+# Arpan Suravi Prasad <prasadar@iis.ee.ethz.ch>
 #
 # Copyright 2023 ETH Zurich and University of Bologna
 #
@@ -61,33 +62,49 @@ class Neureka:
         # Reshape into (cout, cinMajor, cinMinor, Flattened spatial, 1)
         # The 1 at the end is required by the unpacking
         cinMajor = int(np.ceil(cin / cinSubtile))
-        cinMinor = cinSubtile
-        weight = weight.reshape(cout, cinMajor, cinMinor, height * width, 1)
+        weight = weight.reshape(cout, cinMajor, cinSubtile, height * width, 1)
 
         # Unpack 'bits' bits in little order, e.g. bits=4: 3 => [1, 1, 0, 0]
-        # (cout, cinMajor, cinMinor, Flattened spatial, Bits)
+        # (cout, cinMajor, cinSubtile, Flattened spatial, Bits)
         weight = np.unpackbits(weight, axis=-1, count=bits, bitorder="little")
 
         # Shuffle bits so that the final shape is:
-        # (cout, cinMajor, Bits, Flattened spatial, cinMinor)
+        # (cout, cinMajor, Bits, Flattened spatial, cinSubtile)
         weight = weight.transpose(0, 1, 4, 3, 2)
 
         # Pack dimensions to fit into weight bandwidth
         if height == 3 and width == 3:
-            # (cout * cinMajor * Bits, H * W * cinMinor)
-            weight = weight.reshape(-1, height * width * cinMinor)
+            # (cout * cinMajor * Bits, H * W * cinSubtile)
+            weight = weight.reshape(-1, height * width * cinSubtile)
+            # Pad only the last dimension to weight bandwidth size
+            # (-1, Weight Bandwidth)
+            weight = np.pad(
+                weight,
+                ((0, 0), (0, Neureka._WEIGHT_BANDWIDTH - weight.shape[-1])),
+                "constant",
+                constant_values=0,
+            )
         elif height == 1 and width == 1:
-            # (cout * cinMajor, Bits * H * W * cinMinor)
-            weight = weight.reshape(-1, bits * height * width * cinMinor)
-
-        # Pad only the last dimension to weight bandwidth size
-        # (-1, Weight Bandwidth)
-        weight = np.pad(
-            weight,
-            ((0, 0), (0, Neureka._WEIGHT_BANDWIDTH - weight.shape[-1])),
-            "constant",
-            constant_values=0,
-        )
+            # Tile cinSubtile into tiles of size 4
+            # (cout, cinMajor, Bits, Flattened spatial, cinSubtileMajor, cinSubtileTile)
+            weight = weight.reshape(
+                cout, cinMajor, bits, height * width, cinSubtile // 4, 4
+            )  # cout, cinMajor, bits, 1, 8, 4
+            # Pad bits to 8
+            if bits < 8:
+                # (cout, cinMajor, PaddedBits, Flattened spatial, cinSubtileMajor, cinSubtileTile)
+                weight = np.pad(
+                    weight,
+                    ((0, 0), (0, 0), (0, 8 - bits), (0, 0), (0, 0), (0, 0)),
+                    mode="constant",
+                    constant_values=0,
+                )
+            # (cout, cinMajor, Flattened spatial, cinSubtileMajor, PaddedBits, cinSubtileTile)
+            weight = weight.transpose(0, 1, 3, 4, 2, 5)
+            # (-1, Weight Bandwidth)
+            weight = weight.reshape(
+                cout * cinMajor, Neureka._WEIGHT_BANDWIDTH
+            )  # cout*cinMajor, 256b
 
         # Prepare for packing
         # (-1, Weight Bandwidth Bytes, 8)
@@ -109,7 +126,7 @@ class Neureka:
         height: int,
         width: int,
     ) -> npt.NDArray[np.uint8]:
-        """Reverse of weight_roll"""
+        """Reverse of weight_unroll"""
         cinSubtile = (
             Neureka._CIN_SUBTILE_3x3 if height == 3 else Neureka._CIN_SUBTILE_1x1
         )
@@ -120,12 +137,17 @@ class Neureka:
         weight = weight.reshape(-1, weightBandwidthBytes, 1)
         weight = np.unpackbits(weight, axis=-1, count=8, bitorder="little")
         weight = weight.reshape(-1, Neureka._WEIGHT_BANDWIDTH)
+
         if height == 3 and width == 3:
             weight = weight[:, : height * width * cinMinor]
+            weight = weight.reshape(
+                cout, cinMajor, bits, height * width, cinMinor
+            ).transpose(0, 1, 4, 3, 2)
         elif height == 1 and width == 1:
-            weight = weight[:, : bits * height * width * cinMinor]
-        weight = weight.reshape(cout, cinMajor, bits, height * width, cinMinor)
-        weight = weight.transpose(0, 1, 4, 3, 2)
+            weight = weight[:, : height * width * cinMinor * 8]
+            weight = weight.reshape(cout, cinMajor, cinMinor // 4, 8, 4).transpose(
+                0, 1, 2, 4, 3
+            )
         weight = np.packbits(weight, axis=-1, bitorder="little")
         weight = weight.reshape(cout, cinMajor * cinMinor, height, width)
         weight = weight[:, :cin, :, :]
