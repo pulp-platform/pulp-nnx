@@ -19,6 +19,7 @@
 import os
 from typing import Union
 
+import pytest
 import pydantic
 from Ne16 import Ne16
 from Ne16TestConf import Ne16TestConf
@@ -98,8 +99,7 @@ def pytest_generate_tests(metafunc):
             test_dirs.extend(_find_test_dirs(tests_dir))
 
     # Load valid tests
-    valid_paths = []
-    valid_tests = []
+    nnxTestAndNames = []
     for test_dir in test_dirs:
         try:
             test = NnxTest.load(nnxTestConfCls, test_dir)
@@ -107,12 +107,12 @@ def pytest_generate_tests(metafunc):
             if not test.is_valid() or regenerate:
                 test = NnxTestGenerator.from_conf(test.conf, nnxCls.ACCUMULATOR_TYPE)
                 test.save_data(test_dir)
-            valid_tests.append(test)
-            valid_paths.append(test_dir)
+            nnxTestAndNames.append((test, test_dir))
         except pydantic.ValidationError as e:
             _ = e
+            nnxTestAndNames.append(pytest.param((None, test_dir), marks=pytest.mark.skipif(True, reason=f"Invalid test {test_dir}: {e.errors}")))
 
-    metafunc.parametrize("nnxTestAndName", zip(valid_tests, valid_paths))
+    metafunc.parametrize("nnxTestAndName", nnxTestAndNames)
     metafunc.parametrize("timeout", [timeout])
     metafunc.parametrize("nnxName", [nnxName])
     metafunc.parametrize("nnxCls", [nnxCls])
