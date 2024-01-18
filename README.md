@@ -101,7 +101,7 @@ The library will follow the [Semantic Versioning](https://semver.org/).
 
 * Luka Macan <[luka.macan@unibo.it](mailto:luka.macan@unibo.it)>
 * Francesco Conti <[fconti@unibo.it](mailto:fconti@unibo.it)>
-* Arpan Prasad <[prasadar@iis.ee.ethz.ch](mailto:prasadar@iis.ee.ethz.ch)>
+* Arpan Suravi Prasad <[prasadar@iis.ee.ethz.ch](mailto:prasadar@iis.ee.ethz.ch)>
 
 ## License
 
