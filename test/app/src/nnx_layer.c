@@ -43,7 +43,7 @@ typedef ne16_pulp_conf_t nnx_bsp_conf_t;
 #define nnx_task_set_dims_stride2x2 ne16_task_set_dims_stride2x2
 #define nnx_task_set_ptrs ne16_task_set_ptrs
 
-#define NNX_GVSOC_LOG_LEVEL NE16_GVSOC_LOG_LEVEL_CONFIG
+#define NNX_GVSOC_LOG_LEVEL NE16_GVSOC_LOG_LEVEL_ALL
 #define NNX_GVSOC_LOG_FORMAT NE16_GVSOC_LOG_FORMAT_HEXADECIMAL
 #define nnx_gvsoc_log_activate ne16_gvsoc_log_activate
 #define nnx_gvsoc_log_deactivate ne16_gvsoc_log_deactivate
@@ -139,9 +139,6 @@ static void task_prepare(nnx_task_t *task) {
                     NULL
 #endif
   );
-
-  printf("input addr: @%p\n", input);
-  printf("task input addr: @%p\n", task->data.infeat_ptr);
 }
 
 static void task_execute(nnx_task_t *task) {

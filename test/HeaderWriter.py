@@ -135,6 +135,7 @@ class HeaderWriter:
         render = ""
         render += self.includes
         render += self.render_vector(name, "extern " + _type, size)
+        render += self.render_vector(name + "_l2", "extern " + _type, size)
 
         if golden is not None:
             render += self.render_vector("golden_" + name, "extern " + _type, size)
@@ -155,10 +156,11 @@ class HeaderWriter:
         render = ""
         render += f'#include "{name}.h"\n\n'
         render += self.render_vector(name, "PI_L1 " + _type, size, init=init)
+        render += self.render_vector(name + "_l2", "PI_L2 " + _type, size, init=init)
 
         if golden is not None:
             render += self.render_vector(
-                "golden_" + name, "PI_L1 " + _type, size, init=golden
+                "golden_" + name, "PI_L2 " + _type, size, init=golden
             )
             render += self.check(name)
 
