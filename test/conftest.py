@@ -18,7 +18,14 @@
 
 import os
 from typing import Union
-from Ne16TestClasses import Ne16Test, Ne16TestGenerator
+from Ne16 import Ne16
+from Ne16TestConf import Ne16TestConf
+from Neureka import Neureka
+from NeurekaTestConf import NeurekaTestConf
+from NnxTestClasses import NnxTest, NnxTestGenerator
+
+
+_SUPPORTED_ACCELERATORS = ["ne16", "neureka"]
 
 
 def pytest_addoption(parser):
@@ -40,6 +47,13 @@ def pytest_addoption(parser):
         help="Recursively search for tests in given test directories.",
     )
     parser.addoption(
+        "-A",
+        "--accelerator",
+        choices=_SUPPORTED_ACCELERATORS,
+        default="ne16",
+        help="Choose an accelerator to test. Default: ne16",
+    )
+    parser.addoption(
         "--regenerate",
         action="store_true",
         default=False,
@@ -54,7 +68,7 @@ def pytest_addoption(parser):
 
 
 def _find_test_dirs(path: Union[str, os.PathLike]):
-    return [dirpath for dirpath, _, _ in os.walk(path) if Ne16Test.is_test_dir(dirpath)]
+    return [dirpath for dirpath, _, _ in os.walk(path) if NnxTest.is_test_dir(dirpath)]
 
 
 def pytest_generate_tests(metafunc):
@@ -62,6 +76,7 @@ def pytest_generate_tests(metafunc):
     recursive = metafunc.config.getoption("recursive")
     regenerate = metafunc.config.getoption("regenerate")
     timeout = metafunc.config.getoption("timeout")
+    nnxName = metafunc.config.getoption("accelerator")
 
     if recursive:
         tests_dirs = test_dirs
@@ -71,10 +86,24 @@ def pytest_generate_tests(metafunc):
 
     # (Re)Generate test data
     for test_dir in test_dirs:
-        test = Ne16Test.load(test_dir)
+        test = NnxTest.load(Ne16TestConf, test_dir)
         if not test.is_valid() or regenerate:
-            test = Ne16TestGenerator.from_conf(test.conf)
+            test = NnxTestGenerator.from_conf(test.conf, Ne16.ACCUMULATOR_TYPE)
             test.save_data(test_dir)
+
+    if nnxName == "ne16":
+        nnxCls = Ne16
+        nnxTestConfCls = Ne16TestConf
+    elif nnxName == "neureka":
+        nnxCls = Neureka
+        nnxTestConfCls = NeurekaTestConf
+    else:
+        assert (
+            False
+        ), f"Given accelerator {nnxName} not supported. Supported accelerators: {_SUPPORTED_ACCELERATORS}"
 
     metafunc.parametrize("path", test_dirs)
     metafunc.parametrize("timeout", [timeout])
+    metafunc.parametrize("nnxName", [nnxName])
+    metafunc.parametrize("nnxCls", [nnxCls])
+    metafunc.parametrize("nnxTestConfCls", [nnxTestConfCls])

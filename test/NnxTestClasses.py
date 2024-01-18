@@ -17,18 +17,18 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
-from typing import List, Union, Optional, Set, Tuple
+from typing import Callable, Union, Optional, Set, Tuple, Type
 import torch
 import numpy as np
+import numpy.typing as npt
 import torch.nn.functional as F
 import os
-from Ne16 import Ne16
 from HeaderWriter import HeaderWriter
-from TestClasses import implies, KernelShape, Padding, Stride, IntegerType
-from pydantic import BaseModel, field_validator, model_validator, PositiveInt
+from TestClasses import IntegerType, Stride, Padding, KernelShape, implies
+from pydantic import BaseModel, PositiveInt
 
 
-class Ne16TestConf(BaseModel):
+class NnxTestConf(BaseModel):
     in_height: PositiveInt
     in_width: PositiveInt
     in_channel: PositiveInt
@@ -46,122 +46,8 @@ class Ne16TestConf(BaseModel):
     has_bias: bool
     has_relu: bool
 
-    @field_validator("kernel_shape")
-    @classmethod
-    def check_valid_kernel_shape(cls, v: KernelShape) -> KernelShape:
-        assert v == KernelShape(height=1, width=1) or v == KernelShape(
-            height=3, width=3
-        ), f"Unsupported kernel shape {v}. Supported 1x1 and 3x3."
-        return v
 
-    @field_validator("stride")
-    @classmethod
-    def check_valid_stride(cls, v: Stride) -> Stride:
-        assert v == Stride(height=1, width=1) or v == Stride(
-            height=2, width=2
-        ), f"Unsupported stride {v}. Supported 1x1 and 2x2."
-        return v
-
-    @staticmethod
-    def _check_type(
-        name: str, _type: IntegerType, allowed_types: List[Union[IntegerType, str]]
-    ) -> None:
-        assert (
-            _type in allowed_types
-        ), f"Unsupported {name} type {_type}. Supported types: {allowed_types}"
-
-    @field_validator("in_type")
-    @classmethod
-    def check_valid_in_type(cls, v: IntegerType) -> IntegerType:
-        Ne16TestConf._check_type("in_type", v, ["uint8"])
-        return v
-
-    @field_validator("out_type")
-    @classmethod
-    def check_valid_out_type(cls, v: IntegerType) -> IntegerType:
-        Ne16TestConf._check_type("out_type", v, ["uint8", "int8"])
-        return v
-
-    @field_validator("weight_type")
-    @classmethod
-    def check_valid_weight_type(cls, v: IntegerType) -> IntegerType:
-        Ne16TestConf._check_type("weight_type", v, ["int8"])
-        return v
-
-    @field_validator("scale_type")
-    @classmethod
-    def check_valid_scale_type(cls, v: Optional[IntegerType]) -> Optional[IntegerType]:
-        if v is not None:
-            Ne16TestConf._check_type("scale_type", v, ["uint8", "uint32"])
-        return v
-
-    @field_validator("bias_type")
-    @classmethod
-    def check_valid_bias_type(cls, v: Optional[IntegerType]) -> Optional[IntegerType]:
-        if v is not None:
-            Ne16TestConf._check_type("bias_type", v, ["int32"])
-        return v
-
-    @model_validator(mode="after")  # type: ignore
-    def check_valid_out_channel_with_stride_2x2(self) -> Ne16TestConf:
-        assert implies(
-            self.stride == Stride(height=2, width=2), self.out_channel % 2 == 0
-        ), f"With stride 2x2 supported only even output channel sizes. Given output channel {self.out_channel}"
-        return self
-
-    @model_validator(mode="after")  # type: ignore
-    def check_valid_depthwise(self) -> Ne16TestConf:
-        assert implies(
-            self.depthwise, self.kernel_shape == KernelShape(height=3, width=3)
-        ), f"Depthwise supported only on 3x3 kernel shape. Given kernel shape {self.kernel_shape}."
-        assert implies(self.depthwise, self.in_channel == self.out_channel), (
-            f"Input and output channel should be the same in a depthwise layer. "
-            f"input channel: {self.in_channel}, output channel: {self.out_channel}"
-        )
-        return self
-
-    @model_validator(mode="after")  # type: ignore
-    def check_valid_padding_with_kernel_shape_1x1(self) -> Ne16TestConf:
-        assert implies(
-            self.kernel_shape == KernelShape(height=1, width=1),
-            self.padding == Padding(top=0, bottom=0, left=0, right=0),
-        ), f"No padding on 1x1 kernel. Given padding {self.padding}"
-        return self
-
-    @field_validator("has_norm_quant")
-    @classmethod
-    def check_valid_has_norm_quant(cls, v: bool) -> bool:
-        assert v == True, f"Untested without has_norm_quant."
-        return v
-
-    @model_validator(mode="after")  # type: ignore
-    def check_valid_norm_quant_types_when_has_norm_qunat(self) -> Ne16TestConf:
-        if self.has_norm_quant:
-            assert self.scale_type is not None, "Scale type was not provided."
-            if self.has_bias:
-                assert self.bias_type is not None, "Bias type was not provided."
-        return self
-
-    @model_validator(mode="after")  # type: ignore
-    def check_valid_out_type_with_flags(self) -> Ne16TestConf:
-        assert implies(
-            not self.has_norm_quant, self.out_type == Ne16.ACCUMULATOR_TYPE
-        ), (
-            f"Without quantization, the output type has to be equal to the "
-            f"accumulator type {Ne16.ACCUMULATOR_TYPE}. Given output type {self.out_type}"
-        )
-        assert implies(
-            self.has_norm_quant,
-            (self.has_relu and not self.out_type._signed)
-            or (not self.has_relu and self.out_type._signed),
-        ), (
-            f"Output type has to be unsigned when there is relu, otherwise signed. "
-            f"Given output type {self.out_type} and has_relu {self.has_relu}"
-        )
-        return self
-
-
-class Ne16Test:
+class NnxTest:
     _CONF_NAME = "conf.json"
     _INPUT_NAME = "input.pt"
     _OUTPUT_NAME = "output.pt"
@@ -172,7 +58,7 @@ class Ne16Test:
 
     def __init__(
         self,
-        conf: Ne16TestConf,
+        conf: NnxTestConf,
         input: Optional[torch.Tensor],
         output: Optional[torch.Tensor],
         weight: Optional[torch.Tensor],
@@ -188,7 +74,7 @@ class Ne16Test:
         self.bias = bias
         self.global_shift = global_shift
 
-    def is_valid(self):
+    def is_valid(self) -> bool:
         return all(
             [
                 self.input is not None,
@@ -203,22 +89,22 @@ class Ne16Test:
     def save_conf(self, path: Union[str, os.PathLike]) -> None:
         os.makedirs(path, exist_ok=True)
 
-        with open(os.path.join(path, Ne16Test._CONF_NAME), "w") as fp:
+        with open(os.path.join(path, NnxTest._CONF_NAME), "w") as fp:
             fp.write(self.conf.model_dump_json(indent=4))
 
     def save_data(self, path: Union[str, os.PathLike]) -> None:
         os.makedirs(path, exist_ok=True)
 
-        torch.save(self.input, os.path.join(path, Ne16Test._INPUT_NAME))
-        torch.save(self.output, os.path.join(path, Ne16Test._OUTPUT_NAME))
-        torch.save(self.weight, os.path.join(path, Ne16Test._WEIGHT_NAME))
+        torch.save(self.input, os.path.join(path, NnxTest._INPUT_NAME))
+        torch.save(self.output, os.path.join(path, NnxTest._OUTPUT_NAME))
+        torch.save(self.weight, os.path.join(path, NnxTest._WEIGHT_NAME))
         if self.scale is not None:
-            torch.save(self.scale, os.path.join(path, Ne16Test._SCALE_NAME))
+            torch.save(self.scale, os.path.join(path, NnxTest._SCALE_NAME))
         if self.bias is not None:
-            torch.save(self.bias, os.path.join(path, Ne16Test._BIAS_NAME))
+            torch.save(self.bias, os.path.join(path, NnxTest._BIAS_NAME))
         if self.global_shift is not None:
             torch.save(
-                self.global_shift, os.path.join(path, Ne16Test._GLOBAL_SHIFT_NAME)
+                self.global_shift, os.path.join(path, NnxTest._GLOBAL_SHIFT_NAME)
             )
 
     def save(self, path: Union[str, os.PathLike]) -> None:
@@ -228,33 +114,33 @@ class Ne16Test:
     @staticmethod
     def is_test_dir(path: Union[str, os.PathLike]) -> bool:
         fileset = set(os.listdir(path))
-        required_fileset = set([Ne16Test._CONF_NAME])
+        required_fileset = set([NnxTest._CONF_NAME])
         return required_fileset.issubset(fileset)
 
     @classmethod
-    def load(cls, path: Union[str, os.PathLike]) -> "Ne16Test":
-        assert Ne16Test.is_test_dir(
+    def load(cls, confCls: Type[NnxTestConf], path: Union[str, os.PathLike]) -> NnxTest:
+        assert NnxTest.is_test_dir(
             path
         ), f"ERROR: Test {path} does not contain the necessary files."
 
-        with open(os.path.join(path, Ne16Test._CONF_NAME), "r") as fp:
-            conf = Ne16TestConf.model_validate_json(fp.read())
+        with open(os.path.join(path, NnxTest._CONF_NAME), "r") as fp:
+            conf = confCls.model_validate_json(fp.read())
 
         def load_if_exist(filename: str) -> Optional[torch.Tensor]:
             filepath = os.path.join(path, filename)
             return torch.load(filepath) if os.path.isfile(filepath) else None
 
-        input = load_if_exist(Ne16Test._INPUT_NAME)
-        output = load_if_exist(Ne16Test._OUTPUT_NAME)
-        weight = load_if_exist(Ne16Test._WEIGHT_NAME)
-        scale = load_if_exist(Ne16Test._SCALE_NAME)
-        bias = load_if_exist(Ne16Test._BIAS_NAME)
-        global_shift = load_if_exist(Ne16Test._GLOBAL_SHIFT_NAME)
+        input = load_if_exist(NnxTest._INPUT_NAME)
+        output = load_if_exist(NnxTest._OUTPUT_NAME)
+        weight = load_if_exist(NnxTest._WEIGHT_NAME)
+        scale = load_if_exist(NnxTest._SCALE_NAME)
+        bias = load_if_exist(NnxTest._BIAS_NAME)
+        global_shift = load_if_exist(NnxTest._GLOBAL_SHIFT_NAME)
 
         return cls(conf, input, output, weight, scale, bias, global_shift)
 
 
-class Ne16TestGenerator:
+class NnxTestGenerator:
     _DEFAULT_SEED = 0
 
     @staticmethod
@@ -286,17 +172,18 @@ class Ne16TestGenerator:
 
     @staticmethod
     def from_conf(
-        conf: Ne16TestConf,
+        conf: NnxTestConf,
+        accumulator_type: IntegerType,
         input: Optional[torch.Tensor] = None,
         weight: Optional[torch.Tensor] = None,
         scale: Optional[torch.Tensor] = None,
         bias: Optional[torch.Tensor] = None,
         global_shift: Optional[torch.Tensor] = None,
-    ) -> Ne16Test:
-        torch.manual_seed(Ne16TestGenerator._DEFAULT_SEED)
+    ) -> NnxTest:
+        torch.manual_seed(NnxTestGenerator._DEFAULT_SEED)
 
         if input is None:
-            input = Ne16TestGenerator._random_data(
+            input = NnxTestGenerator._random_data(
                 _type=conf.in_type,
                 shape=(1, conf.in_channel, conf.in_height, conf.in_width),
             )
@@ -314,7 +201,7 @@ class Ne16TestGenerator:
         )
 
         if weight is None:
-            weight = Ne16TestGenerator._random_data(
+            weight = NnxTestGenerator._random_data(
                 _type=conf.weight_type,
                 shape=(
                     conf.out_channel,
@@ -333,14 +220,14 @@ class Ne16TestGenerator:
             groups=conf.in_channel if conf.depthwise else 1,
         ).type(torch.int64)
         # Use only the lower 32bits
-        output = Ne16TestGenerator._cast(
-            output, Ne16.ACCUMULATOR_TYPE, saturate=False
-        ).type(torch.int32)
+        output = NnxTestGenerator._cast(output, accumulator_type, saturate=False).type(
+            torch.int32
+        )
 
         if conf.has_norm_quant:
             if scale is None:
                 assert conf.scale_type is not None
-                scale = Ne16TestGenerator._random_data(
+                scale = NnxTestGenerator._random_data(
                     conf.scale_type, shape=(1, conf.out_channel, 1, 1)
                 )
             # Scale accumulators are in 48bit, so keeping the data in 64bit
@@ -350,16 +237,16 @@ class Ne16TestGenerator:
             if conf.has_bias:
                 # Saturating cast to int32
                 assert conf.bias_type is not None
-                output = Ne16TestGenerator._cast(
+                output = NnxTestGenerator._cast(
                     output, conf.bias_type, saturate=True
                 ).type(torch.int32)
 
                 if bias is None:
-                    bias = Ne16TestGenerator._random_data(
+                    bias = NnxTestGenerator._random_data(
                         conf.bias_type, shape=(1, conf.out_channel, 1, 1)
                     ).type(torch.int32)
                 output = output + bias
-                output = Ne16TestGenerator._cast(
+                output = NnxTestGenerator._cast(
                     output, conf.bias_type, saturate=False
                 ).type(torch.int32)
 
@@ -367,15 +254,15 @@ class Ne16TestGenerator:
                 output = F.relu(output)
 
             if global_shift is None:
-                global_shift = Ne16TestGenerator._global_shift(
+                global_shift = NnxTestGenerator._global_shift(
                     output, conf.out_type, conf.has_relu
                 )
             output = output >> global_shift
 
             # Saturate into out_type
-            output = Ne16TestGenerator._cast(output, conf.out_type, saturate=True)
+            output = NnxTestGenerator._cast(output, conf.out_type, saturate=True)
 
-        return Ne16Test(
+        return NnxTest(
             conf=conf,
             input=input,
             output=output,
@@ -386,28 +273,38 @@ class Ne16TestGenerator:
         )
 
     @staticmethod
-    def regenerate(test: Ne16Test, regen_tensors: Set[str]) -> Ne16Test:
+    def regenerate(test: NnxTest, regen_tensors: Set[str]) -> NnxTest:
         test_tensors = set(["input", "output", "weight", "scale", "bias"])
         load_tensors = test_tensors - regen_tensors
         kwargs = {tensor: getattr(test, tensor) for tensor in load_tensors}
-        return Ne16TestGenerator.from_conf(test.conf, **kwargs)
+        return NnxTestGenerator.from_conf(test.conf, **kwargs)
 
 
-class Ne16TestHeaderGenerator:
+class NnxTestHeaderGenerator:
     DEFAULT_HEADERS_DIR = "app/gen"
 
-    def __init__(self, headers_dir: Optional[Union[str, os.PathLike]] = None):
+    def __init__(
+        self,
+        weight_unroll: Callable[
+            [npt.NDArray[np.uint8], int, bool], npt.NDArray[np.uint8]
+        ],
+        headers_dir: Optional[Union[str, os.PathLike]] = None,
+    ):
         if headers_dir is None:
-            headers_dir = Ne16TestHeaderGenerator.DEFAULT_HEADERS_DIR
+            headers_dir = NnxTestHeaderGenerator.DEFAULT_HEADERS_DIR
         self.header_writer = HeaderWriter(headers_dir)
+        # function that takes the weights in CoutCinK format, bitwidth, and a depthwise flag,
+        # and returns a numpy array of dtype=np.uint8 of data in a layout correct for the accelerator
+        self.weight_unroll = weight_unroll
 
-    def generate(self, test_name: str, test: Ne16Test):
+    def generate(self, test_name: str, test: NnxTest):
         assert test.input is not None and test.output is not None
         _, in_channel, in_height, in_width = test.input.shape
         _, out_channel, out_height, out_width = test.output.shape
 
         # Render input
         in_ctype = test.conf.in_type.ctype()
+        in_signed = test.conf.in_type._signed
         in_data = test.input.permute(0, 2, 3, 1).ravel()
         self.header_writer.generate_vector_files(
             "input", _type=in_ctype, size=in_data.numel(), init=in_data
@@ -431,10 +328,10 @@ class Ne16TestHeaderGenerator:
         weight_offset = -(2 ** (weight_bits - 1))
         weight_out_ch, weight_in_ch, weight_ks_h, weight_ks_w = test.weight.shape
         weight_data: np.ndarray = test.weight.numpy() - weight_offset
-        weight_init = Ne16.weight_unroll(
+        weight_init = self.weight_unroll(
             weight_data.astype(np.uint8),
             weight_type._bits,
-            depthwise=test.conf.depthwise,
+            test.conf.depthwise,
         )
         self.header_writer.generate_vector_files(
             "weight", _type="uint8_t", size=weight_init.size, init=weight_init
@@ -470,6 +367,7 @@ class Ne16TestHeaderGenerator:
                     "height": in_height,
                     "width": in_width,
                     "channel": in_channel,
+                    "signed": in_signed,
                     "bits": 8,
                 },
                 "output": {

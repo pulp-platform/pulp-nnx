@@ -18,10 +18,12 @@
 
 import os
 import re
-from typing import Union, Optional, Tuple
+from typing import Dict, Union, Optional, Tuple, Type
 import locale
 import subprocess
-from Ne16TestClasses import Ne16Test, Ne16TestHeaderGenerator
+from Ne16 import Ne16
+from Neureka import Neureka
+from NnxTestClasses import NnxTest, NnxTestConf, NnxTestHeaderGenerator
 from pathlib import Path
 
 HORIZONTAL_LINE = "\n" + "-" * 100 + "\n"
@@ -49,17 +51,29 @@ def captured_output(
 
 
 def execute_command(
-    cmd: str, timeout: int = 30, cflags: Optional[str] = None
+    cmd: str,
+    timeout: int = 30,
+    cflags: Optional[str] = None,
+    envflags: Optional[Dict[str, str]] = None,
 ) -> Tuple[bool, str, str, Optional[str]]:
-    app_cflags = 'APP_CFLAGS="' + " ".join(cflags) + '" ' if cflags else ""
-    cmd = cmd + app_cflags
+    env = os.environ
+    if cflags:
+        env["APP_CFLAGS"] = '"' + " ".join(cflags) + '"'
+    if envflags:
+        for key, value in envflags.items():
+            env[key] = value
 
     status = None
     stdout = None
 
     try:
         proc = subprocess.run(
-            cmd.split(), check=True, capture_output=True, text=True, timeout=timeout
+            cmd.split(),
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=env,
         )
         status = True
         msg = "OK"
@@ -94,15 +108,23 @@ def assert_message(
     return retval
 
 
-def test(path: str, timeout: int):
+def test(
+    path: str,
+    timeout: int,
+    nnxName: str,
+    nnxCls: Union[Type[Ne16], Type[Neureka]],
+    nnxTestConfCls: Type[NnxTestConf],
+):
     test_name = path
-    test = Ne16Test.load(path)
+    test = NnxTest.load(nnxTestConfCls, path)
 
-    Ne16TestHeaderGenerator().generate(test_name, test)
+    NnxTestHeaderGenerator(nnxCls.weight_unroll).generate(test_name, test)
 
     Path("app/src/nnx_layer.c").touch()
     cmd = f"make -C app all run platform=gvsoc"
-    passed, msg, stdout, stderr = execute_command(cmd=cmd, timeout=timeout)
+    passed, msg, stdout, stderr = execute_command(
+        cmd=cmd, timeout=timeout, envflags={"ACCELERATOR": nnxName}
+    )
 
     assert passed, assert_message(msg, test_name, cmd, stdout, stderr)
 
