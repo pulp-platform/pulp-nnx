@@ -20,18 +20,18 @@
 
 #include <pmsis.h>
 
+#include "bias.h"
+#include "input.h"
 #include "layer_util.h"
 #include "nnx_layer.h"
 #include "output.h"
-#include "input.h"
-#include "bias.h"
 #include "scale.h"
 #include "weight.h"
 
-#define NNX_MEMCPY(dst, src, size) \
-for (int i = 0; i < size; i++) { \
-  dst[i] = src[i]; \
-}
+#define NNX_MEMCPY(dst, src, size)                                             \
+  for (int i = 0; i < size; i++) {                                             \
+    dst[i] = src[i];                                                           \
+  }
 
 int main() {
   struct pi_device cl_dev;

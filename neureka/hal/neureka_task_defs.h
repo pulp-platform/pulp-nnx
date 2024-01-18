@@ -78,7 +78,8 @@
 #define NEUREKA_QUANT_MODE_32BIT (2 << 21)
 // conf0[20:16] - quantization shift amount
 #define NEUREKA_FLAG_WEIGHT_OFFSET_SYMMETRIC (0 << 15) // Unimplemented in gvsoc
-#define NEUREKA_FLAG_WEIGHT_OFFSET_LAYER_WISE (1 << 15) // Unimplemented in gvsoc
+#define NEUREKA_FLAG_WEIGHT_OFFSET_LAYER_WISE                                  \
+  (1 << 15) // Unimplemented in gvsoc
 #define NEUREKA_FLAG_STREAMIN (1 << 14)
 #define NEUREKA_NORM_MODE_8BIT (0 << 12)
 #define NEUREKA_NORM_MODE_16BIT (1 << 12) // not supported
@@ -87,7 +88,7 @@
 #define NEUREKA_FLAG_ACTIVATION_PREFETCH (1 << 10)
 #define NEUREKA_FLAG_USE_WMEM (1 << 9)
 #define NEUREKA_FLAG_USE_TCDM (0 << 9)
-#define NEUREKA_FLAG_STRIDE_2x2 (1 << 8) // not supported
+#define NEUREKA_FLAG_STRIDE_2x2 (1 << 8)  // not supported
 #define NEUREKA_FLAG_LINEAR_MODE (1 << 7) // not supported
 #define NEUREKA_FLAG_MODE_3x3 (0 << 5)
 #define NEUREKA_FLAG_MODE_3x3_DW (1 << 5)

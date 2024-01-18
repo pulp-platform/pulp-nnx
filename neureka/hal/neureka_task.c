@@ -48,19 +48,19 @@ void neureka_task_init(neureka_task_t *task, const uint8_t kernel_shape,
                        const uint32_t weights_offset_factor,
                        neureka_quant_t quant, neureka_norm_t norm,
                        const uint8_t stride) {
-  *task = (neureka_task_t){
-      .outbytes = output_bits / 8,
-      .qw = weights_bits,
-      .stride_shift = stride == 2 ? 1 : 0,
-      .output_channel_throughput = depthwise
-                                       ? NEUREKA_INPUT_CHANNEL_THROUGHPUT_3x3
-                                       : NEUREKA_OUTPUT_CHANNEL_THROUGHPUT,
-      .input_channel_throughput = kernel_shape == 3
-                                      ? NEUREKA_INPUT_CHANNEL_THROUGHPUT_3x3
-                                      : NEUREKA_INPUT_CHANNEL_THROUGHPUT_1x1,
-      .kernel_shape = kernel_shape,
-      .depthwise = depthwise,
-      .data = {0}};
+  *task = (neureka_task_t){.outbytes = output_bits / 8,
+                           .qw = weights_bits,
+                           .stride_shift = stride == 2 ? 1 : 0,
+                           .output_channel_throughput =
+                               depthwise ? NEUREKA_INPUT_CHANNEL_THROUGHPUT_3x3
+                                         : NEUREKA_OUTPUT_CHANNEL_THROUGHPUT,
+                           .input_channel_throughput =
+                               kernel_shape == 3
+                                   ? NEUREKA_INPUT_CHANNEL_THROUGHPUT_3x3
+                                   : NEUREKA_INPUT_CHANNEL_THROUGHPUT_1x1,
+                           .kernel_shape = kernel_shape,
+                           .depthwise = depthwise,
+                           .data = {0}};
 
   const int flag_mode = kernel_shape == 1 ? NEUREKA_FLAG_MODE_1x1
                         : depthwise == 1  ? NEUREKA_FLAG_MODE_3x3_DW
@@ -122,15 +122,15 @@ void neureka_task_set_strides(neureka_task_t *task, const uint32_t k_in,
   const neureka_stride_t output_stride = {
       .d0 = 32, // TODO: should depend on outbytes. Probably 32 / outbytes
       .d1 = k_out_stride * task->outbytes,
-      .d2 = k_out_stride * task->outbytes * w_out_stride
-  };
+      .d2 = k_out_stride * task->outbytes * w_out_stride};
   task->data.cfg.output_stride = output_stride;
 
   task->data.cfg.weights_stride.d0 = NEUREKA_WEIGHT_D0_STRIDE;
   if (task->kernel_shape == 1) { // 1x1
     task->data.cfg.weights_stride.d1 = NEUREKA_WEIGHT_D0_STRIDE * num_k_in;
   } else if (!task->depthwise) { // 3x3
-    task->data.cfg.weights_stride.d1 = NEUREKA_WEIGHT_D0_STRIDE * task->qw * num_k_in;
+    task->data.cfg.weights_stride.d1 =
+        NEUREKA_WEIGHT_D0_STRIDE * task->qw * num_k_in;
   } else { // 3x3 depthwise
     task->data.cfg.weights_stride.d1 = 0;
   }
@@ -151,10 +151,14 @@ void neureka_task_set_counters(neureka_task_t *task, const uint32_t k_in,
   const uint16_t rem_Ki = remainder(k_in, task->input_channel_throughput);
   const uint16_t rem_Ho = remainder(h_out, NEUREKA_COMPUTE_SIZE_HEIGHT);
   const uint16_t rem_Wo = remainder(w_out, NEUREKA_COMPUTE_SIZE_WIDTH);
-  const uint16_t rem_Hi = rem_Ho == 0 ? 0 : (task->kernel_shape == 1 ? rem_Ho : rem_Ho + 2) -
-                          padding_bottom; // TODO: Check padding bottom
-  const uint16_t rem_Wi = rem_Wo == 0 ? 0 : (task->kernel_shape == 1 ? rem_Wo : rem_Wo + 2) -
-                          padding_right; // TODO: Check padding right
+  const uint16_t rem_Hi =
+      rem_Ho == 0 ? 0
+                  : (task->kernel_shape == 1 ? rem_Ho : rem_Ho + 2) -
+                        padding_bottom; // TODO: Check padding bottom
+  const uint16_t rem_Wi =
+      rem_Wo == 0 ? 0
+                  : (task->kernel_shape == 1 ? rem_Wo : rem_Wo + 2) -
+                        padding_right; // TODO: Check padding right
 
   const neureka_subtile_t subtile = {
       .number = {.KoKi = concat_half(num_Ko, num_Ki),
