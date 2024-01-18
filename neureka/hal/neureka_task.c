@@ -126,17 +126,15 @@ void neureka_task_set_strides(neureka_task_t *task, const uint32_t k_in,
   };
   task->data.cfg.output_stride = output_stride;
 
-  task->data.cfg.weights_stride.d0 = NEUREKA_WEIGHT_D0_STRIDE_MODE8_3x3;
-  task->data.cfg.weights_stride.d2 = 0;
+  task->data.cfg.weights_stride.d0 = NEUREKA_WEIGHT_D0_STRIDE;
   if (task->kernel_shape == 1) { // 1x1
-    task->data.cfg.weights_stride.d1 =
-        NEUREKA_WEIGHT_D0_STRIDE_MODE8_3x3 * num_k_in;
+    task->data.cfg.weights_stride.d1 = NEUREKA_WEIGHT_D0_STRIDE * num_k_in;
   } else if (!task->depthwise) { // 3x3
-    task->data.cfg.weights_stride.d1 =
-        NEUREKA_WEIGHT_D0_STRIDE_MODE8_3x3 * task->qw * num_k_in;
+    task->data.cfg.weights_stride.d1 = NEUREKA_WEIGHT_D0_STRIDE * task->qw * num_k_in;
   } else { // 3x3 depthwise
     task->data.cfg.weights_stride.d1 = 0;
   }
+  task->data.cfg.weights_stride.d2 = 0;
 }
 
 void neureka_task_set_counters(neureka_task_t *task, const uint32_t k_in,
@@ -149,10 +147,10 @@ void neureka_task_set_counters(neureka_task_t *task, const uint32_t k_in,
   const uint16_t num_Ho = divnceil(h_out, NEUREKA_COMPUTE_SIZE_HEIGHT);
   const uint16_t num_Wo = divnceil(w_out, NEUREKA_COMPUTE_SIZE_WIDTH);
 
-  const uint16_t rem_Ko = k_out % task->output_channel_throughput;
-  const uint16_t rem_Ki = k_in % task->input_channel_throughput;
-  const uint16_t rem_Ho = h_out % NEUREKA_COMPUTE_SIZE_HEIGHT;
-  const uint16_t rem_Wo = w_out % NEUREKA_COMPUTE_SIZE_WIDTH;
+  const uint16_t rem_Ko = remainder(k_out, task->output_channel_throughput);
+  const uint16_t rem_Ki = remainder(k_in, task->input_channel_throughput);
+  const uint16_t rem_Ho = remainder(h_out, NEUREKA_COMPUTE_SIZE_HEIGHT);
+  const uint16_t rem_Wo = remainder(w_out, NEUREKA_COMPUTE_SIZE_WIDTH);
   const uint16_t rem_Hi = rem_Ho == 0 ? 0 : (task->kernel_shape == 1 ? rem_Ho : rem_Ho + 2) -
                           padding_bottom; // TODO: Check padding bottom
   const uint16_t rem_Wi = rem_Wo == 0 ? 0 : (task->kernel_shape == 1 ? rem_Wo : rem_Wo + 2) -
