@@ -34,11 +34,20 @@ static_check_python:
   script:
     - pyright .
 
-run_test0:
+run_ne16_test:
   stage: test
   tags:
     - gap9-sdk
   artifacts:
     untracked: true
   script:
-    - cd test && pytest test.py --test-dir tests --recursive
+    - cd test && pytest test.py --test-dir tests --recursive -A ne16
+
+run_neureka_test:
+  stage: test
+  tags:
+    - siracusa-sdk
+  artifacts:
+    untracked: true
+  script:
+    - cd test && pytest test.py --test-dir tests --recursive -A neureka
