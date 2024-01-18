@@ -110,7 +110,14 @@ def pytest_generate_tests(metafunc):
             nnxTestAndNames.append((test, test_dir))
         except pydantic.ValidationError as e:
             _ = e
-            nnxTestAndNames.append(pytest.param((None, test_dir), marks=pytest.mark.skipif(True, reason=f"Invalid test {test_dir}: {e.errors}")))
+            nnxTestAndNames.append(
+                pytest.param(
+                    (None, test_dir),
+                    marks=pytest.mark.skipif(
+                        True, reason=f"Invalid test {test_dir}: {e.errors}"
+                    ),
+                )
+            )
 
     metafunc.parametrize("nnxTestAndName", nnxTestAndNames)
     metafunc.parametrize("timeout", [timeout])
