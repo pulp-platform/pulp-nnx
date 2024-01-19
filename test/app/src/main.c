@@ -28,26 +28,17 @@
 #include "scale.h"
 #include "weight.h"
 
-#define NNX_MEMCPY(dst, src, size)                                             \
-  for (int i = 0; i < size; i++) {                                             \
-    dst[i] = src[i];                                                           \
-  }
-
 int main() {
   struct pi_device cl_dev;
   struct pi_cluster_conf cl_conf;
   struct pi_cluster_task cl_task;
 
-  printf("\n");
-  printf("Test %s starting\n", TEST_NAME);
+  printf("\nTest %s starting\n", TEST_NAME);
+
+  printf("\nAccelerator: %s\n", NNX_NEUREKA ? "neureka" : "ne16");
 
   printf("\n");
   layer_info();
-
-  NNX_MEMCPY(input, input_l2, INPUT_SIZE);
-  NNX_MEMCPY(bias, bias_l2, BIAS_SIZE);
-  NNX_MEMCPY(scale, scale_l2, SCALE_SIZE);
-  NNX_MEMCPY(weight, weight_l2, WEIGHT_SIZE);
 
   pi_cluster_conf_init(&cl_conf);
   pi_open_from_conf(&cl_dev, &cl_conf);
@@ -59,11 +50,9 @@ int main() {
       &cl_dev, pi_cluster_task(&cl_task, execute_nnx_layer, NULL));
   pi_cluster_close(&cl_dev);
 
-  printf("\n");
-  printf("Test %s finished\n", TEST_NAME);
+  printf("\nTest %s finished\n", TEST_NAME);
 
   printf("\n");
-  NNX_MEMCPY(output_l2, output, OUTPUT_SIZE);
   check_output();
 
   return 0;
