@@ -35,7 +35,7 @@ int main() {
 
   printf("\nTest %s starting\n", TEST_NAME);
 
-  printf("\nAccelerator: %s\n", NNX_NEUREKA ? "neureka" : "ne16");
+  printf("\nAccelerator: %s\n", NNX_ACCELERATOR);
 
   printf("\n");
   layer_info();
