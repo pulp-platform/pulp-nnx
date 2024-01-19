@@ -35,3 +35,9 @@ $ pytest test.py --help
 - [testgen.py](testgen.py): collection of helper tools for individual tests
 
 For more information you can run the script with the `-h` flag.
+
+## Application
+
+The Makefile in the `app/` uses a flag `ACCELERATOR` to decide which accelerator to use.
+The choices are _ne16_ or _neureka_.
+You can either export it or run it like `ACCELERATOR=<accelerator> make clean all run`.
