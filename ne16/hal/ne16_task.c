@@ -114,11 +114,7 @@ void ne16_task_set_strides(ne16_task_t *task, const uint32_t k_in,
   const uint32_t num_k_in = divnceil(k_in, NE16_INPUT_CHANNEL_THROUGHPUT);
 
   const ne16_stride_t input_stride = {
-      .d0 = k_in_stride,
-      .d1 = k_in_stride * w_in_stride,
-      .d2 = task->depthwise ? 0
-                            : k_in_stride * NE16_FILTER_BUFFER_SIZE *
-                                  NE16_FILTER_BUFFER_SIZE};
+      .d0 = k_in_stride, .d1 = k_in_stride * w_in_stride, .d2 = 0};
   task->data.cfg.input_stride = input_stride;
 
   // WARNING: Stride works only for even output channel sizes (divisible by 2)
@@ -133,20 +129,18 @@ void ne16_task_set_strides(ne16_task_t *task, const uint32_t k_in,
     task->data.cfg.weights_stride.d0 = task->weight_d0_stride * task->qw;
     task->data.cfg.weights_stride.d1 =
         task->weight_d0_stride * task->qw * num_k_in;
-    task->data.cfg.weights_stride.d2 = 0;
   } else if (!task->depthwise) {
     task->data.cfg.weights_stride.d0 =
         NE16_FILTER_SIZE * NE16_FILTER_SIZE * task->weight_d0_stride;
     task->data.cfg.weights_stride.d1 = NE16_FILTER_SIZE * NE16_FILTER_SIZE *
                                        task->weight_d0_stride * task->qw *
                                        num_k_in;
-    task->data.cfg.weights_stride.d2 = 0;
   } else {
     task->data.cfg.weights_stride.d0 =
         NE16_FILTER_SIZE * NE16_FILTER_SIZE * task->weight_d0_stride;
     task->data.cfg.weights_stride.d1 = 0;
-    task->data.cfg.weights_stride.d2 = 0;
   }
+  task->data.cfg.weights_stride.d2 = 0;
 }
 
 void ne16_task_set_counters(ne16_task_t *task, const uint32_t k_in,
