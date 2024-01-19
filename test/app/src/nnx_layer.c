@@ -113,7 +113,12 @@ static void task_prepare(nnx_task_t *task) {
       (nnx_norm_t){.mode = normMode8Bit,
                    .flag_bias = HAS_BIAS ? nnxTaskFlagTrue : nnxTaskFlagFalse,
                    .flag_shift = nnxTaskFlagFalse},
-      STRIDE_HEIGHT);
+#ifdef NNX_NE16
+      STRIDE_HEIGHT
+#elif NNX_NEUREKA
+      INPUT_SIGNED
+#endif
+  );
 
 #if STRIDE_HEIGHT == 2 && STRIDE_WIDTH == 2
   nnx_task_set_dims_stride2x2(

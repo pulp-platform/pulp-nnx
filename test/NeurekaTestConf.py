@@ -50,7 +50,7 @@ class NeurekaTestConf(NnxTestConf):
     @field_validator("in_type")
     @classmethod
     def check_valid_in_type(cls, v: IntegerType) -> IntegerType:
-        NeurekaTestConf._check_type("in_type", v, ["uint8"])
+        NeurekaTestConf._check_type("in_type", v, ["uint8", "int8"])
         return v
 
     @field_validator("out_type")

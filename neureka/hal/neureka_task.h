@@ -111,9 +111,7 @@ typedef struct neureka_task_data_t {
 typedef struct neureka_task_t {
   neureka_task_data_t data;
   uint8_t outbytes;
-  uint8_t weight_d0_stride;
   uint8_t qw;
-  uint8_t stride_shift;
   uint8_t output_channel_throughput;
   uint8_t input_channel_throughput;
   uint8_t kernel_shape;
@@ -127,7 +125,7 @@ void neureka_task_init(neureka_task_t *task, const uint8_t kernel_shape,
                        const neureka_weight_offset_mode_e weights_offset_mode,
                        const uint32_t weights_offset_factor,
                        neureka_quant_t quant, neureka_norm_t norm,
-                       const uint8_t stride);
+                       const uint8_t flag_input_signed);
 uint32_t neureka_get_tile_padding(uint32_t padding, uint32_t i_height,
                                   uint32_t i_width, uint32_t n_height,
                                   uint32_t n_width);

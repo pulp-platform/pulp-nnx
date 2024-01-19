@@ -47,10 +47,9 @@ void neureka_task_init(neureka_task_t *task, const uint8_t kernel_shape,
                        const neureka_weight_offset_mode_e weights_offset_mode,
                        const uint32_t weights_offset_factor,
                        neureka_quant_t quant, neureka_norm_t norm,
-                       const uint8_t stride) {
+                       const uint8_t flag_input_signed) {
   *task = (neureka_task_t){.outbytes = output_bits / 8,
                            .qw = weights_bits,
-                           .stride_shift = stride == 2 ? 1 : 0,
                            .output_channel_throughput =
                                depthwise ? NEUREKA_INPUT_CHANNEL_THROUGHPUT_3x3
                                          : NEUREKA_OUTPUT_CHANNEL_THROUGHPUT,
@@ -67,6 +66,7 @@ void neureka_task_init(neureka_task_t *task, const uint8_t kernel_shape,
                                           : NEUREKA_FLAG_MODE_3x3;
 
   task->data.cfg.conf0 |=
+      flag_input_signed << NEUREKA_SHIFT_FLAG_INPUT_SIGNED |
       NEUREKA_FLAG_NORM_QUANT | quant.function | quant.mode |
       (quant.shift_amount << 16) |
       quant.flag_rounding << NEUREKA_SHIFT_ROUNDING | norm.mode |
