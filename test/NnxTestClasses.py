@@ -179,6 +179,7 @@ class NnxTestGenerator:
         scale: Optional[torch.Tensor] = None,
         bias: Optional[torch.Tensor] = None,
         global_shift: Optional[torch.Tensor] = None,
+        verbose: bool = False,
     ) -> NnxTest:
         torch.manual_seed(NnxTestGenerator._DEFAULT_SEED)
 
@@ -223,6 +224,10 @@ class NnxTestGenerator:
         output = NnxTestGenerator._cast(output, accumulator_type, saturate=False).type(
             torch.int32
         )
+
+        if verbose:
+            print("INTERMEDIATE RESULTS (pre-normalization/requant):")
+            print(output)
 
         if conf.has_norm_quant:
             if scale is None:

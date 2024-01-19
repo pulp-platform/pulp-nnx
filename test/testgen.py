@@ -47,6 +47,21 @@ def headers_gen(
     NnxTestHeaderGenerator(nnxCls.weight_unroll).generate(args.test_dir, test)
 
 
+def print_tensors(test: NnxTest):
+    print("INPUT TENSOR:")
+    print(test.input)
+    print("WEIGHT TENSOR:")
+    print(test.weight)
+    print("SCALE TENSOR:")
+    print(test.scale)
+    print("BIAS TENSOR:")
+    print(test.bias)
+    print("GLOBAL SHIFT TENSOR:")
+    print(test.global_shift)
+    print("EXPECTED OUTPUT TENSOR:")
+    print(test.output)
+
+
 def test_gen(
     args, nnxCls: Union[Type[Ne16], Type[Neureka]], nnxTestConfCls: Type[NnxTestConf]
 ):
@@ -62,11 +77,13 @@ def test_gen(
         exit(-1)
 
     test_conf = nnxTestConfCls.model_validate(test_conf_dict)
-    test = NnxTestGenerator.from_conf(test_conf, nnxCls.ACCUMULATOR_TYPE)
+    test = NnxTestGenerator.from_conf(test_conf, nnxCls.ACCUMULATOR_TYPE, verbose=args.print_tensors)
     if not args.skip_save:
         test.save(args.test_dir)
     if args.headers:
         headers_gen(args, nnxCls, nnxTestConfCls, test)
+    if args.print_tensors:
+        print_tensors(test)
 
 
 def _regen(
@@ -156,6 +173,13 @@ parser_test.add_argument(
     default=False,
     dest="skip_save",
     help="Skip saving the test.",
+)
+parser_test.add_argument(
+    "--print-tensors",
+    action="store_true",
+    default=False,
+    dest="print_tensors",
+    help="Print tensor values to stdout.",
 )
 add_common_arguments(parser_test)
 parser_test.set_defaults(func=test_gen)
