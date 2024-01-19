@@ -24,8 +24,8 @@ import numpy.typing as npt
 import torch.nn.functional as F
 import os
 from HeaderWriter import HeaderWriter
-from TestClasses import IntegerType, Stride, Padding, KernelShape, implies
-from pydantic import BaseModel, PositiveInt
+from TestClasses import IntegerType, Stride, Padding, KernelShape, implies, xor
+from pydantic import BaseModel, PositiveInt, field_validator, model_validator
 
 
 class NnxTestConf(BaseModel):
@@ -45,6 +45,44 @@ class NnxTestConf(BaseModel):
     has_norm_quant: bool
     has_bias: bool
     has_relu: bool
+
+    @model_validator(mode="after")  # type: ignore
+    def check_valid_depthwise_channels(self) -> NnxTestConf:
+        assert implies(self.depthwise, self.in_channel == self.out_channel), (
+            f"Input and output channel should be the same in a depthwise layer. "
+            f"input channel: {self.in_channel}, output channel: {self.out_channel}"
+        )
+        return self
+
+    @model_validator(mode="after")  # type: ignore
+    def check_valid_padding_with_kernel_shape_1x1(self) -> NnxTestConf:
+        assert implies(
+            self.kernel_shape == KernelShape(height=1, width=1),
+            self.padding == Padding(top=0, bottom=0, left=0, right=0),
+        ), f"No padding on 1x1 kernel. Given padding {self.padding}"
+        return self
+
+    @field_validator("has_norm_quant")
+    @classmethod
+    def check_valid_has_norm_quant(cls, v: bool) -> bool:
+        assert v == True, f"Untested without has_norm_quant."
+        return v
+
+    @model_validator(mode="after")  # type: ignore
+    def check_valid_norm_quant_types_when_has_norm_qunat(self) -> NnxTestConf:
+        if self.has_norm_quant:
+            assert self.scale_type is not None, "Scale type was not provided."
+            if self.has_bias:
+                assert self.bias_type is not None, "Bias type was not provided."
+        return self
+
+    @model_validator(mode="after")  # type: ignore
+    def check_valid_out_type_with_relu(self) -> NnxTestConf:
+        assert xor(self.has_relu, not self.out_type._signed), (
+            f"Output type has to be unsigned when there is relu, otherwise signed. "
+            f"Given output type {self.out_type} and has_relu {self.has_relu}"
+        )
+        return self
 
 
 class NnxTest:

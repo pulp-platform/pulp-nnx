@@ -20,7 +20,7 @@ from __future__ import annotations
 from Neureka import Neureka
 from typing import List, Union, Optional
 from NnxTestClasses import NnxTestConf
-from TestClasses import implies, KernelShape, Padding, Stride, IntegerType
+from TestClasses import implies, KernelShape, Stride, IntegerType
 from pydantic import field_validator, model_validator
 
 
@@ -80,52 +80,18 @@ class NeurekaTestConf(NnxTestConf):
         return v
 
     @model_validator(mode="after")  # type: ignore
-    def check_valid_depthwise(self) -> NeurekaTestConf:
+    def check_valid_depthwise_kernel_shape(self) -> NeurekaTestConf:
         assert implies(
             self.depthwise, self.kernel_shape == KernelShape(height=3, width=3)
         ), f"Depthwise supported only on 3x3 kernel shape. Given kernel shape {self.kernel_shape}."
-        assert implies(self.depthwise, self.in_channel == self.out_channel), (
-            f"Input and output channel should be the same in a depthwise layer. "
-            f"input channel: {self.in_channel}, output channel: {self.out_channel}"
-        )
         return self
 
     @model_validator(mode="after")  # type: ignore
-    def check_valid_padding_with_kernel_shape_1x1(self) -> NeurekaTestConf:
-        assert implies(
-            self.kernel_shape == KernelShape(height=1, width=1),
-            self.padding == Padding(top=0, bottom=0, left=0, right=0),
-        ), f"No padding on 1x1 kernel. Given padding {self.padding}"
-        return self
-
-    @field_validator("has_norm_quant")
-    @classmethod
-    def check_valid_has_norm_quant(cls, v: bool) -> bool:
-        assert v == True, f"Untested without has_norm_quant."
-        return v
-
-    @model_validator(mode="after")  # type: ignore
-    def check_valid_norm_quant_types_when_has_norm_qunat(self) -> NeurekaTestConf:
-        if self.has_norm_quant:
-            assert self.scale_type is not None, "Scale type was not provided."
-            if self.has_bias:
-                assert self.bias_type is not None, "Bias type was not provided."
-        return self
-
-    @model_validator(mode="after")  # type: ignore
-    def check_valid_out_type_with_flags(self) -> NeurekaTestConf:
+    def check_valid_out_type_with_norm_quant(self) -> NeurekaTestConf:
         assert implies(
             not self.has_norm_quant, self.out_type == Neureka.ACCUMULATOR_TYPE
         ), (
             f"Without quantization, the output type has to be equal to the "
             f"accumulator type {Neureka.ACCUMULATOR_TYPE}. Given output type {self.out_type}"
-        )
-        assert implies(
-            self.has_norm_quant,
-            (self.has_relu and not self.out_type._signed)
-            or (not self.has_relu and self.out_type._signed),
-        ), (
-            f"Output type has to be unsigned when there is relu, otherwise signed. "
-            f"Given output type {self.out_type} and has_relu {self.has_relu}"
         )
         return self

@@ -32,6 +32,10 @@ def implies(a: bool, b: bool):
     return (not a) or b
 
 
+def xor(a: bool, b: bool):
+    return (a and not b) or (not a and b)
+
+
 class KernelShape(BaseModel):
     height: PositiveInt
     width: PositiveInt
