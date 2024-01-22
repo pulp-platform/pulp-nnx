@@ -1,4 +1,4 @@
-# NE16
+# Neureka
 
 ## Docs
 
