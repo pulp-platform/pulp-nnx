@@ -42,13 +42,17 @@ typedef enum ne16_gvsoc_log_level_e {
 static void ne16_gvsoc_log_activate(ne16_dev_t *dev,
                                     ne16_gvsoc_log_level_e log_level,
                                     ne16_gvsoc_log_format_e format) {
+#if __PLATFORM__ == ARCHI_PLATFORM_GVSOC
   hwpe_task_reg_write(&dev->hwpe_dev, NE16_REG_GVSOC_LOG_LEVEL, log_level);
   hwpe_task_reg_write(&dev->hwpe_dev, NE16_REG_GVSOC_LOG_FORMAT, format);
+#endif
 }
 
 static void ne16_gvsoc_log_deactivate(ne16_dev_t *dev) {
+#if __PLATFORM__ == ARCHI_PLATFORM_GVSOC
   hwpe_task_reg_write(&dev->hwpe_dev, NE16_REG_GVSOC_LOG_LEVEL,
                       NE16_GVSOC_LOG_LEVEL_CONFIG);
+#endif
 }
 
 #endif // __NE16_GVSOC_H__

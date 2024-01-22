@@ -42,13 +42,17 @@ typedef enum neureka_gvsoc_log_level_e {
 static void neureka_gvsoc_log_activate(neureka_dev_t *dev,
                                        neureka_gvsoc_log_level_e log_level,
                                        neureka_gvsoc_log_format_e format) {
+#if __PLATFORM__ == ARCHI_PLATFORM_GVSOC
   hwpe_task_reg_write(&dev->hwpe_dev, NEUREKA_REG_GVSOC_LOG_LEVEL, log_level);
   hwpe_task_reg_write(&dev->hwpe_dev, NEUREKA_REG_GVSOC_LOG_FORMAT, format);
+#endif
 }
 
 static void neureka_gvsoc_log_deactivate(neureka_dev_t *dev) {
+#if __PLATFORM__ == ARCHI_PLATFORM_GVSOC
   hwpe_task_reg_write(&dev->hwpe_dev, NEUREKA_REG_GVSOC_LOG_LEVEL,
                       NEUREKA_GVSOC_LOG_LEVEL_JOB_START_END);
+#endif
 }
 
 #endif // __NEUREKA_GVSOC_H__
