@@ -44,12 +44,13 @@ int main() {
   }
   pi_cluster_send_task_to_cl(
       &cl_dev, pi_cluster_task(&cl_task, execute_nnx_layer, NULL));
-  pi_cluster_close(&cl_dev);
-
-  printf("\nTest " TEST_NAME " finished\n");
 
   printf("\n");
   check_output();
+
+  pi_cluster_close(&cl_dev);
+
+  printf("\nTest " TEST_NAME " finished\n");
 
   return 0;
 }
