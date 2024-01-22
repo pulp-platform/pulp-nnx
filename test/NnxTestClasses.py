@@ -78,7 +78,7 @@ class NnxTestConf(BaseModel):
 
     @model_validator(mode="after")  # type: ignore
     def check_valid_out_type_with_relu(self) -> NnxTestConf:
-        assert xor(self.has_relu, not self.out_type._signed), (
+        assert xor(self.has_relu, self.out_type._signed), (
             f"Output type has to be unsigned when there is relu, otherwise signed. "
             f"Given output type {self.out_type} and has_relu {self.has_relu}"
         )
