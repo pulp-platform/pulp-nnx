@@ -48,8 +48,9 @@ class HeaderWriter:
         if isinstance(expr, str):
             expr = f'"{expr}"'
         elif isinstance(expr, bool):
-            expr = int(expr)
-        expr = f"({expr})"
+            expr = f'({int(expr)})'
+        else:
+            expr = f"({expr})"
         return f"#define {name.upper()} {expr}\n"
 
     def vector_size(self, data):

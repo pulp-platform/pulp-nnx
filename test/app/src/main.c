@@ -20,22 +20,18 @@
 
 #include <pmsis.h>
 
-#include "bias.h"
-#include "input.h"
 #include "layer_util.h"
 #include "nnx_layer.h"
 #include "output.h"
-#include "scale.h"
-#include "weight.h"
 
 int main() {
   struct pi_device cl_dev;
   struct pi_cluster_conf cl_conf;
   struct pi_cluster_task cl_task;
 
-  printf("\nTest %s starting\n", TEST_NAME);
+  printf("\nTest " TEST_NAME " starting\n");
 
-  printf("\nAccelerator: %s\n", NNX_ACCELERATOR);
+  printf("\nAccelerator: " NNX_ACCELERATOR "\n");
 
   printf("\n");
   layer_info();
@@ -50,7 +46,7 @@ int main() {
       &cl_dev, pi_cluster_task(&cl_task, execute_nnx_layer, NULL));
   pi_cluster_close(&cl_dev);
 
-  printf("\nTest %s finished\n", TEST_NAME);
+  printf("\nTest " TEST_NAME " finished\n");
 
   printf("\n");
   check_output();
