@@ -48,7 +48,7 @@ class HeaderWriter:
         if isinstance(expr, str):
             expr = f'"{expr}"'
         elif isinstance(expr, bool):
-            expr = f'({int(expr)})'
+            expr = f"({int(expr)})"
         else:
             expr = f"({expr})"
         return f"#define {name.upper()} {expr}\n"
