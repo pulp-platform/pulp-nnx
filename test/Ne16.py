@@ -25,6 +25,7 @@ class Ne16:
     ACCUMULATOR_TYPE = IntegerType(name="int32")
 
     _CIN_SUBTILE = 16
+    _LINEAR_CIN_TILE = 256
 
     @staticmethod
     def weight_unroll(
@@ -43,17 +44,18 @@ class Ne16:
 
         # Pad cin to be divisible with CIN_SUBTILE
         if cin % Ne16._CIN_SUBTILE != 0:
-            cin_pad = Ne16._CIN_SUBTILE - cin % Ne16._CIN_SUBTILE
+            cinPad = Ne16._CIN_SUBTILE - cin % Ne16._CIN_SUBTILE
             weight = np.pad(
                 weight,
-                ((0, 0), (0, cin_pad), (0, 0), (0, 0)),
+                ((0, 0), (0, cinPad), (0, 0), (0, 0)),
                 "constant",
                 constant_values=0,
             )
+            cin = cin + cinPad
 
         # Reshape into (cout, cinMajor, cinMinor, flattened spatial, 1)
         # The 1 at the end is required by the unpacking
-        cinMajor = int(np.ceil(cin / Ne16._CIN_SUBTILE))
+        cinMajor = cin // Ne16._CIN_SUBTILE
         cinMinor = Ne16._CIN_SUBTILE
         weight = weight.reshape(cout, cinMajor, cinMinor, height * width, 1)
 
