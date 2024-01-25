@@ -18,7 +18,7 @@
 
 from __future__ import annotations
 from typing import List, Union, Optional
-from Ne16MemoryLayout import Ne16MemoryLayout
+from NeuralEngineFunctionalModel import NeuralEngineFunctionalModel
 from NnxTestClasses import NnxTestConf
 from TestClasses import implies, KernelShape, Stride, IntegerType
 from pydantic import field_validator, model_validator
@@ -98,9 +98,10 @@ class Ne16TestConf(NnxTestConf):
     @model_validator(mode="after")  # type: ignore
     def check_valid_out_type_with_norm_quant(self) -> Ne16TestConf:
         assert implies(
-            not self.has_norm_quant, self.out_type == Ne16MemoryLayout.ACCUMULATOR_TYPE
+            not self.has_norm_quant,
+            self.out_type == NeuralEngineFunctionalModel.ACCUMULATOR_TYPE,
         ), (
             f"Without quantization, the output type has to be equal to the "
-            f"accumulator type {Ne16MemoryLayout.ACCUMULATOR_TYPE}. Given output type {self.out_type}"
+            f"accumulator type {NeuralEngineFunctionalModel.ACCUMULATOR_TYPE}. Given output type {self.out_type}"
         )
         return self

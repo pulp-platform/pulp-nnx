@@ -23,8 +23,6 @@ from TestClasses import IntegerType
 
 
 class NeurekaMemoryLayout:
-    ACCUMULATOR_TYPE = IntegerType(name="int32")
-
     _WEIGHT_BANDWIDTH = 256
     _CIN_SUBTILE_1x1 = 32
     _CIN_SUBTILE_3x3 = 28
@@ -46,7 +44,9 @@ class NeurekaMemoryLayout:
 
         cout, cin, height, width = weight.shape
         cinSubtile = (
-            NeurekaMemoryLayout._CIN_SUBTILE_3x3 if height == 3 else NeurekaMemoryLayout._CIN_SUBTILE_1x1
+            NeurekaMemoryLayout._CIN_SUBTILE_3x3
+            if height == 3
+            else NeurekaMemoryLayout._CIN_SUBTILE_1x1
         )
 
         # Pad cin to be divisible with CIN_SUBTILE
@@ -128,7 +128,9 @@ class NeurekaMemoryLayout:
     ) -> npt.NDArray[np.uint8]:
         """Reverse of weightEncode"""
         cinSubtile = (
-            NeurekaMemoryLayout._CIN_SUBTILE_3x3 if height == 3 else NeurekaMemoryLayout._CIN_SUBTILE_1x1
+            NeurekaMemoryLayout._CIN_SUBTILE_3x3
+            if height == 3
+            else NeurekaMemoryLayout._CIN_SUBTILE_1x1
         )
         cinMajor = int(np.ceil(cin / cinSubtile))
         cinMinor = cinSubtile

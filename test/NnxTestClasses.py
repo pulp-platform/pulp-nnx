@@ -17,13 +17,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
-from typing import Callable, Union, Optional, Set, Tuple, Type
+from typing import Callable, Literal, Union, Optional, Set, Tuple, Type
 import torch
 import numpy as np
 import numpy.typing as npt
 import torch.nn.functional as F
 import os
 from HeaderWriter import HeaderWriter
+from NeuralEngineFunctionalModel import NeuralEngineFunctionalModel
 from TestClasses import IntegerType, Stride, Padding, KernelShape, implies, xor
 from pydantic import BaseModel, PositiveInt, field_validator, model_validator
 
@@ -182,36 +183,21 @@ class NnxTestGenerator:
     _DEFAULT_SEED = 0
 
     @staticmethod
-    def _global_shift(
-        tensor: torch.Tensor, out_type: IntegerType, has_relu: bool
+    def _calculate_global_shift(
+        tensor: torch.Tensor, out_type: IntegerType
     ) -> torch.Tensor:
-        if has_relu:
-            # only adjust positive values
-            tensor = tensor[tensor > 0]
-
+        """Calculate global shift so that the output values are in the range of out_type"""
         s = tensor.type(torch.float64).std()
         target_s = 2 ** (out_type._bits - 1)
-        global_shift = torch.ceil(torch.log2(s / target_s)).type(torch.int32)
-
-        return global_shift
+        return torch.ceil(torch.log2(s / target_s)).type(torch.int32)
 
     @staticmethod
-    def _random_data(_type: IntegerType, shape: Tuple[int, int, int, int]):
+    def _random_data(_type: IntegerType, shape: Tuple):
         return torch.randint(_type.min, _type.max, size=shape)
-
-    @staticmethod
-    def _cast(
-        tensor: torch.Tensor, _type: IntegerType, saturate: bool = False
-    ) -> torch.Tensor:
-        if saturate:
-            return tensor.clamp(_type.min, _type.max)
-        else:
-            return tensor & ((1 << _type._bits) - 1)
 
     @staticmethod
     def from_conf(
         conf: NnxTestConf,
-        accumulator_type: IntegerType,
         input: Optional[torch.Tensor] = None,
         weight: Optional[torch.Tensor] = None,
         scale: Optional[torch.Tensor] = None,
@@ -221,89 +207,49 @@ class NnxTestGenerator:
     ) -> NnxTest:
         torch.manual_seed(NnxTestGenerator._DEFAULT_SEED)
 
+        input_shape = (1, conf.in_channel, conf.in_height, conf.in_width)
+        weight_shape = (
+            conf.out_channel,
+            1 if conf.depthwise else conf.in_channel,
+            conf.kernel_shape.height,
+            conf.kernel_shape.width,
+        )
+        scale_shape = (1, conf.out_channel, 1, 1)
+        bias_shape = (1, conf.out_channel, 1, 1)
+
         if input is None:
             input = NnxTestGenerator._random_data(
                 _type=conf.in_type,
-                shape=(1, conf.in_channel, conf.in_height, conf.in_width),
+                shape=input_shape,
             )
-
-        input_padded = F.pad(
-            input,
-            (
-                conf.padding.left,
-                conf.padding.right,
-                conf.padding.top,
-                conf.padding.bottom,
-            ),
-            "constant",
-            0,
-        )
 
         if weight is None:
             weight = NnxTestGenerator._random_data(
                 _type=conf.weight_type,
-                shape=(
-                    conf.out_channel,
-                    1 if conf.depthwise else conf.in_channel,
-                    conf.kernel_shape.height,
-                    conf.kernel_shape.width,
-                ),
+                shape=weight_shape,
             )
-
-        # Accumulators are 32bit non-saturating.
-        # Calculate in higher precision (int64)
-        output = F.conv2d(
-            input=input_padded,
-            weight=weight,
-            stride=(conf.stride.height, conf.stride.width),
-            groups=conf.in_channel if conf.depthwise else 1,
-        ).type(torch.int64)
-        # Use only the lower 32bits
-        output = NnxTestGenerator._cast(output, accumulator_type, saturate=False).type(
-            torch.int32
-        )
-
-        if verbose:
-            print("INTERMEDIATE RESULTS (pre-normalization/requant):")
-            print(output)
 
         if conf.has_norm_quant:
             if scale is None:
                 assert conf.scale_type is not None
                 scale = NnxTestGenerator._random_data(
-                    conf.scale_type, shape=(1, conf.out_channel, 1, 1)
+                    conf.scale_type, shape=scale_shape
                 )
-            # Scale accumulators are in 48bit, so keeping the data in 64bit
-            output = scale * output
-            assert output.dtype == torch.int64
-
-            if conf.has_bias:
-                # Saturating cast to int32
+            if conf.has_bias and bias is None:
                 assert conf.bias_type is not None
-                output = NnxTestGenerator._cast(
-                    output, conf.bias_type, saturate=True
+                bias = NnxTestGenerator._random_data(
+                    conf.bias_type, shape=bias_shape
                 ).type(torch.int32)
-
-                if bias is None:
-                    bias = NnxTestGenerator._random_data(
-                        conf.bias_type, shape=(1, conf.out_channel, 1, 1)
-                    ).type(torch.int32)
-                output = output + bias
-                output = NnxTestGenerator._cast(
-                    output, conf.bias_type, saturate=False
-                ).type(torch.int32)
-
-            if conf.has_relu:
-                output = F.relu(output)
-
             if global_shift is None:
-                global_shift = NnxTestGenerator._global_shift(
-                    output, conf.out_type, conf.has_relu
+                global_shift = torch.Tensor([0]).type(torch.int32)
+                output = NeuralEngineFunctionalModel().convolution(
+                    input, weight, scale, bias, global_shift, verbose=verbose, **conf.__dict__
                 )
-            output = output >> global_shift
+                NnxTestGenerator._calculate_global_shift(output, conf.out_type)
 
-            # Saturate into out_type
-            output = NnxTestGenerator._cast(output, conf.out_type, saturate=True)
+        output = NeuralEngineFunctionalModel().convolution(
+            input, weight, scale, bias, global_shift, verbose=verbose, **conf.__dict__
+        )
 
         return NnxTest(
             conf=conf,
@@ -328,7 +274,7 @@ class NnxTestHeaderGenerator:
 
     def __init__(
         self,
-        weight_unroll: Callable[
+        weightEncode: Callable[
             [npt.NDArray[np.uint8], int, bool], npt.NDArray[np.uint8]
         ],
         headers_dir: Optional[Union[str, os.PathLike]] = None,
@@ -338,7 +284,7 @@ class NnxTestHeaderGenerator:
         self.header_writer = HeaderWriter(headers_dir)
         # function that takes the weights in CoutCinK format, bitwidth, and a depthwise flag,
         # and returns a numpy array of dtype=np.uint8 of data in a layout correct for the accelerator
-        self.weight_unroll = weight_unroll
+        self.weightEncode = weightEncode
 
     def generate(self, test_name: str, test: NnxTest):
         assert test.input is not None and test.output is not None
@@ -371,7 +317,7 @@ class NnxTestHeaderGenerator:
         weight_offset = -(2 ** (weight_bits - 1))
         weight_out_ch, weight_in_ch, weight_ks_h, weight_ks_w = test.weight.shape
         weight_data: np.ndarray = test.weight.numpy() - weight_offset
-        weight_init = self.weight_unroll(
+        weight_init = self.weightEncode(
             weight_data.astype(np.uint8),
             weight_type._bits,
             test.conf.depthwise,

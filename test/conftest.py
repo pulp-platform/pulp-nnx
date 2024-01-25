@@ -105,7 +105,7 @@ def pytest_generate_tests(metafunc):
             test = NnxTest.load(nnxTestConfCls, test_dir)
             # (Re)generate data
             if not test.is_valid() or regenerate:
-                test = NnxTestGenerator.from_conf(test.conf, nnxMemoryLayoutCls.ACCUMULATOR_TYPE)
+                test = NnxTestGenerator.from_conf(test.conf)
                 test.save_data(test_dir)
             nnxTestAndNames.append((test, test_dir))
         except pydantic.ValidationError as e:

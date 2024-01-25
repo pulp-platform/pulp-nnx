@@ -18,12 +18,9 @@
 
 import numpy as np
 import numpy.typing as npt
-from TestClasses import IntegerType
 
 
 class Ne16MemoryLayout:
-    ACCUMULATOR_TYPE = IntegerType(name="int32")
-
     _CIN_SUBTILE = 16
 
     @staticmethod

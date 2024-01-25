@@ -17,8 +17,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
-from NeurekaMemoryLayout import NeurekaMemoryLayout
 from typing import List, Union, Optional
+from NeuralEngineFunctionalModel import NeuralEngineFunctionalModel
 from NnxTestClasses import NnxTestConf
 from TestClasses import implies, KernelShape, Stride, IntegerType
 from pydantic import field_validator, model_validator
@@ -89,9 +89,10 @@ class NeurekaTestConf(NnxTestConf):
     @model_validator(mode="after")  # type: ignore
     def check_valid_out_type_with_norm_quant(self) -> NeurekaTestConf:
         assert implies(
-            not self.has_norm_quant, self.out_type == NeurekaMemoryLayout.ACCUMULATOR_TYPE
+            not self.has_norm_quant,
+            self.out_type == NeuralEngineFunctionalModel.ACCUMULATOR_TYPE,
         ), (
             f"Without quantization, the output type has to be equal to the "
-            f"accumulator type {NeurekaMemoryLayout.ACCUMULATOR_TYPE}. Given output type {self.out_type}"
+            f"accumulator type {NeuralEngineFunctionalModel.ACCUMULATOR_TYPE}. Given output type {self.out_type}"
         )
         return self

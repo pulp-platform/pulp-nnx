@@ -43,9 +43,7 @@ def headers_gen(
         test = NnxTest.load(nnxTestConfCls, args.test_dir)
     assert test is not None
     if not test.is_valid():
-        test = NnxTestGenerator.from_conf(
-            test.conf, nnxMemoryLayoutCls.ACCUMULATOR_TYPE
-        )
+        test = NnxTestGenerator.from_conf(test.conf)
     NnxTestHeaderGenerator(nnxMemoryLayoutCls.weightEncode).generate(
         args.test_dir, test
     )
@@ -83,9 +81,7 @@ def test_gen(
         exit(-1)
 
     test_conf = nnxTestConfCls.model_validate(test_conf_dict)
-    test = NnxTestGenerator.from_conf(
-        test_conf, nnxMemoryLayoutCls.ACCUMULATOR_TYPE, verbose=args.print_tensors
-    )
+    test = NnxTestGenerator.from_conf(test_conf, verbose=args.print_tensors)
     if not args.skip_save:
         test.save(args.test_dir)
     if args.headers:
