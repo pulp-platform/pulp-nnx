@@ -21,9 +21,9 @@ from typing import Union
 
 import pytest
 import pydantic
-from Ne16 import Ne16
+from Ne16MemoryLayout import Ne16MemoryLayout
 from Ne16TestConf import Ne16TestConf
-from Neureka import Neureka
+from NeurekaMemoryLayout import NeurekaMemoryLayout
 from NeurekaTestConf import NeurekaTestConf
 from NnxTestClasses import NnxTest, NnxTestGenerator
 
@@ -82,10 +82,10 @@ def pytest_generate_tests(metafunc):
     nnxName = metafunc.config.getoption("accelerator")
 
     if nnxName == "ne16":
-        nnxCls = Ne16
+        nnxMemoryLayoutCls = Ne16MemoryLayout
         nnxTestConfCls = Ne16TestConf
     elif nnxName == "neureka":
-        nnxCls = Neureka
+        nnxMemoryLayoutCls = NeurekaMemoryLayout
         nnxTestConfCls = NeurekaTestConf
     else:
         assert (
@@ -105,7 +105,7 @@ def pytest_generate_tests(metafunc):
             test = NnxTest.load(nnxTestConfCls, test_dir)
             # (Re)generate data
             if not test.is_valid() or regenerate:
-                test = NnxTestGenerator.from_conf(test.conf, nnxCls.ACCUMULATOR_TYPE)
+                test = NnxTestGenerator.from_conf(test.conf, nnxMemoryLayoutCls.ACCUMULATOR_TYPE)
                 test.save_data(test_dir)
             nnxTestAndNames.append((test, test_dir))
         except pydantic.ValidationError as e:
@@ -122,4 +122,4 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize("nnxTestAndName", nnxTestAndNames)
     metafunc.parametrize("timeout", [timeout])
     metafunc.parametrize("nnxName", [nnxName])
-    metafunc.parametrize("nnxCls", [nnxCls])
+    metafunc.parametrize("nnxMemoryLayoutCls", [nnxMemoryLayoutCls])

@@ -21,14 +21,13 @@ import numpy.typing as npt
 from TestClasses import IntegerType
 
 
-class Ne16:
+class Ne16MemoryLayout:
     ACCUMULATOR_TYPE = IntegerType(name="int32")
 
     _CIN_SUBTILE = 16
-    _LINEAR_CIN_TILE = 256
 
     @staticmethod
-    def weight_unroll(
+    def weightEncode(
         weight: npt.NDArray[np.uint8], bits: int, depthwise: bool = False
     ) -> npt.NDArray[np.uint8]:
         """Unroll weight into expected memory format
@@ -43,8 +42,8 @@ class Ne16:
         cout, cin, height, width = weight.shape
 
         # Pad cin to be divisible with CIN_SUBTILE
-        if cin % Ne16._CIN_SUBTILE != 0:
-            cinPad = Ne16._CIN_SUBTILE - cin % Ne16._CIN_SUBTILE
+        if cin % Ne16MemoryLayout._CIN_SUBTILE != 0:
+            cinPad = Ne16MemoryLayout._CIN_SUBTILE - cin % Ne16MemoryLayout._CIN_SUBTILE
             weight = np.pad(
                 weight,
                 ((0, 0), (0, cinPad), (0, 0), (0, 0)),
@@ -55,8 +54,8 @@ class Ne16:
 
         # Reshape into (cout, cinMajor, cinMinor, flattened spatial, 1)
         # The 1 at the end is required by the unpacking
-        cinMajor = cin // Ne16._CIN_SUBTILE
-        cinMinor = Ne16._CIN_SUBTILE
+        cinMajor = cin // Ne16MemoryLayout._CIN_SUBTILE
+        cinMinor = Ne16MemoryLayout._CIN_SUBTILE
         weight = weight.reshape(cout, cinMajor, cinMinor, height * width, 1)
 
         # Unpack 'bits' bits in little order, e.g. bits=4: 3 => [1, 1, 0, 0]
@@ -79,7 +78,7 @@ class Ne16:
         return weight.flatten()
 
     @staticmethod
-    def weight_roll(
+    def weightDecode(
         weight: npt.NDArray[np.uint8],
         bits: int,
         cout: int,
@@ -88,8 +87,8 @@ class Ne16:
         width: int,
     ) -> npt.NDArray[np.uint8]:
         """Reverse of weight_roll"""
-        cinMajor = int(np.ceil(cin / Ne16._CIN_SUBTILE))
-        cinMinor = Ne16._CIN_SUBTILE
+        cinMajor = int(np.ceil(cin / Ne16MemoryLayout._CIN_SUBTILE))
+        cinMinor = Ne16MemoryLayout._CIN_SUBTILE
         cinMinorBytes = int(np.ceil(cinMinor / 8))
 
         weight = weight.reshape(cout, cinMajor, bits, height * width, cinMinorBytes, 1)

@@ -22,7 +22,7 @@ import numpy.typing as npt
 from TestClasses import IntegerType
 
 
-class Neureka:
+class NeurekaMemoryLayout:
     ACCUMULATOR_TYPE = IntegerType(name="int32")
 
     _WEIGHT_BANDWIDTH = 256
@@ -30,7 +30,7 @@ class Neureka:
     _CIN_SUBTILE_3x3 = 28
 
     @staticmethod
-    def weight_unroll(
+    def weightEncode(
         weight: npt.NDArray[np.uint8], bits: int, depthwise: bool = False
     ) -> npt.NDArray[np.uint8]:
         """Unroll weight into expected memory format
@@ -46,7 +46,7 @@ class Neureka:
 
         cout, cin, height, width = weight.shape
         cinSubtile = (
-            Neureka._CIN_SUBTILE_3x3 if height == 3 else Neureka._CIN_SUBTILE_1x1
+            NeurekaMemoryLayout._CIN_SUBTILE_3x3 if height == 3 else NeurekaMemoryLayout._CIN_SUBTILE_1x1
         )
 
         # Pad cin to be divisible with CIN_SUBTILE
@@ -80,7 +80,7 @@ class Neureka:
             # (-1, Weight Bandwidth)
             weight = np.pad(
                 weight,
-                ((0, 0), (0, Neureka._WEIGHT_BANDWIDTH - weight.shape[-1])),
+                ((0, 0), (0, NeurekaMemoryLayout._WEIGHT_BANDWIDTH - weight.shape[-1])),
                 "constant",
                 constant_values=0,
             )
@@ -103,12 +103,12 @@ class Neureka:
             weight = weight.transpose(0, 1, 3, 4, 2, 5)
             # (-1, Weight Bandwidth)
             weight = weight.reshape(
-                cout * cinMajor, Neureka._WEIGHT_BANDWIDTH
+                cout * cinMajor, NeurekaMemoryLayout._WEIGHT_BANDWIDTH
             )  # cout*cinMajor, 256b
 
         # Prepare for packing
         # (-1, Weight Bandwidth Bytes, 8)
-        weightBandwidthBytes = int(np.ceil(Neureka._WEIGHT_BANDWIDTH / 8))
+        weightBandwidthBytes = int(np.ceil(NeurekaMemoryLayout._WEIGHT_BANDWIDTH / 8))
         weight = np.stack(np.split(weight, weightBandwidthBytes, axis=-1), axis=-2)
 
         # Pack bits
@@ -118,7 +118,7 @@ class Neureka:
         return weight.flatten()
 
     @staticmethod
-    def weight_roll(
+    def weightDecode(
         weight: npt.NDArray[np.uint8],
         bits: int,
         cout: int,
@@ -126,17 +126,17 @@ class Neureka:
         height: int,
         width: int,
     ) -> npt.NDArray[np.uint8]:
-        """Reverse of weight_unroll"""
+        """Reverse of weightEncode"""
         cinSubtile = (
-            Neureka._CIN_SUBTILE_3x3 if height == 3 else Neureka._CIN_SUBTILE_1x1
+            NeurekaMemoryLayout._CIN_SUBTILE_3x3 if height == 3 else NeurekaMemoryLayout._CIN_SUBTILE_1x1
         )
         cinMajor = int(np.ceil(cin / cinSubtile))
         cinMinor = cinSubtile
-        weightBandwidthBytes = int(np.ceil(Neureka._WEIGHT_BANDWIDTH / 8))
+        weightBandwidthBytes = int(np.ceil(NeurekaMemoryLayout._WEIGHT_BANDWIDTH / 8))
 
         weight = weight.reshape(-1, weightBandwidthBytes, 1)
         weight = np.unpackbits(weight, axis=-1, count=8, bitorder="little")
-        weight = weight.reshape(-1, Neureka._WEIGHT_BANDWIDTH)
+        weight = weight.reshape(-1, NeurekaMemoryLayout._WEIGHT_BANDWIDTH)
 
         if height == 3 and width == 3:
             weight = weight[:, : height * width * cinMinor]

@@ -21,8 +21,8 @@ import re
 from typing import Dict, Union, Optional, Tuple, Type
 import locale
 import subprocess
-from Ne16 import Ne16
-from Neureka import Neureka
+from Ne16MemoryLayout import Ne16MemoryLayout
+from NeurekaMemoryLayout import NeurekaMemoryLayout
 from NnxTestClasses import NnxTest, NnxTestConf, NnxTestHeaderGenerator
 from pathlib import Path
 
@@ -112,10 +112,12 @@ def test(
     nnxTestAndName: Tuple[NnxTest, str],
     timeout: int,
     nnxName: str,
-    nnxCls: Union[Type[Ne16], Type[Neureka]],
+    nnxMemoryLayoutCls: Union[Type[Ne16MemoryLayout], Type[NeurekaMemoryLayout]],
 ):
     nnxTest, nnxTestName = nnxTestAndName
-    NnxTestHeaderGenerator(nnxCls.weight_unroll).generate(nnxTestName, nnxTest)
+    NnxTestHeaderGenerator(nnxMemoryLayoutCls.weightEncode).generate(
+        nnxTestName, nnxTest
+    )
 
     Path("app/src/nnx_layer.c").touch()
     cmd = f"make -C app all run platform=gvsoc"

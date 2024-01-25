@@ -21,9 +21,9 @@ import argparse
 import json
 import toml
 from typing import Optional, Type, Union, Set
-from Ne16 import Ne16
+from Ne16MemoryLayout import Ne16MemoryLayout
 from Ne16TestConf import Ne16TestConf
-from Neureka import Neureka
+from NeurekaMemoryLayout import NeurekaMemoryLayout
 from NeurekaTestConf import NeurekaTestConf
 from NnxTestClasses import (
     NnxTest,
@@ -35,7 +35,7 @@ from NnxTestClasses import (
 
 def headers_gen(
     args,
-    nnxCls: Union[Type[Ne16], Type[Neureka]],
+    nnxMemoryLayoutCls: Union[Type[Ne16MemoryLayout], Type[NeurekaMemoryLayout]],
     nnxTestConfCls: Type[NnxTestConf],
     test: Optional[NnxTest] = None,
 ):
@@ -43,8 +43,12 @@ def headers_gen(
         test = NnxTest.load(nnxTestConfCls, args.test_dir)
     assert test is not None
     if not test.is_valid():
-        test = NnxTestGenerator.from_conf(test.conf, nnxCls.ACCUMULATOR_TYPE)
-    NnxTestHeaderGenerator(nnxCls.weight_unroll).generate(args.test_dir, test)
+        test = NnxTestGenerator.from_conf(
+            test.conf, nnxMemoryLayoutCls.ACCUMULATOR_TYPE
+        )
+    NnxTestHeaderGenerator(nnxMemoryLayoutCls.weightEncode).generate(
+        args.test_dir, test
+    )
 
 
 def print_tensors(test: NnxTest):
@@ -63,7 +67,9 @@ def print_tensors(test: NnxTest):
 
 
 def test_gen(
-    args, nnxCls: Union[Type[Ne16], Type[Neureka]], nnxTestConfCls: Type[NnxTestConf]
+    args,
+    nnxMemoryLayoutCls: Union[Type[Ne16MemoryLayout], Type[NeurekaMemoryLayout]],
+    nnxTestConfCls: Type[NnxTestConf],
 ):
     if args.conf.endswith(".toml"):
         test_conf_dict = toml.load(args.conf)
@@ -78,12 +84,12 @@ def test_gen(
 
     test_conf = nnxTestConfCls.model_validate(test_conf_dict)
     test = NnxTestGenerator.from_conf(
-        test_conf, nnxCls.ACCUMULATOR_TYPE, verbose=args.print_tensors
+        test_conf, nnxMemoryLayoutCls.ACCUMULATOR_TYPE, verbose=args.print_tensors
     )
     if not args.skip_save:
         test.save(args.test_dir)
     if args.headers:
-        headers_gen(args, nnxCls, nnxTestConfCls, test)
+        headers_gen(args, nnxMemoryLayoutCls, nnxTestConfCls, test)
     if args.print_tensors:
         print_tensors(test)
 
@@ -112,9 +118,11 @@ def _regen_recursive(
 
 
 def test_regen(
-    args, nnxCls: Union[Type[Ne16], Type[Neureka]], nnxTestConfCls: Type[NnxTestConf]
+    args,
+    nnxMemoryLayoutCls: Union[Type[Ne16MemoryLayout], Type[NeurekaMemoryLayout]],
+    nnxTestConfCls: Type[NnxTestConf],
 ):
-    _ = nnxCls
+    _ = nnxMemoryLayoutCls
     regen_tensors = set(args.tensors + ["output"])
 
     for test_dir in args.test_dirs:
@@ -207,12 +215,12 @@ parser_regen.set_defaults(func=test_regen)
 args = parser.parse_args()
 
 if args.accelerator == "ne16":
-    nnxCls = Ne16
+    nnxMemoryLayoutCls = Ne16MemoryLayout
     nnxTestConfCls = Ne16TestConf
 elif args.accelerator == "neureka":
-    nnxCls = Neureka
+    nnxMemoryLayoutCls = NeurekaMemoryLayout
     nnxTestConfCls = NeurekaTestConf
 else:
     assert False, f"Unsupported accelerator {args.accelerator}."
 
-args.func(args, nnxCls, nnxTestConfCls)
+args.func(args, nnxMemoryLayoutCls, nnxTestConfCls)
