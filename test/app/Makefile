@@ -63,7 +63,6 @@ APP_SRCS += $(wildcard gen/src/*.c)
 ACCELERATOR_UPPERCASE := $(shell echo $(ACCELERATOR) | tr [:lower:] [:upper:])
 APP_CFLAGS += -DNNX_ACCELERATOR=\"$(ACCELERATOR)\" -DNNX_$(ACCELERATOR_UPPERCASE)
 
-APP_CFLAGS += -O2 -w -Wall -Werror -flto
-APP_LDFLAGS += -flto
+APP_CFLAGS += -O2 -w -Wall -Werror
 
 include $(RULES_DIR)/pmsis_rules.mk
