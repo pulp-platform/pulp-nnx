@@ -41,41 +41,52 @@ uint32_t ne16_get_tile_padding(uint32_t padding, uint32_t i_height,
   return tile_padding;
 }
 
-void ne16_task_init(ne16_task_t *task, const uint8_t kernel_shape,
-                    const uint8_t depthwise, const uint8_t input_bits,
-                    const uint8_t output_bits, const uint8_t weights_bits,
-                    const ne16_weight_offset_mode_e weights_offset_mode,
-                    const uint32_t weights_offset_factor, ne16_quant_t quant,
-                    ne16_norm_t norm, const uint8_t stride) {
-  const uint32_t flag_mode16 =
-      input_bits == 16 ? NE16_FLAG_MODE16 : NE16_FLAG_MODE_BASIC;
+void ne16_task_init(ne16_task_t *task) {
+    *task = (ne16_task_t) { .data = {0} };
+    task->data.cfg.conf0 |= quantMode32Bit;
+}
 
-  *task = (ne16_task_t){
-      .outbytes = output_bits / 8,
-      .weight_d0_stride = flag_mode16 ? NE16_WEIGHT_D0_STRIDE_MODE16
-                                      : NE16_WEIGHT_D0_STRIDE_MODE8,
-      .qw = weights_bits,
-      .stride_shift = stride == 2 ? 1 : 0,
-      .output_channel_throughput = depthwise ? NE16_INPUT_CHANNEL_THROUGHPUT
-                                             : NE16_OUTPUT_CHANNEL_THROUGHPUT,
-      .kernel_shape = kernel_shape,
-      .depthwise = depthwise,
-      .data = {0}};
-
-  const int flag_stride2x2 = stride == 2 ? NE16_FLAG_STRIDE_2x2 : 0;
+void ne16_task_set_op_to_conv(ne16_task_t *task, const uint8_t kernel_shape,
+                              const uint8_t depthwise, const uint8_t stride) {
+  task->depthwise = depthwise;
+  task->kernel_shape = kernel_shape;
+  task->output_channel_throughput = depthwise ? NE16_INPUT_CHANNEL_THROUGHPUT
+                                             : NE16_OUTPUT_CHANNEL_THROUGHPUT;
+  task->stride_shift = stride == 2 ? 1 : 0;
 
   const int flag_mode = kernel_shape == 1 ? NE16_FLAG_MODE_1x1
                         : depthwise == 1  ? NE16_FLAG_MODE_3x3_DW
                                           : NE16_FLAG_MODE_3x3;
 
+  const int flag_stride2x2 = stride == 2 ? NE16_FLAG_STRIDE_2x2 : 0;
+
+  task->data.cfg.conf0 |= flag_mode | flag_stride2x2;
+}
+
+void ne16_task_set_bits(ne16_task_t *task, const uint8_t input_bits,
+                        const uint8_t output_bits, const uint8_t weight_bits) {
+  const uint32_t flag_mode16 =
+      input_bits == 16 ? NE16_FLAG_MODE16 : NE16_FLAG_MODE_BASIC;
+
+  task->out_d0_stride = 256 / output_bits;
+  task->weight_d0_stride = flag_mode16 ? NE16_WEIGHT_D0_STRIDE_MODE16
+                                       : NE16_WEIGHT_D0_STRIDE_MODE8;
+  task->qw = weight_bits;
+  task->data.cfg.conf0 |= flag_mode16 | (weight_bits - 1);
+}
+
+void ne16_task_set_norm_quant(ne16_task_t *task,
+                    ne16_quant_t quant, ne16_norm_t norm) {
   task->data.cfg.conf0 |=
       NE16_FLAG_NORM_QUANT | quant.function | quant.mode |
       (quant.shift_amount << 16) | quant.flag_rounding << NE16_SHIFT_ROUNDING |
       norm.mode | norm.flag_bias << NE16_SHIFT_FLAG_NORM_BIAS |
-      norm.flag_shift << NE16_SHIFT_FLAG_NORM_SHIFT | weights_offset_mode |
-      flag_mode | flag_mode16 | (weights_bits - 1) | flag_stride2x2;
+      norm.flag_shift << NE16_SHIFT_FLAG_NORM_SHIFT;
+}
 
-  task->data.cfg.weight_offset_factor = weights_offset_factor;
+void ne16_task_set_weight_offset(ne16_task_t *task, ne16_weight_offset_mode_e weight_offset_mode, const int32_t weight_offset) {
+  task->data.cfg.conf0 |= weight_offset_mode;
+  task->data.cfg.weight_offset_factor = weight_offset;
 }
 
 /** ne16_pad_ptr
@@ -119,10 +130,9 @@ void ne16_task_set_strides(ne16_task_t *task, const uint32_t k_in,
 
   // WARNING: Stride works only for even output channel sizes (divisible by 2)
   const ne16_stride_t output_stride = {
-      .d0 = 32,
-      .d1 = (k_out_stride * task->outbytes) >> task->stride_shift,
-      .d2 =
-          (k_out_stride * task->outbytes * w_out_stride) >> task->stride_shift};
+      .d0 = task->out_d0_stride,
+      .d1 = k_out_stride >> task->stride_shift,
+      .d2 = (k_out_stride * w_out_stride) >> task->stride_shift};
   task->data.cfg.output_stride = output_stride;
 
   if (task->kernel_shape == 1) {

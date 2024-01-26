@@ -65,18 +65,28 @@ class NnxTestConf(BaseModel):
         ), f"No padding on 1x1 kernel. Given padding {self.padding}"
         return self
 
-    @field_validator("has_norm_quant")
-    @classmethod
-    def check_valid_has_norm_quant(cls, v: bool) -> bool:
-        assert v == True, f"Untested without has_norm_quant."
-        return v
-
     @model_validator(mode="after")  # type: ignore
     def check_valid_norm_quant_types_when_has_norm_qunat(self) -> NnxTestConf:
         if self.has_norm_quant:
             assert self.scale_type is not None, "Scale type was not provided."
             if self.has_bias:
                 assert self.bias_type is not None, "Bias type was not provided."
+        return self
+
+    @model_validator(mode="after")  # type: ignore
+    def check_has_relu_with_norm_quant(self) -> NnxTestConf:
+        assert implies(self.has_relu, self.has_norm_quant), (
+            f"Relu flag can only be enabled when norm_quant is enabled. "
+            f"Given has_relu {self.has_relu} and has_norm_quant {self.has_norm_quant}"
+        )
+        return self
+
+    @model_validator(mode="after")  # type: ignore
+    def check_has_bias_with_norm_quant(self) -> NnxTestConf:
+        assert implies(self.has_bias, self.has_norm_quant), (
+            f"Bias flag can only be enabled when norm_quant is enabled. "
+            f"Given has_bias {self.has_bias} and has_norm_quant {self.has_norm_quant}"
+        )
         return self
 
     @model_validator(mode="after")  # type: ignore
@@ -365,13 +375,13 @@ class NnxTestHeaderGenerator:
                     "width": in_width,
                     "channel": in_channel,
                     "signed": in_signed,
-                    "bits": 8,
+                    "bits": test.conf.in_type._bits,
                 },
                 "output": {
                     "height": out_height,
                     "width": out_width,
                     "channel": out_channel,
-                    "bits": 8,
+                    "bits": test.conf.out_type._bits,
                 },
                 "weight": {
                     "height": weight_ks_h,
@@ -381,8 +391,8 @@ class NnxTestHeaderGenerator:
                     "bits": weight_bits,
                     "offset": weight_offset,
                 },
-                "scale": {"bits": 8},
-                "bias": {"bits": 32},
+                "scale": {"bits": test.conf.scale_type._bits if test.conf.scale_type is not None else 0},
+                "bias": {"bits": test.conf.bias_type._bits if test.conf.bias_type is not None else 0},
                 "padding": {
                     "top": test.conf.padding.top,
                     "bottom": test.conf.padding.bottom,

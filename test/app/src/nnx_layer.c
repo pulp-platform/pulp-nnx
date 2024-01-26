@@ -102,44 +102,63 @@ typedef neureka_siracusa_conf_t nnx_bsp_conf_t;
 #include "weight.h"
 
 static void task_prepare(nnx_task_t *task) {
-  nnx_task_init(
-      task, WEIGHT_HEIGHT, GROUPS > 1, INPUT_BITS, OUTPUT_BITS, WEIGHT_BITS,
-      weightOffsetModeLayerWise, WEIGHT_OFFSET,
+  nnx_task_init(task);
+  ne16_task_set_op_to_conv(task, WEIGHT_HEIGHT, GROUPS > 1, STRIDE_HEIGHT);
+  ne16_task_set_bits(task, INPUT_BITS, OUTPUT_BITS, WEIGHT_BITS);
+
+#if HAS_NORM_QUANT == 1
+#if OUTPUT_BITS == 8
+  const ne16_quant_mode_e quantMode = quantMode8Bit;
+#elif OUTPUT_BITS == 32
+  const ne16_quant_mode_e quantMode = quantMode32Bit;
+#endif
+#if SCALE_BITS == 8
+  const ne16_norm_mode_e normMode = normMode8Bit;
+#elif SCALE_BITS == 32
+  const ne16_norm_mode_e normMode = normMode32Bit;
+#endif
+
+  ne16_task_set_norm_quant(
+      task,
       (nnx_quant_t){.shift_amount = OUTSHIFT,
-                    .mode = quantMode8Bit,
+                    .mode = quantMode,
                     .function =
                         HAS_RELU ? quantFunctionRelu : quantFunctionIdentity,
                     .flag_rounding = nnxTaskFlagFalse},
-      (nnx_norm_t){.mode = normMode8Bit,
+      (nnx_norm_t){.mode = normMode32Bit,
                    .flag_bias = HAS_BIAS ? nnxTaskFlagTrue : nnxTaskFlagFalse,
-                   .flag_shift = nnxTaskFlagFalse},
-#ifdef NNX_NE16
-      STRIDE_HEIGHT
-#elif NNX_NEUREKA
-      INPUT_SIGNED
-#endif
-  );
+                   .flag_shift = nnxTaskFlagFalse});
+#endif // HAS_NORM_QUANT
+  ne16_task_set_weight_offset(task, weightOffsetModeLayerWise, WEIGHT_OFFSET);
+
+  const uint32_t k_in_stride = INPUT_CHANNEL * INPUT_BITS / 8;
+  const uint32_t k_out_stride = OUTPUT_CHANNEL * OUTPUT_BITS / 8;
 
 #if STRIDE_HEIGHT == 2 && STRIDE_WIDTH == 2
   nnx_task_set_dims_stride2x2(
-      task, INPUT_HEIGHT, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH,
-      INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL, OUTPUT_WIDTH,
-      OUTPUT_CHANNEL, WEIGHT_HEIGHT, WEIGHT_WIDTH, PADDING_TOP, PADDING_BOTTOM,
-      PADDING_RIGHT, PADDING_LEFT);
+      task, INPUT_HEIGHT, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH, k_in_stride,
+      OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL, OUTPUT_WIDTH, k_out_stride,
+      WEIGHT_HEIGHT, WEIGHT_WIDTH, PADDING_TOP, PADDING_BOTTOM, PADDING_RIGHT,
+      PADDING_LEFT);
 #else
-  nnx_task_set_dims(task, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH,
-                    INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL,
-                    OUTPUT_WIDTH, OUTPUT_CHANNEL, PADDING_TOP, PADDING_BOTTOM,
-                    PADDING_RIGHT, PADDING_LEFT);
+  nnx_task_set_dims(task, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH, k_in_stride,
+                    OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL, OUTPUT_WIDTH,
+                    k_out_stride, PADDING_TOP, PADDING_BOTTOM, PADDING_RIGHT,
+                    PADDING_LEFT);
 #endif
 
   nnx_task_set_ptrs(task, (uint32_t)input, INPUT_WIDTH, INPUT_CHANNEL,
                     INPUT_BITS, PADDING_TOP, PADDING_LEFT, (uint32_t)output,
-                    (uint32_t)weight, (uint32_t)scale, NULL,
+                    (uint32_t)weight,
+#if HAS_NORM_QUANT == 1
+                    (uint32_t)scale, NULL,
 #if HAS_BIAS == 1
                     (uint32_t)bias
 #else
                     NULL
+#endif
+#else
+                    NULL, NULL, NULL
 #endif
   );
 }
