@@ -17,16 +17,18 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
-from typing import Callable, Literal, Union, Optional, Set, Tuple, Type
-import torch
+
+import os
+from typing import Callable, Optional, Set, Tuple, Type, Union
+
 import numpy as np
 import numpy.typing as npt
-import torch.nn.functional as F
-import os
+import torch
+from pydantic import BaseModel, PositiveInt, field_validator, model_validator
+
 from HeaderWriter import HeaderWriter
 from NeuralEngineFunctionalModel import NeuralEngineFunctionalModel
-from TestClasses import IntegerType, Stride, Padding, KernelShape, implies, xor
-from pydantic import BaseModel, PositiveInt, field_validator, model_validator
+from TestClasses import IntegerType, KernelShape, Padding, Stride, implies, xor
 
 
 class NnxTestConf(BaseModel):
@@ -243,7 +245,13 @@ class NnxTestGenerator:
             if global_shift is None:
                 global_shift = torch.Tensor([0]).type(torch.int32)
                 output = NeuralEngineFunctionalModel().convolution(
-                    input, weight, scale, bias, global_shift, verbose=verbose, **conf.__dict__
+                    input,
+                    weight,
+                    scale,
+                    bias,
+                    global_shift,
+                    verbose=verbose,
+                    **conf.__dict__,
                 )
                 NnxTestGenerator._calculate_global_shift(output, conf.out_type)
 

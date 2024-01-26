@@ -16,15 +16,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from functools import cached_property
 import re
-from typing import Any, Dict, Literal, Optional, TYPE_CHECKING
+from functools import cached_property
+from typing import TYPE_CHECKING, Any, Dict, Literal, Optional
+
 from pydantic import (
     BaseModel,
-    model_serializer,
-    model_validator,
     NonNegativeInt,
     PositiveInt,
+    model_serializer,
+    model_validator,
 )
 
 

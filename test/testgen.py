@@ -16,11 +16,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import os
 import argparse
 import json
+import os
+from typing import Optional, Set, Type, Union
+
 import toml
-from typing import Optional, Type, Union, Set
+
 from Ne16MemoryLayout import Ne16MemoryLayout
 from Ne16TestConf import Ne16TestConf
 from NeurekaMemoryLayout import NeurekaMemoryLayout

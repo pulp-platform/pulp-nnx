@@ -16,15 +16,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import locale
 import os
 import re
-from typing import Dict, Union, Optional, Tuple, Type
-import locale
 import subprocess
+from pathlib import Path
+from typing import Dict, Optional, Tuple, Type, Union
+
 from Ne16MemoryLayout import Ne16MemoryLayout
 from NeurekaMemoryLayout import NeurekaMemoryLayout
 from NnxTestClasses import NnxTest, NnxTestConf, NnxTestHeaderGenerator
-from pathlib import Path
 
 HORIZONTAL_LINE = "\n" + "-" * 100 + "\n"
 

@@ -20,14 +20,21 @@ stages:
   - lint
   - test
 
-format_python:
+python_format:
   stage: lint
   tags:
     - python-lint
   script:
     - black --check .
 
-static_check_python:
+python_sort_imports:
+  stage: lint
+  tags:
+    - python-lint
+  script:
+    - isort --check test
+
+python_static_check:
   stage: lint
   tags:
     - python-lint

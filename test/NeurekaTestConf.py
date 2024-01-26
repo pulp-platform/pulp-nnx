@@ -17,11 +17,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from __future__ import annotations
-from typing import List, Union, Optional
+
+from typing import List, Optional, Union
+
+from pydantic import field_validator, model_validator
+
 from NeuralEngineFunctionalModel import NeuralEngineFunctionalModel
 from NnxTestClasses import NnxTestConf
-from TestClasses import implies, KernelShape, Stride, IntegerType
-from pydantic import field_validator, model_validator
+from TestClasses import IntegerType, KernelShape, Stride, implies
 
 
 class NeurekaTestConf(NnxTestConf):

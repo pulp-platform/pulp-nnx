@@ -1,6 +1,8 @@
 from typing import Optional
+
 import torch
 import torch.nn.functional as F
+
 from TestClasses import IntegerType, Padding, Stride
 
 
@@ -107,6 +109,15 @@ class NeuralEngineFunctionalModel:
         if has_norm_quant:
             assert scale is not None
             assert global_shift is not None
-            output = self._norm_quant(output, scale, bias, global_shift, out_type, bias_type, has_bias, has_relu)
+            output = self._norm_quant(
+                output,
+                scale,
+                bias,
+                global_shift,
+                out_type,
+                bias_type,
+                has_bias,
+                has_relu,
+            )
 
         return output

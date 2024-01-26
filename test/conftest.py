@@ -19,14 +19,14 @@
 import os
 from typing import Union
 
-import pytest
 import pydantic
+import pytest
+
 from Ne16MemoryLayout import Ne16MemoryLayout
 from Ne16TestConf import Ne16TestConf
 from NeurekaMemoryLayout import NeurekaMemoryLayout
 from NeurekaTestConf import NeurekaTestConf
 from NnxTestClasses import NnxTest, NnxTestGenerator
-
 
 _SUPPORTED_ACCELERATORS = ["ne16", "neureka"]
 
