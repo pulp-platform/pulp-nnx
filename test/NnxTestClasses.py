@@ -28,7 +28,7 @@ from pydantic import BaseModel, PositiveInt, field_validator, model_validator
 
 from HeaderWriter import HeaderWriter
 from NeuralEngineFunctionalModel import NeuralEngineFunctionalModel
-from TestClasses import IntegerType, KernelShape, Padding, Stride, implies, xor
+from TestClasses import IntegerType, KernelShape, Padding, Stride, implies
 
 
 class NnxTestConf(BaseModel):
@@ -81,7 +81,7 @@ class NnxTestConf(BaseModel):
 
     @model_validator(mode="after")  # type: ignore
     def check_valid_out_type_with_relu(self) -> NnxTestConf:
-        assert xor(self.has_relu, self.out_type._signed), (
+        assert self.has_relu ^ self.out_type._signed, (
             f"Output type has to be unsigned when there is relu, otherwise signed. "
             f"Given output type {self.out_type} and has_relu {self.has_relu}"
         )
