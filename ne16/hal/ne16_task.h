@@ -60,7 +60,6 @@ typedef enum ne16_quant_function_e {
 typedef struct ne16_quant_t {
   // Shift amount must be in range 0x00-0x1F
   unsigned shift_amount;
-  ne16_quant_mode_e mode;
   ne16_quant_function_e function;
   int flag_rounding;
 } ne16_quant_t;

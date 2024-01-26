@@ -41,10 +41,7 @@ uint32_t ne16_get_tile_padding(uint32_t padding, uint32_t i_height,
   return tile_padding;
 }
 
-void ne16_task_init(ne16_task_t *task) {
-  *task = (ne16_task_t){.data = {0}};
-  task->data.cfg.conf0 |= quantMode32Bit;
-}
+void ne16_task_init(ne16_task_t *task) { *task = (ne16_task_t){.data = {0}}; }
 
 void ne16_task_set_op_to_conv(ne16_task_t *task, const uint8_t kernel_shape,
                               const uint8_t depthwise, const uint8_t stride) {
@@ -67,26 +64,35 @@ void ne16_task_set_bits(ne16_task_t *task, const uint8_t input_bits,
   const uint32_t flag_mode16 =
       input_bits == 16 ? NE16_FLAG_MODE16 : NE16_FLAG_MODE_BASIC;
 
+  ne16_quant_mode_e quantMode;
+  if (output_bits == 16) {
+    quantMode = quantMode16Bit;
+  } else if (output_bits == 8) {
+    quantMode = quantMode8Bit;
+  } else {
+    quantMode = quantMode32Bit;
+  }
+
   task->out_d0_stride = 256 / output_bits;
   task->weight_d0_stride =
       flag_mode16 ? NE16_WEIGHT_D0_STRIDE_MODE16 : NE16_WEIGHT_D0_STRIDE_MODE8;
   task->qw = weight_bits;
-  task->data.cfg.conf0 &= ~(NE16_MASK_FLAG_MODE16 | NE16_MASK_FLAG_WEIGHT_BITS);
-  task->data.cfg.conf0 |= flag_mode16 | (weight_bits - 1);
+  task->data.cfg.conf0 &= ~(NE16_MASK_QUANT_MODE | NE16_MASK_FLAG_MODE16 |
+                            NE16_MASK_FLAG_WEIGHT_BITS);
+  task->data.cfg.conf0 |= quantMode | flag_mode16 | (weight_bits - 1);
 }
 
 void ne16_task_set_norm_quant(ne16_task_t *task, ne16_quant_t quant,
                               ne16_norm_t norm) {
   task->data.cfg.conf0 &=
-      ~(NE16_MASK_QUANT_MODE | NE16_MASK_QUANT_FUNCTION |
-        NE16_MASK_SHIFT_AMOUNT | NE16_MASK_FLAG_ROUNDING | NE16_MASK_NORM_MODE |
+      ~(NE16_MASK_QUANT_FUNCTION | NE16_MASK_SHIFT_AMOUNT |
+        NE16_MASK_FLAG_ROUNDING | NE16_MASK_NORM_MODE |
         NE16_MASK_FLAG_NORM_BIAS | NE16_MASK_FLAG_NORM_SHIFT);
-  task->data.cfg.conf0 |= NE16_FLAG_NORM_QUANT | quant.function | quant.mode |
-                          (quant.shift_amount << 16) |
-                          quant.flag_rounding << NE16_SHIFT_FLAG_ROUNDING |
-                          norm.mode |
-                          norm.flag_bias << NE16_SHIFT_FLAG_NORM_BIAS |
-                          norm.flag_shift << NE16_SHIFT_FLAG_NORM_SHIFT;
+  task->data.cfg.conf0 |=
+      NE16_FLAG_NORM_QUANT | quant.function | (quant.shift_amount << 16) |
+      quant.flag_rounding << NE16_SHIFT_FLAG_ROUNDING | norm.mode |
+      norm.flag_bias << NE16_SHIFT_FLAG_NORM_BIAS |
+      norm.flag_shift << NE16_SHIFT_FLAG_NORM_SHIFT;
 }
 
 void ne16_task_set_weight_offset(ne16_task_t *task,

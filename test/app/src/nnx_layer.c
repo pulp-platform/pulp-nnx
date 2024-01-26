@@ -107,11 +107,6 @@ static void task_prepare(nnx_task_t *task) {
   ne16_task_set_bits(task, INPUT_BITS, OUTPUT_BITS, WEIGHT_BITS);
 
 #if HAS_NORM_QUANT == 1
-#if OUTPUT_BITS == 8
-  const ne16_quant_mode_e quantMode = quantMode8Bit;
-#elif OUTPUT_BITS == 32
-  const ne16_quant_mode_e quantMode = quantMode32Bit;
-#endif
 #if SCALE_BITS == 8
   const ne16_norm_mode_e normMode = normMode8Bit;
 #elif SCALE_BITS == 32
@@ -121,7 +116,6 @@ static void task_prepare(nnx_task_t *task) {
   ne16_task_set_norm_quant(
       task,
       (nnx_quant_t){.shift_amount = OUTSHIFT,
-                    .mode = quantMode,
                     .function =
                         HAS_RELU ? quantFunctionRelu : quantFunctionIdentity,
                     .flag_rounding = nnxTaskFlagFalse},
