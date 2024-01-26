@@ -25,20 +25,6 @@
 #include <stdint.h>
 
 /**
- * neureka_siracusa_cg_enable
- *
- * Enable clock gating of the neureka.
- */
-void neureka_siracusa_cg_enable();
-
-/**
- * neureka_siracusa_cg_enable
- *
- * Disable clock gating of the neureka.
- */
-void neureka_siracusa_cg_disable();
-
-/**
  * neureka_siracusa_setpriority_neureka
  *
  * Set HCI interconnect bus priority to prioritize neureka.
