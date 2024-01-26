@@ -22,7 +22,7 @@
 #include "neureka_task_defs.h"
 #include "pulp_nnx_util.h"
 
-inline uint32_t neureka_get_tile_padding(uint32_t padding, uint32_t i_height,
+uint32_t neureka_get_tile_padding(uint32_t padding, uint32_t i_height,
                                          uint32_t i_width, uint32_t n_height,
                                          uint32_t n_width) {
   uint32_t tile_padding = padding;
@@ -83,14 +83,14 @@ void neureka_task_init(neureka_task_t *task, const uint8_t kernel_shape,
  * it was the start to the padded data.
  * Necessary for input pointer when it's padded.
  */
-inline uint32_t neureka_pad_ptr(uint32_t ptr, const uint32_t width,
+uint32_t neureka_pad_ptr(uint32_t ptr, const uint32_t width,
                                 const uint32_t channel, const uint8_t bits,
                                 const uint8_t padding_top,
                                 const uint8_t padding_left) {
   return ptr - (padding_top * width + padding_left) * channel * bits / 8;
 }
 
-inline void neureka_task_set_ptrs(neureka_task_t *task, uint32_t input_ptr,
+void neureka_task_set_ptrs(neureka_task_t *task, uint32_t input_ptr,
                                   uint32_t w_in, uint32_t k_in, uint8_t bits_in,
                                   uint8_t padding_top, uint8_t padding_left,
                                   uint32_t output_ptr, uint32_t weights_ptr,
@@ -169,7 +169,7 @@ void neureka_task_set_counters(neureka_task_t *task, const uint32_t k_in,
   task->data.cfg.subtile = subtile;
 }
 
-inline void neureka_task_set_padding(neureka_task_t *task, const uint8_t top,
+void neureka_task_set_padding(neureka_task_t *task, const uint8_t top,
                                      const uint8_t bottom, const uint8_t left,
                                      const uint8_t right, const uint8_t value) {
   task->data.cfg.padding = ((top & 0xf) << 28) | ((right & 0xf) << 24) |
@@ -177,7 +177,7 @@ inline void neureka_task_set_padding(neureka_task_t *task, const uint8_t top,
                            (value & 0xff);
 }
 
-inline void neureka_task_set_mask_filter(neureka_task_t *task,
+void neureka_task_set_mask_filter(neureka_task_t *task,
                                          const uint8_t top, const uint8_t right,
                                          const uint8_t bottom,
                                          const uint8_t left) {
