@@ -23,8 +23,8 @@
 #include "pulp_nnx_util.h"
 
 uint32_t ne16_get_tile_padding(uint32_t padding, uint32_t i_height,
-                                      uint32_t i_width, uint32_t n_height,
-                                      uint32_t n_width) {
+                               uint32_t i_width, uint32_t n_height,
+                               uint32_t n_width) {
   uint32_t tile_padding = padding;
   if (i_height > 0) {
     tile_padding &= ~(0xf << 28);
@@ -42,8 +42,8 @@ uint32_t ne16_get_tile_padding(uint32_t padding, uint32_t i_height,
 }
 
 void ne16_task_init(ne16_task_t *task) {
-    *task = (ne16_task_t) { .data = {0} };
-    task->data.cfg.conf0 |= quantMode32Bit;
+  *task = (ne16_task_t){.data = {0}};
+  task->data.cfg.conf0 |= quantMode32Bit;
 }
 
 void ne16_task_set_op_to_conv(ne16_task_t *task, const uint8_t kernel_shape,
@@ -51,13 +51,14 @@ void ne16_task_set_op_to_conv(ne16_task_t *task, const uint8_t kernel_shape,
   task->depthwise = depthwise;
   task->kernel_shape = kernel_shape;
   task->output_channel_throughput = depthwise ? NE16_INPUT_CHANNEL_THROUGHPUT
-                                             : NE16_OUTPUT_CHANNEL_THROUGHPUT;
+                                              : NE16_OUTPUT_CHANNEL_THROUGHPUT;
   const int flag_mode = kernel_shape == 1 ? NE16_FLAG_MODE_1x1
                         : depthwise == 1  ? NE16_FLAG_MODE_3x3_DW
                                           : NE16_FLAG_MODE_3x3;
 
   const int flag_stride2x2 = stride == 2 ? NE16_FLAG_STRIDE_2x2 : 0;
 
+  task->data.cfg.conf0 &= ~(NE16_MASK_FLAG_MODE | NE16_MASK_FLAG_STRIDE_2x2);
   task->data.cfg.conf0 |= flag_mode | flag_stride2x2;
 }
 
@@ -67,22 +68,31 @@ void ne16_task_set_bits(ne16_task_t *task, const uint8_t input_bits,
       input_bits == 16 ? NE16_FLAG_MODE16 : NE16_FLAG_MODE_BASIC;
 
   task->out_d0_stride = 256 / output_bits;
-  task->weight_d0_stride = flag_mode16 ? NE16_WEIGHT_D0_STRIDE_MODE16
-                                       : NE16_WEIGHT_D0_STRIDE_MODE8;
+  task->weight_d0_stride =
+      flag_mode16 ? NE16_WEIGHT_D0_STRIDE_MODE16 : NE16_WEIGHT_D0_STRIDE_MODE8;
   task->qw = weight_bits;
+  task->data.cfg.conf0 &= ~(NE16_MASK_FLAG_MODE16 | NE16_MASK_FLAG_WEIGHT_BITS);
   task->data.cfg.conf0 |= flag_mode16 | (weight_bits - 1);
 }
 
-void ne16_task_set_norm_quant(ne16_task_t *task,
-                    ne16_quant_t quant, ne16_norm_t norm) {
-  task->data.cfg.conf0 |=
-      NE16_FLAG_NORM_QUANT | quant.function | quant.mode |
-      (quant.shift_amount << 16) | quant.flag_rounding << NE16_SHIFT_ROUNDING |
-      norm.mode | norm.flag_bias << NE16_SHIFT_FLAG_NORM_BIAS |
-      norm.flag_shift << NE16_SHIFT_FLAG_NORM_SHIFT;
+void ne16_task_set_norm_quant(ne16_task_t *task, ne16_quant_t quant,
+                              ne16_norm_t norm) {
+  task->data.cfg.conf0 &=
+      ~(NE16_MASK_QUANT_MODE | NE16_MASK_QUANT_FUNCTION |
+        NE16_MASK_SHIFT_AMOUNT | NE16_MASK_FLAG_ROUNDING | NE16_MASK_NORM_MODE |
+        NE16_MASK_FLAG_NORM_BIAS | NE16_MASK_FLAG_NORM_SHIFT);
+  task->data.cfg.conf0 |= NE16_FLAG_NORM_QUANT | quant.function | quant.mode |
+                          (quant.shift_amount << 16) |
+                          quant.flag_rounding << NE16_SHIFT_FLAG_ROUNDING |
+                          norm.mode |
+                          norm.flag_bias << NE16_SHIFT_FLAG_NORM_BIAS |
+                          norm.flag_shift << NE16_SHIFT_FLAG_NORM_SHIFT;
 }
 
-void ne16_task_set_weight_offset(ne16_task_t *task, ne16_weight_offset_mode_e weight_offset_mode, const int32_t weight_offset) {
+void ne16_task_set_weight_offset(ne16_task_t *task,
+                                 ne16_weight_offset_mode_e weight_offset_mode,
+                                 const int32_t weight_offset) {
+  task->data.cfg.conf0 &= ~NE16_MASK_WEIGHT_OFFSET_MODE;
   task->data.cfg.conf0 |= weight_offset_mode;
   task->data.cfg.weight_offset_factor = weight_offset;
 }
@@ -94,18 +104,16 @@ void ne16_task_set_weight_offset(ne16_task_t *task, ne16_weight_offset_mode_e we
  * Necessary for input pointer when it's padded.
  */
 uint32_t ne16_pad_ptr(uint32_t ptr, const uint32_t width,
-                             const uint32_t channel, const uint8_t bits,
-                             const uint8_t padding_top,
-                             const uint8_t padding_left) {
+                      const uint32_t channel, const uint8_t bits,
+                      const uint8_t padding_top, const uint8_t padding_left) {
   return ptr - (padding_top * width + padding_left) * channel * bits / 8;
 }
 
-void ne16_task_set_ptrs(ne16_task_t *task, uint32_t input_ptr,
-                               uint32_t w_in, uint32_t k_in, uint8_t bits_in,
-                               uint8_t padding_top, uint8_t padding_left,
-                               uint32_t output_ptr, uint32_t weights_ptr,
-                               uint32_t scale_ptr, uint32_t shift_ptr,
-                               uint32_t bias_ptr) {
+void ne16_task_set_ptrs(ne16_task_t *task, uint32_t input_ptr, uint32_t w_in,
+                        uint32_t k_in, uint8_t bits_in, uint8_t padding_top,
+                        uint8_t padding_left, uint32_t output_ptr,
+                        uint32_t weights_ptr, uint32_t scale_ptr,
+                        uint32_t shift_ptr, uint32_t bias_ptr) {
   task->data.infeat_ptr =
       ne16_pad_ptr(input_ptr, w_in, k_in, bits_in, padding_top, padding_left);
   task->data.outfeat_ptr = output_ptr;
@@ -126,10 +134,9 @@ void ne16_task_set_strides(ne16_task_t *task, const uint32_t k_in,
       .d0 = k_in_stride, .d1 = k_in_stride * w_in_stride, .d2 = 0};
   task->data.cfg.input_stride = input_stride;
 
-  const ne16_stride_t output_stride = {
-      .d0 = task->out_d0_stride,
-      .d1 = k_out_stride,
-      .d2 = k_out_stride * w_out_stride};
+  const ne16_stride_t output_stride = {.d0 = task->out_d0_stride,
+                                       .d1 = k_out_stride,
+                                       .d2 = k_out_stride * w_out_stride};
   task->data.cfg.output_stride = output_stride;
 
   if (task->kernel_shape == 1) {
@@ -178,16 +185,16 @@ void ne16_task_set_counters(ne16_task_t *task, const uint32_t k_in,
 }
 
 void ne16_task_set_padding(ne16_task_t *task, const uint8_t top,
-                                  const uint8_t bottom, const uint8_t left,
-                                  const uint8_t right, const uint8_t value) {
+                           const uint8_t bottom, const uint8_t left,
+                           const uint8_t right, const uint8_t value) {
   task->data.cfg.padding = ((top & 0xf) << 28) | ((right & 0xf) << 24) |
                            ((bottom & 0xf) << 20) | ((left & 0xf) << 16) |
                            (value & 0xff);
 }
 
 void ne16_task_set_mask_filter(ne16_task_t *task, const uint8_t top,
-                                      const uint8_t right, const uint8_t bottom,
-                                      const uint8_t left) {
+                               const uint8_t right, const uint8_t bottom,
+                               const uint8_t left) {
   task->data.cfg.filter_mask = ((top & 0xff) << 24) | ((right & 0xff) << 16) |
                                ((bottom & 0xff) << 8) | ((left & 0xff) << 0);
 }

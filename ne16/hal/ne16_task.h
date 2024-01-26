@@ -124,9 +124,11 @@ void ne16_task_set_op_to_conv(ne16_task_t *task, const uint8_t kernel_shape,
                               const uint8_t depthwise, const uint8_t stride);
 void ne16_task_set_bits(ne16_task_t *task, const uint8_t input_bits,
                         const uint8_t output_bits, const uint8_t weight_bits);
-void ne16_task_set_norm_quant(ne16_task_t *task,
-                    ne16_quant_t quant, ne16_norm_t norm);
-void ne16_task_set_weight_offset(ne16_task_t *task, ne16_weight_offset_mode_e weight_offset_mode, const int32_t weight_offset);
+void ne16_task_set_norm_quant(ne16_task_t *task, ne16_quant_t quant,
+                              ne16_norm_t norm);
+void ne16_task_set_weight_offset(ne16_task_t *task,
+                                 ne16_weight_offset_mode_e weight_offset_mode,
+                                 const int32_t weight_offset);
 uint32_t ne16_get_tile_padding(uint32_t padding, uint32_t i_height,
                                uint32_t i_width, uint32_t n_height,
                                uint32_t n_width);
