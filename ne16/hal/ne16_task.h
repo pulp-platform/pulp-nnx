@@ -113,7 +113,6 @@ typedef struct ne16_task_t {
   uint8_t out_d0_stride;
   uint8_t weight_d0_stride;
   uint8_t qw;
-  uint8_t stride_shift;
   uint8_t output_channel_throughput;
   uint8_t kernel_shape;
   uint8_t depthwise;

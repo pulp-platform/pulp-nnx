@@ -52,8 +52,6 @@ void ne16_task_set_op_to_conv(ne16_task_t *task, const uint8_t kernel_shape,
   task->kernel_shape = kernel_shape;
   task->output_channel_throughput = depthwise ? NE16_INPUT_CHANNEL_THROUGHPUT
                                              : NE16_OUTPUT_CHANNEL_THROUGHPUT;
-  task->stride_shift = stride == 2 ? 1 : 0;
-
   const int flag_mode = kernel_shape == 1 ? NE16_FLAG_MODE_1x1
                         : depthwise == 1  ? NE16_FLAG_MODE_3x3_DW
                                           : NE16_FLAG_MODE_3x3;
@@ -128,11 +126,10 @@ void ne16_task_set_strides(ne16_task_t *task, const uint32_t k_in,
       .d0 = k_in_stride, .d1 = k_in_stride * w_in_stride, .d2 = 0};
   task->data.cfg.input_stride = input_stride;
 
-  // WARNING: Stride works only for even output channel sizes (divisible by 2)
   const ne16_stride_t output_stride = {
       .d0 = task->out_d0_stride,
-      .d1 = k_out_stride >> task->stride_shift,
-      .d2 = (k_out_stride * w_out_stride) >> task->stride_shift};
+      .d1 = k_out_stride,
+      .d2 = k_out_stride * w_out_stride};
   task->data.cfg.output_stride = output_stride;
 
   if (task->kernel_shape == 1) {
@@ -222,8 +219,9 @@ void ne16_task_set_dims_stride2x2(
     const uint8_t padding_left) {
   const uint8_t stride = 2;
 
+  // WARNING: works only for even output channel stride (divisible by 2)
   ne16_task_set_strides(task, k_in, w_in_stride, k_in_stride, w_out_stride,
-                        k_out_stride);
+                        k_out_stride >> 1);
   ne16_task_set_counters(task, k_in, h_out > 1 ? 3 : 1, w_out > 1 ? 3 : 1,
                          k_out, h_in + padding_top >= 5 ? 0 : padding_bottom,
                          0);
