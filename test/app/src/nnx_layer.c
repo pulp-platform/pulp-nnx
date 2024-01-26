@@ -125,10 +125,11 @@ static void task_prepare(nnx_task_t *task) {
                     .function =
                         HAS_RELU ? quantFunctionRelu : quantFunctionIdentity,
                     .flag_rounding = nnxTaskFlagFalse},
-      (nnx_norm_t){.mode = normMode32Bit,
+      (nnx_norm_t){.mode = normMode,
                    .flag_bias = HAS_BIAS ? nnxTaskFlagTrue : nnxTaskFlagFalse,
                    .flag_shift = nnxTaskFlagFalse});
 #endif // HAS_NORM_QUANT
+  //
   ne16_task_set_weight_offset(task, weightOffsetModeLayerWise, WEIGHT_OFFSET);
 
   const uint32_t k_in_stride = INPUT_CHANNEL * INPUT_BITS / 8;
