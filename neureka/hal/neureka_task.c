@@ -148,7 +148,8 @@ void neureka_task_set_strides(neureka_task_t *task, const uint32_t k_in,
                               const uint32_t w_in_stride,
                               const uint32_t h_out_stride,
                               const uint32_t w_out_stride) {
-  const uint32_t num_k_in = divnceil(k_in, task->subtile_input_channel);
+  const uint32_t num_k_in =
+      nnx_calculate_number_of_tiles(k_in, task->subtile_input_channel);
 
   const neureka_stride_t input_stride = {
       .d0 = w_in_stride, .d1 = h_in_stride, .d2 = 0};
@@ -177,26 +178,34 @@ void neureka_task_set_counters(neureka_task_t *task, const uint32_t k_in,
                                const uint32_t k_out,
                                const uint8_t padding_bottom,
                                const uint8_t padding_right) {
-  const uint16_t num_Ko = divnceil(k_out, task->subtile_output_channel);
-  const uint16_t num_Ki = divnceil(k_in, task->subtile_input_channel);
-  const uint16_t num_Ho = divnceil(h_out, NEUREKA_SUBTILE_OUTPUT_HEIGHT);
-  const uint16_t num_Wo = divnceil(w_out, NEUREKA_SUBTILE_OUTPUT_WIDTH);
+  const uint16_t num_Ko =
+      nnx_calculate_number_of_tiles(k_out, task->subtile_output_channel);
+  const uint16_t num_Ki =
+      nnx_calculate_number_of_tiles(k_in, task->subtile_input_channel);
+  const uint16_t num_Ho =
+      nnx_calculate_number_of_tiles(h_out, NEUREKA_SUBTILE_OUTPUT_HEIGHT);
+  const uint16_t num_Wo =
+      nnx_calculate_number_of_tiles(w_out, NEUREKA_SUBTILE_OUTPUT_WIDTH);
 
-  const uint16_t rem_Ko = remainder(k_out, task->subtile_output_channel);
-  const uint16_t rem_Ki = remainder(k_in, task->subtile_input_channel);
-  const uint16_t rem_Ho = remainder(h_out, NEUREKA_SUBTILE_OUTPUT_HEIGHT);
-  const uint16_t rem_Wo = remainder(w_out, NEUREKA_SUBTILE_OUTPUT_WIDTH);
+  const uint16_t rem_Ko =
+      nnx_calculate_last_tile_size(k_out, task->subtile_output_channel);
+  const uint16_t rem_Ki =
+      nnx_calculate_last_tile_size(k_in, task->subtile_input_channel);
+  const uint16_t rem_Ho =
+      nnx_calculate_last_tile_size(h_out, NEUREKA_SUBTILE_OUTPUT_HEIGHT);
+  const uint16_t rem_Wo =
+      nnx_calculate_last_tile_size(w_out, NEUREKA_SUBTILE_OUTPUT_WIDTH);
   const uint16_t rem_Hi =
       (task->kernel_shape == 1 ? rem_Ho : rem_Ho + 2) - padding_bottom;
   const uint16_t rem_Wi =
       (task->kernel_shape == 1 ? rem_Wo : rem_Wo + 2) - padding_right;
 
   const neureka_subtile_t subtile = {
-      .number = {.KoKi = concat_half(num_Ko, num_Ki),
-                 .HoWo = concat_half(num_Ho, num_Wo)},
-      .remainder = {.KoKi = concat_half(rem_Ko, rem_Ki),
-                    .HoWo = concat_half(rem_Ho, rem_Wo),
-                    .HiWi = concat_half(rem_Hi, rem_Wi)}};
+      .number = {.KoKi = nnx_concat_half(num_Ko, num_Ki),
+                 .HoWo = nnx_concat_half(num_Ho, num_Wo)},
+      .remainder = {.KoKi = nnx_concat_half(rem_Ko, rem_Ki),
+                    .HoWo = nnx_concat_half(rem_Ho, rem_Wo),
+                    .HiWi = nnx_concat_half(rem_Hi, rem_Wi)}};
   task->data.cfg.subtile = subtile;
 }
 

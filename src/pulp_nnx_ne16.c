@@ -91,8 +91,8 @@ void ne16_nnx_dispatch_stride2x2(ne16_dev_t *dev, ne16_task_t *task,
                                  const uint8_t w_ker) {
   const uint8_t stride = 2;
 
-  const uint32_t n_h = divnceil(h_out, stride);
-  const uint32_t n_w = divnceil(w_out, stride);
+  const uint32_t n_h = nnx_calculate_number_of_tiles(h_out, stride);
+  const uint32_t n_w = nnx_calculate_number_of_tiles(w_out, stride);
   const uint32_t input_height_offset = h_out % stride == 1 ? stride : 0;
   const uint32_t input_width_offset = w_out % stride == 1 ? stride : 0;
   const uint32_t output_height_offset = h_out % stride == 1 ? 1 : 0;
