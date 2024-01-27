@@ -109,10 +109,9 @@ typedef struct ne16_task_data_t {
 
 typedef struct ne16_task_t {
   ne16_task_data_t data;
-  uint8_t out_d0_stride;
   uint8_t weight_d0_stride;
   uint8_t qw;
-  uint8_t output_channel_throughput;
+  uint8_t subtile_output_channel;
   uint8_t kernel_shape;
   uint8_t depthwise;
   uint8_t id;

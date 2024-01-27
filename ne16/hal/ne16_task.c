@@ -47,8 +47,8 @@ void ne16_task_set_op_to_conv(ne16_task_t *task, const uint8_t kernel_shape,
                               const uint8_t depthwise, const uint8_t stride) {
   task->depthwise = depthwise;
   task->kernel_shape = kernel_shape;
-  task->output_channel_throughput = depthwise ? NE16_INPUT_CHANNEL_THROUGHPUT
-                                              : NE16_OUTPUT_CHANNEL_THROUGHPUT;
+  task->subtile_output_channel =
+      depthwise ? NE16_SUBTILE_INPUT_CHANNEL : NE16_SUBTILE_OUTPUT_CHANNEL;
   const int flag_mode = kernel_shape == 1 ? NE16_FLAG_MODE_1x1
                         : depthwise == 1  ? NE16_FLAG_MODE_3x3_DW
                                           : NE16_FLAG_MODE_3x3;
@@ -73,7 +73,6 @@ void ne16_task_set_bits(ne16_task_t *task, const uint8_t input_bits,
     quantMode = quantMode32Bit;
   }
 
-  task->out_d0_stride = 256 / output_bits;
   task->weight_d0_stride =
       flag_mode16 ? NE16_WEIGHT_D0_STRIDE_MODE16 : NE16_WEIGHT_D0_STRIDE_MODE8;
   task->qw = weight_bits;
@@ -134,13 +133,13 @@ void ne16_task_set_strides(ne16_task_t *task, const uint32_t k_in,
                            const uint32_t k_in_stride,
                            const uint32_t w_out_stride,
                            const uint32_t k_out_stride) {
-  const uint32_t num_k_in = divnceil(k_in, NE16_INPUT_CHANNEL_THROUGHPUT);
+  const uint32_t num_k_in = divnceil(k_in, NE16_SUBTILE_INPUT_CHANNEL);
 
   const ne16_stride_t input_stride = {
       .d0 = k_in_stride, .d1 = k_in_stride * w_in_stride, .d2 = 0};
   task->data.cfg.input_stride = input_stride;
 
-  const ne16_stride_t output_stride = {.d0 = task->out_d0_stride,
+  const ne16_stride_t output_stride = {.d0 = NE16_OUTPUT_BANDWIDTH_BYTES,
                                        .d1 = k_out_stride,
                                        .d2 = k_out_stride * w_out_stride};
   task->data.cfg.output_stride = output_stride;
@@ -167,15 +166,15 @@ void ne16_task_set_counters(ne16_task_t *task, const uint32_t k_in,
                             const uint32_t h_out, const uint32_t w_out,
                             const uint32_t k_out, const uint8_t padding_bottom,
                             const uint8_t padding_right) {
-  const uint16_t num_Ko = divnceil(k_out, task->output_channel_throughput);
-  const uint16_t num_Ki = divnceil(k_in, NE16_INPUT_CHANNEL_THROUGHPUT);
-  const uint16_t num_Ho = divnceil(h_out, NE16_FILTER_SIZE);
-  const uint16_t num_Wo = divnceil(w_out, NE16_FILTER_SIZE);
+  const uint16_t num_Ko = divnceil(k_out, task->subtile_output_channel);
+  const uint16_t num_Ki = divnceil(k_in, NE16_SUBTILE_INPUT_CHANNEL);
+  const uint16_t num_Ho = divnceil(h_out, NE16_SUBTILE_OUTPUT_HEIGHT);
+  const uint16_t num_Wo = divnceil(w_out, NE16_SUBTILE_OUTPUT_WIDTH);
 
-  const uint16_t rem_Ko = remainder(k_out, task->output_channel_throughput);
-  const uint16_t rem_Ki = remainder(k_in, NE16_INPUT_CHANNEL_THROUGHPUT);
-  const uint16_t rem_Ho = remainder(h_out, NE16_FILTER_SIZE);
-  const uint16_t rem_Wo = remainder(w_out, NE16_FILTER_SIZE);
+  const uint16_t rem_Ko = remainder(k_out, task->subtile_output_channel);
+  const uint16_t rem_Ki = remainder(k_in, NE16_SUBTILE_INPUT_CHANNEL);
+  const uint16_t rem_Ho = remainder(h_out, NE16_SUBTILE_OUTPUT_HEIGHT);
+  const uint16_t rem_Wo = remainder(w_out, NE16_SUBTILE_OUTPUT_WIDTH);
   const uint16_t rem_Hi =
       (task->kernel_shape == 1 ? rem_Ho : rem_Ho + 2) - padding_bottom;
   const uint16_t rem_Wi =
