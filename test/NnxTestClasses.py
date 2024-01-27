@@ -391,8 +391,16 @@ class NnxTestHeaderGenerator:
                     "bits": weight_bits,
                     "offset": weight_offset,
                 },
-                "scale": {"bits": test.conf.scale_type._bits if test.conf.scale_type is not None else 0},
-                "bias": {"bits": test.conf.bias_type._bits if test.conf.bias_type is not None else 0},
+                "scale": {
+                    "bits": test.conf.scale_type._bits
+                    if test.conf.scale_type is not None
+                    else 0
+                },
+                "bias": {
+                    "bits": test.conf.bias_type._bits
+                    if test.conf.bias_type is not None
+                    else 0
+                },
                 "padding": {
                     "top": test.conf.padding.top,
                     "bottom": test.conf.padding.bottom,
