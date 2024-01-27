@@ -186,14 +186,10 @@ void neureka_task_set_counters(neureka_task_t *task, const uint32_t k_in,
   const uint16_t rem_Ki = remainder(k_in, task->subtile_input_channel);
   const uint16_t rem_Ho = remainder(h_out, NEUREKA_SUBTILE_OUTPUT_HEIGHT);
   const uint16_t rem_Wo = remainder(w_out, NEUREKA_SUBTILE_OUTPUT_WIDTH);
-  const uint16_t rem_Hi =
-      rem_Ho == 0 ? 0
-                  : (task->kernel_shape == 1 ? rem_Ho : rem_Ho + 2) -
-                        padding_bottom; // TODO: Check padding bottom
-  const uint16_t rem_Wi =
-      rem_Wo == 0 ? 0
-                  : (task->kernel_shape == 1 ? rem_Wo : rem_Wo + 2) -
-                        padding_right; // TODO: Check padding right
+  const uint16_t rem_Hi = (task->kernel_shape == 1 ? rem_Ho : rem_Ho + 2) -
+                          padding_bottom; // TODO: Check padding bottom
+  const uint16_t rem_Wi = (task->kernel_shape == 1 ? rem_Wo : rem_Wo + 2) -
+                          padding_right; // TODO: Check padding right
 
   const neureka_subtile_t subtile = {
       .number = {.KoKi = concat_half(num_Ko, num_Ki),
