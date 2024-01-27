@@ -59,7 +59,7 @@ class NeurekaTestConf(NnxTestConf):
     @field_validator("out_type")
     @classmethod
     def check_valid_out_type(cls, v: IntegerType) -> IntegerType:
-        NeurekaTestConf._check_type("out_type", v, ["uint8", "int8"])
+        NeurekaTestConf._check_type("out_type", v, ["uint8", "int8", "int32"])
         return v
 
     @field_validator("weight_type")

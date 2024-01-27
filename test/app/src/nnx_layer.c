@@ -29,6 +29,7 @@
 #include "ne16_task.h"
 #include "pulp_nnx_ne16.h"
 
+typedef ne16_norm_mode_e nnx_norm_mode_e;
 typedef ne16_quant_t nnx_quant_t;
 typedef ne16_norm_t nnx_norm_t;
 typedef ne16_task_t nnx_task_t;
@@ -39,6 +40,10 @@ typedef ne16_pulp_conf_t nnx_bsp_conf_t;
 #define nnxTaskFlagFalse ne16TaskFlagFalse
 
 #define nnx_task_init ne16_task_init
+#define nnx_task_set_op_to_conv ne16_task_set_op_to_conv
+#define nnx_task_set_bits ne16_task_set_bits
+#define nnx_task_set_norm_quant ne16_task_set_norm_quant
+#define nnx_task_set_weight_offset ne16_task_set_weight_offset
 #define nnx_task_set_dims ne16_task_set_dims
 #define nnx_task_set_dims_stride2x2 ne16_task_set_dims_stride2x2
 #define nnx_task_set_ptrs ne16_task_set_ptrs
@@ -65,6 +70,7 @@ typedef ne16_pulp_conf_t nnx_bsp_conf_t;
 #include "neureka_task.h"
 #include "pulp_nnx_neureka.h"
 
+typedef neureka_norm_mode_e nnx_norm_mode_e;
 typedef neureka_quant_t nnx_quant_t;
 typedef neureka_norm_t nnx_norm_t;
 typedef neureka_task_t nnx_task_t;
@@ -75,6 +81,10 @@ typedef neureka_siracusa_conf_t nnx_bsp_conf_t;
 #define nnxTaskFlagFalse neurekaTaskFlagFalse
 
 #define nnx_task_init neureka_task_init
+#define nnx_task_set_op_to_conv neureka_task_set_op_to_conv
+#define nnx_task_set_bits neureka_task_set_bits
+#define nnx_task_set_norm_quant neureka_task_set_norm_quant
+#define nnx_task_set_weight_offset neureka_task_set_weight_offset
 #define nnx_task_set_dims neureka_task_set_dims
 #define nnx_task_set_ptrs neureka_task_set_ptrs
 
@@ -103,17 +113,17 @@ typedef neureka_siracusa_conf_t nnx_bsp_conf_t;
 
 static void task_prepare(nnx_task_t *task) {
   nnx_task_init(task);
-  ne16_task_set_op_to_conv(task, WEIGHT_HEIGHT, GROUPS > 1, STRIDE_HEIGHT);
-  ne16_task_set_bits(task, INPUT_BITS, OUTPUT_BITS, WEIGHT_BITS);
+  nnx_task_set_op_to_conv(task, WEIGHT_HEIGHT, GROUPS > 1, STRIDE_HEIGHT);
+  nnx_task_set_bits(task, INPUT_BITS, OUTPUT_BITS, WEIGHT_BITS);
 
 #if HAS_NORM_QUANT == 1
 #if SCALE_BITS == 8
-  const ne16_norm_mode_e normMode = normMode8Bit;
+  const nnx_norm_mode_e normMode = normMode8Bit;
 #elif SCALE_BITS == 32
-  const ne16_norm_mode_e normMode = normMode32Bit;
+  const nnx_norm_mode_e normMode = normMode32Bit;
 #endif
 
-  ne16_task_set_norm_quant(
+  nnx_task_set_norm_quant(
       task,
       (nnx_quant_t){.shift_amount = OUTSHIFT,
                     .function =
@@ -123,8 +133,21 @@ static void task_prepare(nnx_task_t *task) {
                    .flag_bias = HAS_BIAS ? nnxTaskFlagTrue : nnxTaskFlagFalse,
                    .flag_shift = nnxTaskFlagFalse});
 #endif // HAS_NORM_QUANT
-  //
-  ne16_task_set_weight_offset(task, weightOffsetModeLayerWise, WEIGHT_OFFSET);
+
+  nnx_task_set_weight_offset(task, weightOffsetModeLayerWise, WEIGHT_OFFSET);
+
+#ifdef NNX_NEUREKA
+#ifdef NEUREKA_WEIGHT_SOURCE_WMEM
+  neureka_task_set_weight_source(task, neurekaWeightSourceWmem);
+#else
+  neureka_task_set_weight_source(task, neurekaWeightSourceTcdm);
+#endif
+#if INPUT_SIGNED == 1
+  neureka_task_set_input_signed(task);
+#else
+  neureka_task_set_input_unsigned(task);
+#endif
+#endif
 
   const uint32_t w_in_stride = INPUT_CHANNEL * INPUT_BITS / 8;
   const uint32_t h_in_stride = INPUT_WIDTH * w_in_stride;

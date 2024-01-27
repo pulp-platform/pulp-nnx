@@ -29,6 +29,11 @@ typedef enum neureka_task_flag_e {
   neurekaTaskFlagTrue = 1
 } neureka_task_flag_e;
 
+typedef enum neureka_weight_source_e {
+  neurekaWeightSourceTcdm = NEUREKA_FLAG_WEIGHT_SOURCE_TCDM,
+  neurekaWeightSourceWmem = NEUREKA_FLAG_WEIGHT_SOURCE_WMEM
+} neureka_weight_source_e;
+
 typedef enum neureka_weight_offset_mode_e {
   weightOffsetModeSymmetric = NEUREKA_FLAG_WEIGHT_OFFSET_SYMMETRIC,
   weightOffsetModeLayerWise = NEUREKA_FLAG_WEIGHT_OFFSET_LAYER_WISE
@@ -36,7 +41,6 @@ typedef enum neureka_weight_offset_mode_e {
 
 typedef enum {
   normMode8Bit = NEUREKA_NORM_MODE_8BIT,
-  normMode16Bit = NEUREKA_NORM_MODE_16BIT,
   normMode32Bit = NEUREKA_NORM_MODE_32BIT
 } neureka_norm_mode_e;
 
@@ -48,7 +52,6 @@ typedef struct neureka_norm_t {
 
 typedef enum neureka_quant_mode_e {
   quantMode8Bit = NEUREKA_QUANT_MODE_8BIT,
-  quantMode16Bit = NEUREKA_QUANT_MODE_16BIT,
   quantMode32Bit = NEUREKA_QUANT_MODE_32BIT
 } neureka_quant_mode_e;
 
@@ -60,7 +63,6 @@ typedef enum neureka_quant_function_e {
 typedef struct neureka_quant_t {
   // Shift amount must be in range 0x00-0x1F
   unsigned shift_amount;
-  neureka_quant_mode_e mode;
   neureka_quant_function_e function;
   int flag_rounding;
 } neureka_quant_t;
@@ -110,22 +112,30 @@ typedef struct neureka_task_data_t {
 
 typedef struct neureka_task_t {
   neureka_task_data_t data;
-  uint8_t outbytes;
   uint8_t qw;
-  uint8_t output_channel_throughput;
-  uint8_t input_channel_throughput;
+  uint8_t subtile_output_channel;
+  uint8_t subtile_input_channel;
   uint8_t kernel_shape;
   uint8_t depthwise;
   uint8_t id;
 } neureka_task_t;
 
-void neureka_task_init(neureka_task_t *task, const uint8_t kernel_shape,
-                       const uint8_t depthwise, const uint8_t input_bits,
-                       const uint8_t output_bits, const uint8_t weights_bits,
-                       const neureka_weight_offset_mode_e weights_offset_mode,
-                       const uint32_t weights_offset_factor,
-                       neureka_quant_t quant, neureka_norm_t norm,
-                       const uint8_t flag_input_signed);
+void neureka_task_init(neureka_task_t *task);
+void neureka_task_set_op_to_conv(neureka_task_t *task,
+                                 const uint8_t kernel_shape,
+                                 const uint8_t depthwise, const uint8_t stride);
+void neureka_task_set_bits(neureka_task_t *task, const uint8_t input_bits,
+                           const uint8_t output_bits,
+                           const uint8_t weight_bits);
+void neureka_task_set_norm_quant(neureka_task_t *task, neureka_quant_t quant,
+                                 neureka_norm_t norm);
+void neureka_task_set_weight_offset(
+    neureka_task_t *task, neureka_weight_offset_mode_e weight_offset_mode,
+    const int32_t weight_offset);
+void neureka_task_set_input_signed(neureka_task_t *task);
+void neureka_task_set_input_unsigned(neureka_task_t *task);
+void neureka_task_set_weight_source(neureka_task_t *task,
+                                    neureka_weight_source_e weight_source);
 uint32_t neureka_get_tile_padding(uint32_t padding, uint32_t i_height,
                                   uint32_t i_width, uint32_t n_height,
                                   uint32_t n_width);
@@ -138,11 +148,17 @@ void neureka_task_set_ptrs(neureka_task_t *task, uint32_t input_ptr,
                            uint32_t output_ptr, uint32_t weights_ptr,
                            uint32_t scale_ptr, uint32_t shift_ptr,
                            uint32_t bias_ptr);
+/** neureka_task_set_strides
+ *
+ * All the strides variables are strides between elements alongside that
+ * dimension and expressed in bytes. There is no stride variable for the channel
+ * dimension because the N-EUREKA requires the channels to be contiguous.
+ */
 void neureka_task_set_strides(neureka_task_t *task, const uint32_t k_in,
+                              const uint32_t h_in_stride,
                               const uint32_t w_in_stride,
-                              const uint32_t k_in_stride,
-                              const uint32_t w_out_stride,
-                              const uint32_t k_out_stride);
+                              const uint32_t h_out_stride,
+                              const uint32_t w_out_stride);
 void neureka_task_set_counters(neureka_task_t *task, const uint32_t k_in,
                                const uint32_t h_out, const uint32_t w_out,
                                const uint32_t k_out,
@@ -154,11 +170,17 @@ void neureka_task_set_padding(neureka_task_t *task, const uint8_t top,
 void neureka_task_set_mask_filter(neureka_task_t *task, const uint8_t top,
                                   const uint8_t right, const uint8_t bottom,
                                   const uint8_t left);
+/** neureka_task_set_dims
+ *
+ * All the strides variables are strides between elements alongside that
+ * dimension and expressed in bytes. There is no stride variable for the channel
+ * dimension because the N-EUREKA requires the channels to be contiguous.
+ */
 void neureka_task_set_dims(
     neureka_task_t *task, const uint32_t w_in, const uint32_t k_in,
-    const uint32_t w_in_stride, const uint32_t k_in_stride,
+    const uint32_t h_in_stride, const uint32_t w_in_stride,
     const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
-    const uint32_t w_out_stride, const uint32_t k_out_stride,
+    const uint32_t h_out_stride, const uint32_t w_out_stride,
     const uint8_t padding_top, const uint8_t padding_bottom,
     const uint8_t padding_right, const uint8_t padding_left);
 
