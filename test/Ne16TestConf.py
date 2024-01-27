@@ -85,9 +85,10 @@ class Ne16TestConf(NnxTestConf):
         return v
 
     @model_validator(mode="after")  # type: ignore
-    def check_valid_out_channel_with_stride_2x2(self) -> Ne16TestConf:
+    def check_valid_out_channel_stride_with_stride_2x2(self) -> Ne16TestConf:
         assert implies(
-            self.stride == Stride(height=2, width=2), self.out_channel % 2 == 0
+            self.stride == Stride(height=2, width=2),
+            self.out_channel * (self.out_type._bits // 8) % 2 == 0,
         ), f"With stride 2x2 supported only even output channel sizes. Given output channel {self.out_channel}"
         return self
 
