@@ -129,19 +129,19 @@ void ne16_task_set_ptrs(ne16_task_t *task, uint32_t input_ptr, uint32_t w_in,
 }
 
 void ne16_task_set_strides(ne16_task_t *task, const uint32_t k_in,
+                           const uint32_t h_in_stride,
                            const uint32_t w_in_stride,
-                           const uint32_t k_in_stride,
-                           const uint32_t w_out_stride,
-                           const uint32_t k_out_stride) {
+                           const uint32_t h_out_stride,
+                           const uint32_t w_out_stride) {
   const uint32_t num_k_in = divnceil(k_in, NE16_SUBTILE_INPUT_CHANNEL);
 
   const ne16_stride_t input_stride = {
-      .d0 = k_in_stride, .d1 = k_in_stride * w_in_stride, .d2 = 0};
+      .d0 = w_in_stride, .d1 = h_in_stride, .d2 = 0};
   task->data.cfg.input_stride = input_stride;
 
   const ne16_stride_t output_stride = {.d0 = NE16_OUTPUT_BANDWIDTH_BYTES,
-                                       .d1 = k_out_stride,
-                                       .d2 = k_out_stride * w_out_stride};
+                                       .d1 = w_out_stride,
+                                       .d2 = h_out_stride};
   task->data.cfg.output_stride = output_stride;
 
   if (task->kernel_shape == 1) {
@@ -205,16 +205,16 @@ void ne16_task_set_mask_filter(ne16_task_t *task, const uint8_t top,
 }
 
 void ne16_task_set_dims(ne16_task_t *task, const uint32_t w_in,
-                        const uint32_t k_in, const uint32_t w_in_stride,
-                        const uint32_t k_in_stride, const uint32_t h_out,
+                        const uint32_t k_in, const uint32_t h_in_stride,
+                        const uint32_t w_in_stride, const uint32_t h_out,
                         const uint32_t w_out, const uint32_t k_out,
-                        const uint32_t w_out_stride,
-                        const uint32_t k_out_stride, const uint8_t padding_top,
+                        const uint32_t h_out_stride,
+                        const uint32_t w_out_stride, const uint8_t padding_top,
                         const uint8_t padding_bottom,
                         const uint8_t padding_right,
                         const uint8_t padding_left) {
-  ne16_task_set_strides(task, k_in, w_in_stride, k_in_stride, w_out_stride,
-                        k_out_stride);
+  ne16_task_set_strides(task, k_in, h_in_stride, w_in_stride, h_out_stride,
+                        w_out_stride);
   ne16_task_set_counters(task, k_in, h_out, w_out, k_out, padding_bottom,
                          padding_right);
   ne16_task_set_padding(task, padding_top, padding_bottom, padding_left,
@@ -223,17 +223,17 @@ void ne16_task_set_dims(ne16_task_t *task, const uint32_t w_in,
 
 void ne16_task_set_dims_stride2x2(
     ne16_task_t *task, const uint32_t h_in, const uint32_t w_in,
-    const uint32_t k_in, const uint32_t w_in_stride, const uint32_t k_in_stride,
+    const uint32_t k_in, const uint32_t h_in_stride, const uint32_t w_in_stride,
     const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
-    const uint32_t w_out_stride, const uint32_t k_out_stride,
+    const uint32_t h_out_stride, const uint32_t w_out_stride,
     const uint8_t h_ker, const uint8_t w_ker, const uint8_t padding_top,
     const uint8_t padding_bottom, const uint8_t padding_right,
     const uint8_t padding_left) {
   const uint8_t stride = 2;
 
   // WARNING: works only for even output channel stride (divisible by 2)
-  ne16_task_set_strides(task, k_in, w_in_stride, k_in_stride, w_out_stride,
-                        k_out_stride >> 1);
+  ne16_task_set_strides(task, k_in, h_in_stride, w_in_stride, h_out_stride >> 1,
+                        w_out_stride >> 1);
   ne16_task_set_counters(task, k_in, h_out > 1 ? 3 : 1, w_out > 1 ? 3 : 1,
                          k_out, h_in + padding_top >= 5 ? 0 : padding_bottom,
                          0);

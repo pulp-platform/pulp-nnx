@@ -126,19 +126,21 @@ static void task_prepare(nnx_task_t *task) {
   //
   ne16_task_set_weight_offset(task, weightOffsetModeLayerWise, WEIGHT_OFFSET);
 
-  const uint32_t k_in_stride = INPUT_CHANNEL * INPUT_BITS / 8;
-  const uint32_t k_out_stride = OUTPUT_CHANNEL * OUTPUT_BITS / 8;
+  const uint32_t w_in_stride = INPUT_CHANNEL * INPUT_BITS / 8;
+  const uint32_t h_in_stride = INPUT_WIDTH * w_in_stride;
+  const uint32_t w_out_stride = OUTPUT_CHANNEL * OUTPUT_BITS / 8;
+  const uint32_t h_out_stride = OUTPUT_WIDTH * w_out_stride;
 
 #if STRIDE_HEIGHT == 2 && STRIDE_WIDTH == 2
   nnx_task_set_dims_stride2x2(
-      task, INPUT_HEIGHT, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH, k_in_stride,
-      OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL, OUTPUT_WIDTH, k_out_stride,
+      task, INPUT_HEIGHT, INPUT_WIDTH, INPUT_CHANNEL, h_in_stride, w_in_stride,
+      OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL, h_out_stride, w_out_stride,
       WEIGHT_HEIGHT, WEIGHT_WIDTH, PADDING_TOP, PADDING_BOTTOM, PADDING_RIGHT,
       PADDING_LEFT);
 #else
-  nnx_task_set_dims(task, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH, k_in_stride,
-                    OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL, OUTPUT_WIDTH,
-                    k_out_stride, PADDING_TOP, PADDING_BOTTOM, PADDING_RIGHT,
+  nnx_task_set_dims(task, INPUT_WIDTH, INPUT_CHANNEL, h_in_stride, w_in_stride,
+                    OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL, h_out_stride,
+                    w_out_stride, PADDING_TOP, PADDING_BOTTOM, PADDING_RIGHT,
                     PADDING_LEFT);
 #endif
 
@@ -169,10 +171,9 @@ static void task_execute(nnx_task_t *task) {
   nnx_dispatch_wait(dev);
 
 #if STRIDE_HEIGHT == 2 && STRIDE_WIDTH == 2
-  nnx_dispatch_stride2x2(dev, task, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH,
-                         INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH,
-                         OUTPUT_CHANNEL, OUTPUT_WIDTH, OUTPUT_CHANNEL,
-                         WEIGHT_HEIGHT, WEIGHT_WIDTH);
+  nnx_dispatch_stride2x2(dev, task, INPUT_WIDTH, INPUT_CHANNEL, OUTPUT_HEIGHT,
+                         OUTPUT_WIDTH, OUTPUT_CHANNEL, WEIGHT_HEIGHT,
+                         WEIGHT_WIDTH);
 #else
   nnx_dispatch(dev, task);
 #endif

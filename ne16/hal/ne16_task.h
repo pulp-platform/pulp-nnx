@@ -138,11 +138,17 @@ void ne16_task_set_ptrs(ne16_task_t *task, uint32_t input_ptr, uint32_t w_in,
                         uint8_t padding_left, uint32_t output_ptr,
                         uint32_t weights_ptr, uint32_t scale_ptr,
                         uint32_t shift_ptr, uint32_t bias_ptr);
+/** ne16_task_set_strides
+ *
+ * All the strides variables are strides between elements alongside that
+ * dimension and expressed in bytes. There is no stride variable for the channel
+ * dimension because the NE16 requires the channels to be contiguous.
+ */
 void ne16_task_set_strides(ne16_task_t *task, const uint32_t k_in,
+                           const uint32_t h_in_stride,
                            const uint32_t w_in_stride,
-                           const uint32_t k_in_stride,
-                           const uint32_t w_out_stride,
-                           const uint32_t k_out_stride);
+                           const uint32_t h_out_stride,
+                           const uint32_t w_out_stride);
 void ne16_task_set_counters(ne16_task_t *task, const uint32_t k_in,
                             const uint32_t h_out, const uint32_t w_out,
                             const uint32_t k_out, const uint8_t padding_bottom,
@@ -153,20 +159,32 @@ void ne16_task_set_padding(ne16_task_t *task, const uint8_t top,
 void ne16_task_set_mask_filter(ne16_task_t *task, const uint8_t top,
                                const uint8_t right, const uint8_t bottom,
                                const uint8_t left);
+/** ne16_task_set_dims
+ *
+ * All the strides variables are strides between elements alongside that
+ * dimension and expressed in bytes. There is no stride variable for the channel
+ * dimension because the NE16 requires the channels to be contiguous.
+ */
 void ne16_task_set_dims(ne16_task_t *task, const uint32_t w_in,
-                        const uint32_t k_in, const uint32_t w_in_stride,
-                        const uint32_t k_in_stride, const uint32_t h_out,
+                        const uint32_t k_in, const uint32_t h_in_stride,
+                        const uint32_t w_in_stride, const uint32_t h_out,
                         const uint32_t w_out, const uint32_t k_out,
-                        const uint32_t w_out_stride,
-                        const uint32_t k_out_stride, const uint8_t padding_top,
+                        const uint32_t h_out_stride,
+                        const uint32_t w_out_stride, const uint8_t padding_top,
                         const uint8_t padding_bottom,
                         const uint8_t padding_right,
                         const uint8_t padding_left);
+/** ne16_task_set_dims_stride2x2
+ *
+ * All the strides variables are strides between elements alongside that
+ * dimension and expressed in bytes. There is no stride variable for the channel
+ * dimension because the NE16 requires the channels to be contiguous.
+ */
 void ne16_task_set_dims_stride2x2(
     ne16_task_t *task, const uint32_t h_in, const uint32_t w_in,
-    const uint32_t k_in, const uint32_t w_in_stride, const uint32_t k_in_stride,
+    const uint32_t k_in, const uint32_t h_in_stride, const uint32_t w_in_stride,
     const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
-    const uint32_t w_out_stride, const uint32_t k_out_stride,
+    const uint32_t h_out_stride, const uint32_t w_out_stride,
     const uint8_t h_ker, const uint8_t w_ker, const uint8_t padding_top,
     const uint8_t padding_bottom, const uint8_t padding_right,
     const uint8_t padding_left);

@@ -69,9 +69,8 @@ void ne16_nnx_resolve_wait(ne16_dev_t *dev, ne16_task_t *task);
  * tile the tile to the subtile's spatial dimensions (in this case 3x3 output).
  * Works only if the k_out is divisible by 2.
  */
-void ne16_nnx_dispatch_stride2x2(
-    ne16_dev_t *dev, ne16_task_t *task, const uint32_t w_in,
-    const uint32_t k_in, const uint32_t w_in_stride, const uint32_t k_in_stride,
-    const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
-    const uint32_t w_out_stride, const uint32_t k_out_stride,
-    const uint8_t h_ker, const uint8_t w_ker);
+void ne16_nnx_dispatch_stride2x2(ne16_dev_t *dev, ne16_task_t *task,
+                                 const uint32_t w_in, const uint32_t k_in,
+                                 const uint32_t h_out, const uint32_t w_out,
+                                 const uint32_t k_out, const uint8_t h_ker,
+                                 const uint8_t w_ker);
