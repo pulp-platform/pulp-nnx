@@ -35,25 +35,21 @@
 #define NEUREKA_SIRACUSA_WEIGHT_MEM_MRAM_OFFSET (0x00000000)
 #define NEUREKA_SIRACUSA_WEIGHT_MEM_SRAM_OFFSET (0x00400000)
 
-// TODO: Check if needed for neureka
 void neureka_siracusa_hci_setpriority_neureka() {
   *(volatile uint32_t *)NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_ADDR |=
       NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_MASK_HCI_PRIO;
 }
 
-// TODO: Check if needed for neureka
 void neureka_siracusa_hci_setpriority_core() {
   *(volatile uint32_t *)NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_ADDR &=
       ~NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_MASK_HCI_PRIO;
 }
 
-// TODO: Check if needed for neureka
 void neureka_siracusa_hci_reset_max_stall() {
   *(volatile uint32_t *)NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_ADDR &=
       ~NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_MASK_HCI_MAXSTALL;
 }
 
-// TODO: Check if needed for neureka
 void neureka_siracusa_hci_set_max_stall(uint32_t max_stall) {
   *(volatile uint32_t *)NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_ADDR |=
       max_stall & NEUREKA_SIRACUSA_CLUSTER_CTRL_HWPE_MASK_HCI_MAXSTALL;
