@@ -1,5 +1,25 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- N-EUREKA accelerator support: 3x3, 1x1, and 3x3 depthwise convolution kernels
+- Support for kernels without normalization and quantization for NE16
+- isort check
+- publication citation
+
+### Changed
+
+- `ne16_task_init` got split into smaller parts: `ne16_task_init`, `ne16_task_set_op_to_conv`, `ne16_task_set_weight_offset`, `ne16_task_set_bits`, `ne16_task_set_norm_quant`
+- strides in `ne16_task_set_strides`, and `ne16_task_set_dims` are now strides between consecutive elements in that dimension
+- `ne16_task_queue_size` is now `NE16_TASK_QUEUE_SIZE`
+
+### Removed
+
+- `k_in_stride`, `w_in_stride`, `k_out_stride`, and `w_out_stride` from `ne16_nnx_dispatch_stride2x2`
+- `mode` attribute from `ne16_quant_t` structure
+
 ## [0.3.0] - 2024-01-14
 
 ### Added
