@@ -24,11 +24,12 @@
 #include "hwpe.h"
 #include <stdint.h>
 
+#define NE16_TASK_QUEUE_SIZE (2)
+
 typedef struct ne16_dev_t {
   hwpe_dev_t hwpe_dev; /* Implements the HWPE device interface */
 } ne16_dev_t;
 
-int ne16_task_queue_size(ne16_dev_t *dev);
 int ne16_task_queue_tasks_in_flight(ne16_dev_t *dev);
 int ne16_task_queue_empty(ne16_dev_t *dev);
 int ne16_task_queue_full(ne16_dev_t *dev);

@@ -23,8 +23,6 @@
 #define NEUREKA_STATUS_EMPTY (0x000)
 #define NEUREKA_STATUS_FULL (0x101)
 
-inline int neureka_task_queue_size(neureka_dev_t *dev) { return 2; }
-
 inline int neureka_task_queue_tasks_in_flight(neureka_dev_t *dev) {
   uint32_t status = hwpe_task_queue_status(&dev->hwpe_dev);
   return (status & 0x1) + ((status >> 8) & 0x1);

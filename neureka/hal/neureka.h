@@ -24,11 +24,12 @@
 #include "hwpe.h"
 #include <stdint.h>
 
+#define NEUREKA_TASK_QUEUE_SIZE (2)
+
 typedef struct neureka_dev_t {
   hwpe_dev_t hwpe_dev; /* Implements the HWPE device interface */
 } neureka_dev_t;
 
-int neureka_task_queue_size(neureka_dev_t *dev);
 int neureka_task_queue_tasks_in_flight(neureka_dev_t *dev);
 int neureka_task_queue_empty(neureka_dev_t *dev);
 int neureka_task_queue_full(neureka_dev_t *dev);
