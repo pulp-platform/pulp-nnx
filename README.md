@@ -55,9 +55,30 @@ All the development should be done through forks and merged onto the `dev` branc
 
 The library will follow the [Semantic Versioning](https://semver.org/).
 
-## Citing
+## Publication
 
-*TBA*
+<details>
+<summary>If you use PULP-NNX in your work, you can cite us:</summary>
+```
+@inproceedings{10.1145/3607889.3609092,
+    author = {Macan, Luka and Burrello, Alessio and Benini, Luca and Conti, Francesco},
+    title = {WIP: Automatic DNN Deployment on Heterogeneous Platforms: the GAP9 Case Study},
+    year = {2024},
+    isbn = {9798400702907},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    url = {https://doi.org/10.1145/3607889.3609092},
+    doi = {10.1145/3607889.3609092},
+    abstract = {Emerging Artificial-Intelligence-enabled System-on-Chips (AI-SoCs) combine a flexible microcontroller with parallel Digital Signal Processors (DSP) and heterogeneous acceleration capabilities. In this Work-in-Progress paper, we focus on the GAP9 RISC-V SoC as a case study to show how the open-source DORY Deep Neural Network (DNN) tool flow can be extended for heterogeneous acceleration by fine grained interleaving of a dedicated Neural Engine and a cluster of RISC-V cores. Our results show that up to 91\% of the peak accelerator throughput can be extracted in end-to-end execution of benchmarks based on MobileNet-V1 and V2.},
+    booktitle = {Proceedings of the International Conference on Compilers, Architecture, and Synthesis for Embedded Systems},
+    pages = {9–10},
+    numpages = {2},
+    keywords = {TinyML, MCUs, deep learning, HW accelerators},
+    location = {<conf-loc>, <city>Hamburg</city>, <country>Germany</country>, </conf-loc>},
+    series = {CASES '23 Companion}
+}
+```
+</details>
 
 ## Contributors
 
