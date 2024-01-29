@@ -65,8 +65,4 @@ APP_CFLAGS += -DNNX_ACCELERATOR=\"$(ACCELERATOR)\" -DNNX_$(ACCELERATOR_UPPERCASE
 
 APP_CFLAGS += -O2 -w -Wall -Werror
 
-ifndef GAP_SDK_HOME
-APP_CFLAGS += -std=c11
-endif
-
 include $(RULES_DIR)/pmsis_rules.mk
