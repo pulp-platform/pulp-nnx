@@ -11,20 +11,19 @@ Github repo [link](https://github.com/siracusa-soc/ne).
 - [x] Depthwise convolution w/ kernel shape 3x3
 - [ ] Normalization and quantization
     - [x] With
-    - [ ] Without
+    - [x] Without
     - [x] Relu (w/ and w/o)
     - [x] Bias (w/ and w/o)
     - [ ] Per-channel shift
     - [x] Per-layer shift
     - [ ] Rounding
-- [ ] Input type
+- [x] Input type
     - [x] uint8
     - [x] int8
-- [ ] Output type
+- [x] Output type
     - [x] int8
     - [x] uint8 (only w/ Relu)
-    - [ ] int32
-    - [ ] uint32 (only w/ Relu)
+    - [x] int32
 - [ ] Scale type
     - [x] uint8
     - [ ] uint32

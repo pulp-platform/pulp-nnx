@@ -12,7 +12,7 @@
 - [x] Stride 2x2
 - [ ] Normalization and quantization
     - [x] With
-    - [ ] Without
+    - [x] Without
     - [x] Relu (w/ and w/o)
     - [x] Bias (w/ and w/o)
     - [ ] Per-channel shift
@@ -24,8 +24,7 @@
 - [ ] Output type
     - [x] int8
     - [x] uint8 (only w/ Relu)
-    - [ ] int32
-    - [ ] uint32 (only w/ Relu)
+    - [x] int32
 - [ ] Scale type
     - [x] uint8
     - [ ] uint16
