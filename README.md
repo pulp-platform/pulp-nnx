@@ -68,6 +68,7 @@ The library will follow the [Semantic Versioning](https://semver.org/).
 
 <details>
 <summary>If you use PULP-NNX in your work, you can cite us:</summary>
+
 ```
 @inproceedings{10.1145/3607889.3609092,
     author = {Macan, Luka and Burrello, Alessio and Benini, Luca and Conti, Francesco},
@@ -87,6 +88,7 @@ The library will follow the [Semantic Versioning](https://semver.org/).
     series = {CASES '23 Companion}
 }
 ```
+
 </details>
 
 ## Contributors
