@@ -186,7 +186,9 @@ static void task_prepare(nnx_task_t *task) {
 static void task_execute(nnx_task_t *task) {
   nnx_dev_t *dev = nnx_bsp_get_dev();
 
+#if __PLATFORM__ == ARCHI_PLATFORM_GVSOC
   nnx_gvsoc_log_activate(dev, NNX_GVSOC_LOG_LEVEL, NNX_GVSOC_LOG_FORMAT);
+#endif
 
   nnx_bsp_conf_t conf = {.max_stall = 8};
   nnx_init(dev, &conf);
@@ -205,7 +207,9 @@ static void task_execute(nnx_task_t *task) {
 
   nnx_term(dev);
 
+#if __PLATFORM__ == ARCHI_PLATFORM_GVSOC
   nnx_gvsoc_log_deactivate(dev);
+#endif
 }
 
 void execute_nnx_layer(void *args) {
