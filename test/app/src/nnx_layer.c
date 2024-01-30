@@ -167,8 +167,8 @@ static void task_prepare(nnx_task_t *task) {
                     PADDING_LEFT);
 #endif
 
-  nnx_task_set_ptrs(task, (uint32_t)input, INPUT_WIDTH, INPUT_CHANNEL,
-                    INPUT_BITS, PADDING_TOP, PADDING_LEFT, (uint32_t)output,
+  nnx_task_set_ptrs(task, (uint32_t)input, INPUT_WIDTH, w_in_stride,
+                    PADDING_TOP, PADDING_LEFT, (uint32_t)output,
                     (uint32_t)weight,
 #if HAS_NORM_QUANT == 1
                     (uint32_t)scale, NULL,
