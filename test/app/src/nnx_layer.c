@@ -185,7 +185,7 @@ static void task_prepare(nnx_task_t *task) {
                                        .flag_bias = flag_bias,
                                        .flag_shift = nnxTaskFlagFalse});
 
-  nnx_task_set_ptrs_norm_quant(task, (uint32_t)scale, NULL, bias_ptr);
+  nnx_task_set_ptrs_norm_quant(task, (uint32_t)scale, (uint32_t)NULL, bias_ptr);
 #endif // HAS_NORM_QUANT
 }
 

@@ -24,7 +24,6 @@
 #include "pulp_nnx_util.h"
 #include <pmsis.h>
 #include <stdint.h>
-#include <sys/types.h>
 
 void ne16_nnx_init(ne16_dev_t *dev, ne16_pulp_conf_t *conf) {
   ne16_pulp_open(conf);
@@ -102,8 +101,8 @@ void ne16_nnx_dispatch_stride2x2(ne16_dev_t *dev, ne16_task_t *task,
   const uint32_t output_base = task->data.outfeat_ptr;
   const uint32_t tile_padding = task->data.cfg.padding;
 
-  for (int i = 0; i < n_h; i++) {
-    for (int j = 0; j < n_w; j++) {
+  for (uint32_t i = 0; i < n_h; i++) {
+    for (uint32_t j = 0; j < n_w; j++) {
       task->data.infeat_ptr = _get_tile_ptr(
           input_base, i, j, 3 + h_ker - 1, 3 + w_ker - 1, k_in,
           task->data.cfg.input_stride.d1, task->data.cfg.input_stride.d0,
