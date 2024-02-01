@@ -16,13 +16,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import locale
 import os
 import re
-from typing import Union, Optional, Tuple
-import locale
 import subprocess
-from Ne16TestClasses import Ne16Test, Ne16TestHeaderGenerator
 from pathlib import Path
+from typing import Dict, Optional, Tuple, Type, Union
+
+from Ne16MemoryLayout import Ne16MemoryLayout
+from NeurekaMemoryLayout import NeurekaMemoryLayout
+from NnxTestClasses import NnxTest, NnxTestConf, NnxTestHeaderGenerator
 
 HORIZONTAL_LINE = "\n" + "-" * 100 + "\n"
 
@@ -49,17 +52,29 @@ def captured_output(
 
 
 def execute_command(
-    cmd: str, timeout: int = 30, cflags: Optional[str] = None
+    cmd: str,
+    timeout: int = 30,
+    cflags: Optional[str] = None,
+    envflags: Optional[Dict[str, str]] = None,
 ) -> Tuple[bool, str, str, Optional[str]]:
-    app_cflags = 'APP_CFLAGS="' + " ".join(cflags) + '" ' if cflags else ""
-    cmd = cmd + app_cflags
+    env = os.environ
+    if cflags:
+        env["APP_CFLAGS"] = '"' + " ".join(cflags) + '"'
+    if envflags:
+        for key, value in envflags.items():
+            env[key] = value
 
     status = None
     stdout = None
 
     try:
         proc = subprocess.run(
-            cmd.split(), check=True, capture_output=True, text=True, timeout=timeout
+            cmd.split(),
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            env=env,
         )
         status = True
         msg = "OK"
@@ -94,28 +109,35 @@ def assert_message(
     return retval
 
 
-def test(path: str, timeout: int):
-    test_name = path
-    test = Ne16Test.load(path)
-
-    Ne16TestHeaderGenerator().generate(test_name, test)
+def test(
+    nnxTestAndName: Tuple[NnxTest, str],
+    timeout: int,
+    nnxName: str,
+    nnxMemoryLayoutCls: Union[Type[Ne16MemoryLayout], Type[NeurekaMemoryLayout]],
+):
+    nnxTest, nnxTestName = nnxTestAndName
+    NnxTestHeaderGenerator(nnxMemoryLayoutCls.weightEncode).generate(
+        nnxTestName, nnxTest
+    )
 
     Path("app/src/nnx_layer.c").touch()
     cmd = f"make -C app all run platform=gvsoc"
-    passed, msg, stdout, stderr = execute_command(cmd=cmd, timeout=timeout)
+    passed, msg, stdout, stderr = execute_command(
+        cmd=cmd, timeout=timeout, envflags={"ACCELERATOR": nnxName}
+    )
 
-    assert passed, assert_message(msg, test_name, cmd, stdout, stderr)
+    assert passed, assert_message(msg, nnxTestName, cmd, stdout, stderr)
 
     match_success = re.search(r"> Success! No errors found.", stdout)
     match_fail = re.search(r"> Failure! Found (\d*)/(\d*) errors.", stdout)
 
     assert match_success or match_fail, assert_message(
-        "No regexes matched.", test_name, cmd, stdout
+        "No regexes matched.", nnxTestName, cmd, stdout
     )
 
     assert not match_fail, assert_message(
         f"Errors found: {match_fail.group(1)}/{match_fail.group(2)}",
-        test_name,
+        nnxTestName,
         cmd,
         stdout,
     )

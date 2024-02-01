@@ -31,11 +31,11 @@
 #define HWPE_TASK_REG_OFFSET 8
 
 inline void hwpe_reg_write(hwpe_dev_t *dev, int reg, uint32_t value) {
-  *(dev->base_addr + reg) = value;
+  dev->base_addr[reg] = value;
 }
 
 inline uint32_t hwpe_reg_read(hwpe_dev_t *dev, int reg) {
-  return *(dev->base_addr + reg);
+  return dev->base_addr[reg];
 }
 
 inline void hwpe_task_reg_write(hwpe_dev_t *dev, int reg, uint32_t value) {

@@ -16,28 +16,61 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import os
 import argparse
 import json
+import os
+from typing import Optional, Set, Type, Union
+
 import toml
-from typing import Optional, Union, Set
-from Ne16TestClasses import (
-    Ne16TestConf,
-    Ne16TestGenerator,
-    Ne16Test,
-    Ne16TestHeaderGenerator,
+
+from Ne16MemoryLayout import Ne16MemoryLayout
+from Ne16TestConf import Ne16TestConf
+from NeurekaMemoryLayout import NeurekaMemoryLayout
+from NeurekaTestConf import NeurekaTestConf
+from NnxTestClasses import (
+    NnxTest,
+    NnxTestConf,
+    NnxTestGenerator,
+    NnxTestHeaderGenerator,
 )
 
 
-def headers_gen(args, test: Optional[Ne16Test] = None):
+def headers_gen(
+    args,
+    nnxMemoryLayoutCls: Union[Type[Ne16MemoryLayout], Type[NeurekaMemoryLayout]],
+    nnxTestConfCls: Type[NnxTestConf],
+    test: Optional[NnxTest] = None,
+):
     if test is None:
-        test = Ne16Test.load(args.test_dir)
+        test = NnxTest.load(nnxTestConfCls, args.test_dir)
+    assert test is not None
     if not test.is_valid():
-        test = Ne16TestGenerator.from_conf(test.conf)
-    Ne16TestHeaderGenerator().generate(args.test_dir, test)
+        test = NnxTestGenerator.from_conf(test.conf)
+    NnxTestHeaderGenerator(nnxMemoryLayoutCls.weightEncode).generate(
+        args.test_dir, test
+    )
 
 
-def test_gen(args):
+def print_tensors(test: NnxTest):
+    print("INPUT TENSOR:")
+    print(test.input)
+    print("WEIGHT TENSOR:")
+    print(test.weight)
+    print("SCALE TENSOR:")
+    print(test.scale)
+    print("BIAS TENSOR:")
+    print(test.bias)
+    print("GLOBAL SHIFT TENSOR:")
+    print(test.global_shift)
+    print("EXPECTED OUTPUT TENSOR:")
+    print(test.output)
+
+
+def test_gen(
+    args,
+    nnxMemoryLayoutCls: Union[Type[Ne16MemoryLayout], Type[NeurekaMemoryLayout]],
+    nnxTestConfCls: Type[NnxTestConf],
+):
     if args.conf.endswith(".toml"):
         test_conf_dict = toml.load(args.conf)
     elif args.conf.endswith(".json"):
@@ -49,37 +82,71 @@ def test_gen(args):
         )
         exit(-1)
 
-    test_conf = Ne16TestConf.model_validate(test_conf_dict)
-    test = Ne16TestGenerator.from_conf(test_conf)
+    test_conf = nnxTestConfCls.model_validate(test_conf_dict)
+    test = NnxTestGenerator.from_conf(test_conf, verbose=args.print_tensors)
     if not args.skip_save:
         test.save(args.test_dir)
     if args.headers:
-        headers_gen(args, test)
+        headers_gen(args, nnxMemoryLayoutCls, nnxTestConfCls, test)
+    if args.print_tensors:
+        print_tensors(test)
 
 
-def _regen(path: Union[str, os.PathLike], regen_tensors: Set[str]) -> None:
-    test = Ne16Test.load(path)
-    test = Ne16TestGenerator.regenerate(test, regen_tensors)
+def _regen(
+    path: Union[str, os.PathLike],
+    regen_tensors: Set[str],
+    nnxTestConfCls: Type[NnxTestConf],
+) -> None:
+    test = NnxTest.load(nnxTestConfCls, path)
+    test = NnxTestGenerator.regenerate(test, regen_tensors)
     test.save(path)
 
 
-def _regen_recursive(path: Union[str, os.PathLike], regen_tensors: Set[str]) -> None:
-    if Ne16Test.is_test_dir(path):
-        _regen(path, regen_tensors)
+def _regen_recursive(
+    path: Union[str, os.PathLike],
+    regen_tensors: Set[str],
+    nnxTestConfCls: Type[NnxTestConf],
+) -> None:
+    if NnxTest.is_test_dir(path):
+        _regen(path, regen_tensors, nnxTestConfCls)
         return
 
     for dirpath, _, _ in os.walk(path):
-        _regen_recursive(dirpath, regen_tensors)
+        _regen_recursive(dirpath, regen_tensors, nnxTestConfCls)
 
 
-def test_regen(args):
+def test_regen(
+    args,
+    nnxMemoryLayoutCls: Union[Type[Ne16MemoryLayout], Type[NeurekaMemoryLayout]],
+    nnxTestConfCls: Type[NnxTestConf],
+):
+    _ = nnxMemoryLayoutCls
     regen_tensors = set(args.tensors + ["output"])
 
     for test_dir in args.test_dirs:
         if args.recurse:
-            _regen_recursive(test_dir, regen_tensors)
+            _regen_recursive(test_dir, regen_tensors, nnxTestConfCls)
         else:
-            _regen(test_dir, regen_tensors)
+            _regen(test_dir, regen_tensors, nnxTestConfCls)
+
+
+def add_common_arguments(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "-t",
+        "--test-dir",
+        type=str,
+        dest="test_dir",
+        required=True,
+        help="Path to the test.",
+    )
+
+    parser.add_argument(
+        "-a",
+        "--accelerator",
+        choices=["ne16", "neureka"],
+        default="ne16",
+        help="Choose an accelerator. Default: ne16",
+    )
 
 
 parser = argparse.ArgumentParser(
@@ -91,14 +158,7 @@ subparsers = parser.add_subparsers()
 parser_header = subparsers.add_parser(
     "headers", description="Generate headers for a single test."
 )
-parser_header.add_argument(
-    "-t",
-    "--test-dir",
-    type=str,
-    dest="test_dir",
-    required=True,
-    help="Path to the test." "basename.",
-)
+add_common_arguments(parser_header)
 parser_header.set_defaults(func=headers_gen)
 
 parser_test = subparsers.add_parser(
@@ -113,14 +173,6 @@ parser_test.add_argument(
     help="Path to the configuration file.",
 )
 parser_test.add_argument(
-    "-t",
-    "--test-dir",
-    type=str,
-    dest="test_dir",
-    required=True,
-    help="Path to the test. " "basename.",
-)
-parser_test.add_argument(
     "--headers", action="store_true", default=False, help="Generate headers."
 )
 parser_test.add_argument(
@@ -130,6 +182,14 @@ parser_test.add_argument(
     dest="skip_save",
     help="Skip saving the test.",
 )
+parser_test.add_argument(
+    "--print-tensors",
+    action="store_true",
+    default=False,
+    dest="print_tensors",
+    help="Print tensor values to stdout.",
+)
+add_common_arguments(parser_test)
 parser_test.set_defaults(func=test_gen)
 
 parser_regen = subparsers.add_parser("regen", description="Regenerate test tensors.")
@@ -138,25 +198,27 @@ parser_regen.add_argument(
     type=str,
     nargs="?",
     default=[],
-    help="Tensors that should be regenerated. Output " "included by default.",
-)
-parser_regen.add_argument(
-    "-t",
-    "--test-dir",
-    action="append",
-    dest="test_dirs",
-    required=True,
-    help="Path to the test.",
+    help="Tensors that should be regenerated. Output included by default.",
 )
 parser_regen.add_argument(
     "-r",
     "--recursive",
     action="store_true",
     default=False,
-    help="Recursively search for test directiories " "inside given test directories.",
+    help="Recursively search for test directiories inside given test directories.",
 )
+add_common_arguments(parser_regen)
 parser_regen.set_defaults(func=test_regen)
 
 args = parser.parse_args()
 
-args.func(args)
+if args.accelerator == "ne16":
+    nnxMemoryLayoutCls = Ne16MemoryLayout
+    nnxTestConfCls = Ne16TestConf
+elif args.accelerator == "neureka":
+    nnxMemoryLayoutCls = NeurekaMemoryLayout
+    nnxTestConfCls = NeurekaTestConf
+else:
+    assert False, f"Unsupported accelerator {args.accelerator}."
+
+args.func(args, nnxMemoryLayoutCls, nnxTestConfCls)

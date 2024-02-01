@@ -18,7 +18,17 @@
 
 import os
 from typing import Union
-from Ne16TestClasses import Ne16Test, Ne16TestGenerator
+
+import pydantic
+import pytest
+
+from Ne16MemoryLayout import Ne16MemoryLayout
+from Ne16TestConf import Ne16TestConf
+from NeurekaMemoryLayout import NeurekaMemoryLayout
+from NeurekaTestConf import NeurekaTestConf
+from NnxTestClasses import NnxTest, NnxTestGenerator
+
+_SUPPORTED_ACCELERATORS = ["ne16", "neureka"]
 
 
 def pytest_addoption(parser):
@@ -40,6 +50,13 @@ def pytest_addoption(parser):
         help="Recursively search for tests in given test directories.",
     )
     parser.addoption(
+        "-A",
+        "--accelerator",
+        choices=_SUPPORTED_ACCELERATORS,
+        default="ne16",
+        help="Choose an accelerator to test. Default: ne16",
+    )
+    parser.addoption(
         "--regenerate",
         action="store_true",
         default=False,
@@ -54,7 +71,7 @@ def pytest_addoption(parser):
 
 
 def _find_test_dirs(path: Union[str, os.PathLike]):
-    return [dirpath for dirpath, _, _ in os.walk(path) if Ne16Test.is_test_dir(dirpath)]
+    return [dirpath for dirpath, _, _ in os.walk(path) if NnxTest.is_test_dir(dirpath)]
 
 
 def pytest_generate_tests(metafunc):
@@ -62,6 +79,18 @@ def pytest_generate_tests(metafunc):
     recursive = metafunc.config.getoption("recursive")
     regenerate = metafunc.config.getoption("regenerate")
     timeout = metafunc.config.getoption("timeout")
+    nnxName = metafunc.config.getoption("accelerator")
+
+    if nnxName == "ne16":
+        nnxMemoryLayoutCls = Ne16MemoryLayout
+        nnxTestConfCls = Ne16TestConf
+    elif nnxName == "neureka":
+        nnxMemoryLayoutCls = NeurekaMemoryLayout
+        nnxTestConfCls = NeurekaTestConf
+    else:
+        assert (
+            False
+        ), f"Given accelerator {nnxName} not supported. Supported accelerators: {_SUPPORTED_ACCELERATORS}"
 
     if recursive:
         tests_dirs = test_dirs
@@ -69,12 +98,28 @@ def pytest_generate_tests(metafunc):
         for tests_dir in tests_dirs:
             test_dirs.extend(_find_test_dirs(tests_dir))
 
-    # (Re)Generate test data
+    # Load valid tests
+    nnxTestAndNames = []
     for test_dir in test_dirs:
-        test = Ne16Test.load(test_dir)
-        if not test.is_valid() or regenerate:
-            test = Ne16TestGenerator.from_conf(test.conf)
-            test.save_data(test_dir)
+        try:
+            test = NnxTest.load(nnxTestConfCls, test_dir)
+            # (Re)generate data
+            if not test.is_valid() or regenerate:
+                test = NnxTestGenerator.from_conf(test.conf)
+                test.save_data(test_dir)
+            nnxTestAndNames.append((test, test_dir))
+        except pydantic.ValidationError as e:
+            _ = e
+            nnxTestAndNames.append(
+                pytest.param(
+                    (None, test_dir),
+                    marks=pytest.mark.skipif(
+                        True, reason=f"Invalid test {test_dir}: {e.errors}"
+                    ),
+                )
+            )
 
-    metafunc.parametrize("path", test_dirs)
+    metafunc.parametrize("nnxTestAndName", nnxTestAndNames)
     metafunc.parametrize("timeout", [timeout])
+    metafunc.parametrize("nnxName", [nnxName])
+    metafunc.parametrize("nnxMemoryLayoutCls", [nnxMemoryLayoutCls])

@@ -22,7 +22,7 @@
 # Ne16TestClasses.py:Ne16TestConf().check_valid()
 
 # Input dimensions
-in_height = 3
+in_height = 4
 in_width = 3
 in_channel = 8
 

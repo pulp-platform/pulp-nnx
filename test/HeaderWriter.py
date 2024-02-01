@@ -48,8 +48,9 @@ class HeaderWriter:
         if isinstance(expr, str):
             expr = f'"{expr}"'
         elif isinstance(expr, bool):
-            expr = int(expr)
-        expr = f"({expr})"
+            expr = f"({int(expr)})"
+        else:
+            expr = f"({expr})"
         return f"#define {name.upper()} {expr}\n"
 
     def vector_size(self, data):
@@ -158,7 +159,7 @@ class HeaderWriter:
 
         if golden is not None:
             render += self.render_vector(
-                "golden_" + name, "PI_L1 " + _type, size, init=golden
+                "golden_" + name, "PI_L2 " + _type, size, init=golden
             )
             render += self.check(name)
 
