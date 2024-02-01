@@ -19,12 +19,89 @@
  */
 
 #include "nnx_layer.h"
+#include <pmsis.h>
+
+#ifdef NNX_NE16
+
 #include "ne16.h"
 #include "ne16_gvsoc.h"
 #include "ne16_pulp_bsp.h"
 #include "ne16_task.h"
 #include "pulp_nnx_ne16.h"
-#include <pmsis.h>
+
+typedef ne16_norm_mode_e nnx_norm_mode_e;
+typedef ne16_quant_t nnx_quant_t;
+typedef ne16_norm_t nnx_norm_t;
+typedef ne16_task_t nnx_task_t;
+typedef ne16_dev_t nnx_dev_t;
+typedef ne16_pulp_conf_t nnx_bsp_conf_t;
+
+#define nnxTaskFlagTrue ne16TaskFlagTrue
+#define nnxTaskFlagFalse ne16TaskFlagFalse
+
+#define nnx_task_init ne16_task_init
+#define nnx_task_set_op_to_conv ne16_task_set_op_to_conv
+#define nnx_task_set_bits ne16_task_set_bits
+#define nnx_task_set_norm_quant ne16_task_set_norm_quant
+#define nnx_task_set_weight_offset ne16_task_set_weight_offset
+#define nnx_task_set_dims ne16_task_set_dims
+#define nnx_task_set_dims_stride2x2 ne16_task_set_dims_stride2x2
+#define nnx_task_set_ptrs ne16_task_set_ptrs
+
+#define NNX_GVSOC_LOG_LEVEL NE16_GVSOC_LOG_LEVEL_ALL
+#define NNX_GVSOC_LOG_FORMAT NE16_GVSOC_LOG_FORMAT_HEXADECIMAL
+#define nnx_gvsoc_log_activate ne16_gvsoc_log_activate
+#define nnx_gvsoc_log_deactivate ne16_gvsoc_log_deactivate
+
+#define nnx_bsp_get_dev ne16_pulp_get_dev
+
+#define nnx_init ne16_nnx_init
+#define nnx_dispatch_wait ne16_nnx_dispatch_wait
+#define nnx_dispatch_stride2x2 ne16_nnx_dispatch_stride2x2
+#define nnx_dispatch ne16_nnx_dispatch
+#define nnx_resolve_wait ne16_nnx_resolve_wait
+#define nnx_term ne16_nnx_term
+
+#elif defined NNX_NEUREKA
+
+#include "neureka.h"
+#include "neureka_gvsoc.h"
+#include "neureka_siracusa_bsp.h"
+#include "neureka_task.h"
+#include "pulp_nnx_neureka.h"
+
+typedef neureka_norm_mode_e nnx_norm_mode_e;
+typedef neureka_quant_t nnx_quant_t;
+typedef neureka_norm_t nnx_norm_t;
+typedef neureka_task_t nnx_task_t;
+typedef neureka_dev_t nnx_dev_t;
+typedef neureka_siracusa_conf_t nnx_bsp_conf_t;
+
+#define nnxTaskFlagTrue neurekaTaskFlagTrue
+#define nnxTaskFlagFalse neurekaTaskFlagFalse
+
+#define nnx_task_init neureka_task_init
+#define nnx_task_set_op_to_conv neureka_task_set_op_to_conv
+#define nnx_task_set_bits neureka_task_set_bits
+#define nnx_task_set_norm_quant neureka_task_set_norm_quant
+#define nnx_task_set_weight_offset neureka_task_set_weight_offset
+#define nnx_task_set_dims neureka_task_set_dims
+#define nnx_task_set_ptrs neureka_task_set_ptrs
+
+#define NNX_GVSOC_LOG_LEVEL NEUREKA_GVSOC_LOG_LEVEL_ALL
+#define NNX_GVSOC_LOG_FORMAT NEUREKA_GVSOC_LOG_FORMAT_HEXADECIMAL
+#define nnx_gvsoc_log_activate neureka_gvsoc_log_activate
+#define nnx_gvsoc_log_deactivate neureka_gvsoc_log_deactivate
+
+#define nnx_bsp_get_dev neureka_siracusa_get_dev
+
+#define nnx_init neureka_nnx_init
+#define nnx_dispatch_wait neureka_nnx_dispatch_wait
+#define nnx_dispatch neureka_nnx_dispatch
+#define nnx_resolve_wait neureka_nnx_resolve_wait
+#define nnx_term neureka_nnx_term
+
+#endif // NNX_NE16 || NNX_NEUREKA
 
 // Generated headers
 #include "bias.h"
@@ -34,73 +111,109 @@
 #include "scale.h"
 #include "weight.h"
 
-static void task_prepare(ne16_task_t *task) {
-  ne16_task_init(task, WEIGHT_HEIGHT, GROUPS > 1, INPUT_BITS, OUTPUT_BITS,
-                 WEIGHT_BITS, weightOffsetModeLayerWise, WEIGHT_OFFSET,
-                 (ne16_quant_t){.shift_amount = OUTSHIFT,
-                                .mode = quantMode8Bit,
-                                .function = HAS_RELU ? quantFunctionRelu
-                                                     : quantFunctionIdentity,
-                                .flag_rounding = ne16TaskFlagFalse},
-                 (ne16_norm_t){.mode = normMode8Bit,
-                               .flag_bias = HAS_BIAS ? ne16TaskFlagTrue
-                                                     : ne16TaskFlagFalse,
-                               .flag_shift = ne16TaskFlagFalse},
-                 STRIDE_HEIGHT);
+static void task_prepare(nnx_task_t *task) {
+  nnx_task_init(task);
+  nnx_task_set_op_to_conv(task, WEIGHT_HEIGHT, GROUPS > 1, STRIDE_HEIGHT);
+  nnx_task_set_bits(task, INPUT_BITS, OUTPUT_BITS, WEIGHT_BITS);
 
-  if (STRIDE_WIDTH == 2 && STRIDE_HEIGHT == 2) {
-    ne16_task_set_dims_stride2x2(
-        task, INPUT_HEIGHT, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH,
-        INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL,
-        OUTPUT_WIDTH, OUTPUT_CHANNEL, WEIGHT_HEIGHT, WEIGHT_WIDTH, PADDING_TOP,
-        PADDING_BOTTOM, PADDING_RIGHT, PADDING_LEFT);
-  } else {
-    ne16_task_set_dims(task, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH,
-                       INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH,
-                       OUTPUT_CHANNEL, OUTPUT_WIDTH, OUTPUT_CHANNEL, PADDING_TOP,
-                       PADDING_BOTTOM, PADDING_RIGHT, PADDING_LEFT);
-  }
+#if HAS_NORM_QUANT == 1
+#if SCALE_BITS == 8
+  const nnx_norm_mode_e normMode = normMode8Bit;
+#elif SCALE_BITS == 32
+  const nnx_norm_mode_e normMode = normMode32Bit;
+#endif
 
-  ne16_task_set_ptrs(task, (uint32_t)input, INPUT_WIDTH, INPUT_CHANNEL,
-                     INPUT_BITS, PADDING_TOP, PADDING_LEFT, (uint32_t)output,
-                     (uint32_t)weight, (uint32_t)scale, NULL,
-#if HAS_BIAS == 1
-                     (uint32_t)bias
+  nnx_task_set_norm_quant(
+      task,
+      (nnx_quant_t){.shift_amount = OUTSHIFT,
+                    .function =
+                        HAS_RELU ? quantFunctionRelu : quantFunctionIdentity,
+                    .flag_rounding = nnxTaskFlagFalse},
+      (nnx_norm_t){.mode = normMode,
+                   .flag_bias = HAS_BIAS ? nnxTaskFlagTrue : nnxTaskFlagFalse,
+                   .flag_shift = nnxTaskFlagFalse});
+#endif // HAS_NORM_QUANT
+
+  nnx_task_set_weight_offset(task, weightOffsetModeLayerWise, WEIGHT_OFFSET);
+
+#ifdef NNX_NEUREKA
+#ifdef NEUREKA_WEIGHT_SOURCE_WMEM
+  neureka_task_set_weight_source(task, neurekaWeightSourceWmem);
 #else
-                     NULL
+  neureka_task_set_weight_source(task, neurekaWeightSourceTcdm);
+#endif
+#if INPUT_SIGNED == 1
+  neureka_task_set_input_signed(task);
+#else
+  neureka_task_set_input_unsigned(task);
+#endif
+#endif
+
+  const uint32_t w_in_stride = INPUT_CHANNEL * INPUT_BITS / 8;
+  const uint32_t h_in_stride = INPUT_WIDTH * w_in_stride;
+  const uint32_t w_out_stride = OUTPUT_CHANNEL * OUTPUT_BITS / 8;
+  const uint32_t h_out_stride = OUTPUT_WIDTH * w_out_stride;
+
+#if STRIDE_HEIGHT == 2 && STRIDE_WIDTH == 2
+  nnx_task_set_dims_stride2x2(
+      task, INPUT_HEIGHT, INPUT_WIDTH, INPUT_CHANNEL, h_in_stride, w_in_stride,
+      OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL, h_out_stride, w_out_stride,
+      WEIGHT_HEIGHT, WEIGHT_WIDTH, PADDING_TOP, PADDING_BOTTOM, PADDING_RIGHT,
+      PADDING_LEFT);
+#else
+  nnx_task_set_dims(task, INPUT_WIDTH, INPUT_CHANNEL, h_in_stride, w_in_stride,
+                    OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL, h_out_stride,
+                    w_out_stride, PADDING_TOP, PADDING_BOTTOM, PADDING_RIGHT,
+                    PADDING_LEFT);
+#endif
+
+  nnx_task_set_ptrs(task, (uint32_t)input, INPUT_WIDTH, w_in_stride,
+                    PADDING_TOP, PADDING_LEFT, (uint32_t)output,
+                    (uint32_t)weight,
+#if HAS_NORM_QUANT == 1
+                    (uint32_t)scale, NULL,
+#if HAS_BIAS == 1
+                    (uint32_t)bias
+#else
+                    NULL
+#endif
+#else
+                    NULL, NULL, NULL
 #endif
   );
 }
 
-static void task_execute(ne16_task_t *task) {
-  ne16_dev_t *dev = ne16_pulp_get_dev();
+static void task_execute(nnx_task_t *task) {
+  nnx_dev_t *dev = nnx_bsp_get_dev();
 
-  ne16_gvsoc_log_activate(dev, NE16_GVSOC_LOG_LEVEL_CONFIG,
-                          NE16_GVSOC_LOG_FORMAT_HEXADECIMAL);
+#if __PLATFORM__ == ARCHI_PLATFORM_GVSOC
+  nnx_gvsoc_log_activate(dev, NNX_GVSOC_LOG_LEVEL, NNX_GVSOC_LOG_FORMAT);
+#endif
 
-  ne16_pulp_conf_t conf = {.max_stall = 8};
-  ne16_nnx_init(dev, &conf);
+  nnx_bsp_conf_t conf = {.max_stall = 8};
+  nnx_init(dev, &conf);
 
-  ne16_nnx_dispatch_wait(dev);
+  nnx_dispatch_wait(dev);
 
-  if (STRIDE_WIDTH == 2 && STRIDE_HEIGHT == 2) {
-    ne16_nnx_dispatch_stride2x2(dev, task, INPUT_WIDTH, INPUT_CHANNEL, INPUT_WIDTH,
-                                INPUT_CHANNEL, OUTPUT_HEIGHT, OUTPUT_WIDTH,
-                                OUTPUT_CHANNEL, OUTPUT_WIDTH, OUTPUT_CHANNEL,
-                                WEIGHT_HEIGHT, WEIGHT_WIDTH);
-  } else {
-    ne16_nnx_dispatch(dev, task);
-  }
+#if STRIDE_HEIGHT == 2 && STRIDE_WIDTH == 2
+  nnx_dispatch_stride2x2(dev, task, INPUT_WIDTH, INPUT_CHANNEL, OUTPUT_HEIGHT,
+                         OUTPUT_WIDTH, OUTPUT_CHANNEL, WEIGHT_HEIGHT,
+                         WEIGHT_WIDTH);
+#else
+  nnx_dispatch(dev, task);
+#endif
 
-  ne16_nnx_resolve_wait(dev, task);
+  nnx_resolve_wait(dev, task);
 
-  ne16_nnx_term(dev);
+  nnx_term(dev);
 
-  ne16_gvsoc_log_deactivate(dev);
+#if __PLATFORM__ == ARCHI_PLATFORM_GVSOC
+  nnx_gvsoc_log_deactivate(dev);
+#endif
 }
 
 void execute_nnx_layer(void *args) {
-  ne16_task_t task;
+  nnx_task_t task;
   task_prepare(&task);
   task_execute(&task);
 }

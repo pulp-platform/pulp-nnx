@@ -18,13 +18,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "pulp_nnx_util.h"
-#include "pulp_nnx_hal.h"
+#include "neureka.h"
 
-void nnx_activate_gvsoc_logging(int log_level) {
-  NEUREKA_WRITE_IO_REG(NEUREKA_REG_GVSOC_TRACE, log_level);
+#define NEUREKA_STATUS_EMPTY (0x000)
+#define NEUREKA_STATUS_FULL (0x101)
+
+inline int neureka_task_queue_tasks_in_flight(neureka_dev_t *dev) {
+  uint32_t status = hwpe_task_queue_status(&dev->hwpe_dev);
+  return (status & 0x1) + ((status >> 8) & 0x1);
 }
 
-void nnx_deactivate_gvsoc_logging() {
-  NEUREKA_WRITE_IO_REG(NEUREKA_REG_GVSOC_TRACE, 0);
+inline int neureka_task_queue_empty(neureka_dev_t *dev) {
+  return hwpe_task_queue_status(&dev->hwpe_dev) == NEUREKA_STATUS_EMPTY;
+}
+
+inline int neureka_task_queue_full(neureka_dev_t *dev) {
+  return hwpe_task_queue_status(&dev->hwpe_dev) == NEUREKA_STATUS_FULL;
 }

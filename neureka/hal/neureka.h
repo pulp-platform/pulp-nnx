@@ -18,15 +18,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef __NE16_ERROR_CODES_H__
-#define __NE16_ERROR_CODES_H__
+#ifndef __NEUREKA_H__
+#define __NEUREKA_H__
 
-typedef enum {
-  success = 0,
-  weightBitwidthOutOfBounds,
-  unsupportedWeightOffsetMode,
-  unsupportedFeatureBitwidth,
-  dimensionMismatch
-} nnx_error_code;
+#include "hwpe.h"
+#include <stdint.h>
 
-#endif // __NE16_ERROR_CODES_H__
+#define NEUREKA_TASK_QUEUE_SIZE (2)
+
+typedef struct neureka_dev_t {
+  hwpe_dev_t hwpe_dev; /* Implements the HWPE device interface */
+} neureka_dev_t;
+
+int neureka_task_queue_tasks_in_flight(neureka_dev_t *dev);
+int neureka_task_queue_empty(neureka_dev_t *dev);
+int neureka_task_queue_full(neureka_dev_t *dev);
+
+#endif // __NEUREKA_H__
