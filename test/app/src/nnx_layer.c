@@ -113,7 +113,11 @@ typedef neureka_siracusa_conf_t nnx_bsp_conf_t;
 
 static void task_prepare(nnx_task_t *task) {
   nnx_task_init(task);
+#ifdef NNX_NEUREKA
+  nnx_task_set_op_to_conv(task, WEIGHT_HEIGHT, GROUPS > 1);
+#else
   nnx_task_set_op_to_conv(task, WEIGHT_HEIGHT, GROUPS > 1, STRIDE_HEIGHT);
+#endif
   nnx_task_set_bits(task, INPUT_BITS, OUTPUT_BITS, WEIGHT_BITS);
 
 #if HAS_NORM_QUANT == 1
@@ -158,13 +162,13 @@ static void task_prepare(nnx_task_t *task) {
   nnx_task_set_dims_stride2x2(
       task, INPUT_HEIGHT, INPUT_WIDTH, INPUT_CHANNEL, h_in_stride, w_in_stride,
       OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL, h_out_stride, w_out_stride,
-      WEIGHT_HEIGHT, WEIGHT_WIDTH, PADDING_TOP, PADDING_BOTTOM, PADDING_RIGHT,
-      PADDING_LEFT);
+      WEIGHT_HEIGHT, WEIGHT_WIDTH, PADDING_TOP, PADDING_BOTTOM, PADDING_LEFT,
+      PADDING_RIGHT);
 #else
   nnx_task_set_dims(task, INPUT_WIDTH, INPUT_CHANNEL, h_in_stride, w_in_stride,
                     OUTPUT_HEIGHT, OUTPUT_WIDTH, OUTPUT_CHANNEL, h_out_stride,
-                    w_out_stride, PADDING_TOP, PADDING_BOTTOM, PADDING_RIGHT,
-                    PADDING_LEFT);
+                    w_out_stride, PADDING_TOP, PADDING_BOTTOM, PADDING_LEFT,
+                    PADDING_RIGHT);
 #endif
 
   nnx_task_set_ptrs(task, (uint32_t)input, INPUT_WIDTH, w_in_stride,
