@@ -168,8 +168,8 @@ void neureka_task_set_padding(neureka_task_t *task, const uint8_t top,
                               const uint8_t bottom, const uint8_t left,
                               const uint8_t right, const uint8_t value);
 void neureka_task_set_mask_filter(neureka_task_t *task, const uint8_t top,
-                                  const uint8_t right, const uint8_t bottom,
-                                  const uint8_t left);
+                                  const uint8_t bottom, const uint8_t left,
+                                  const uint8_t right);
 /** neureka_task_set_dims
  *
  * All the strides variables are strides between elements alongside that
@@ -182,6 +182,6 @@ void neureka_task_set_dims(
     const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
     const uint32_t h_out_stride, const uint32_t w_out_stride,
     const uint8_t padding_top, const uint8_t padding_bottom,
-    const uint8_t padding_right, const uint8_t padding_left);
+    const uint8_t padding_left, const uint8_t padding_right);
 
 #endif // !__NEUREKA_TASK_H__
