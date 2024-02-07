@@ -113,7 +113,11 @@ typedef neureka_siracusa_conf_t nnx_bsp_conf_t;
 
 static void task_prepare(nnx_task_t *task) {
   nnx_task_init(task);
+#ifdef NNX_NEUREKA
+  nnx_task_set_op_to_conv(task, WEIGHT_HEIGHT, GROUPS > 1);
+#else
   nnx_task_set_op_to_conv(task, WEIGHT_HEIGHT, GROUPS > 1, STRIDE_HEIGHT);
+#endif
   nnx_task_set_bits(task, INPUT_BITS, OUTPUT_BITS, WEIGHT_BITS);
 
 #if HAS_NORM_QUANT == 1

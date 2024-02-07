@@ -123,7 +123,7 @@ typedef struct neureka_task_t {
 void neureka_task_init(neureka_task_t *task);
 void neureka_task_set_op_to_conv(neureka_task_t *task,
                                  const uint8_t kernel_shape,
-                                 const uint8_t depthwise, const uint8_t stride);
+                                 const uint8_t depthwise);
 void neureka_task_set_bits(neureka_task_t *task, const uint8_t input_bits,
                            const uint8_t output_bits,
                            const uint8_t weight_bits);
