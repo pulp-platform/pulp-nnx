@@ -18,8 +18,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef __NEUREKA_siracusa_BSP_H__
-#define __NEUREKA_siracusa_BSP_H__
+#ifndef __NEUREKA_SIRACUSA_BSP_H__
+#define __NEUREKA_SIRACUSA_BSP_H__
 
 #include "neureka.h"
 #include <stdint.h>
@@ -64,4 +64,4 @@ void neureka_siracusa_close();
 void neureka_siracusa_event_wait_and_clear();
 const neureka_dev_t *neureka_siracusa_get_dev();
 
-#endif // !__NEUREKA_siracusa_BSP_H__
+#endif // !__NEUREKA_SIRACUSA_BSP_H__
