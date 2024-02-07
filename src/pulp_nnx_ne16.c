@@ -25,27 +25,27 @@
 #include <pmsis.h>
 #include <stdint.h>
 
-void ne16_nnx_init(ne16_dev_t *dev, ne16_pulp_conf_t *conf) {
+void ne16_nnx_init(const ne16_dev_t *dev, ne16_pulp_conf_t *conf) {
   ne16_pulp_open(conf);
   hwpe_soft_clear(&dev->hwpe_dev);
 }
 
-void ne16_nnx_term(ne16_dev_t *dev) {
+void ne16_nnx_term(const ne16_dev_t *dev) {
   hwpe_soft_clear(&dev->hwpe_dev);
   ne16_pulp_close();
 }
 
-int ne16_nnx_dispatch_check(ne16_dev_t *dev) {
+int ne16_nnx_dispatch_check(const ne16_dev_t *dev) {
   return !ne16_task_queue_full(dev);
 }
 
-void ne16_nnx_dispatch_wait(ne16_dev_t *dev) {
+void ne16_nnx_dispatch_wait(const ne16_dev_t *dev) {
   while (!ne16_nnx_dispatch_check(dev)) {
     ne16_pulp_event_wait_and_clear();
   }
 }
 
-int ne16_nnx_dispatch(ne16_dev_t *dev, ne16_task_t *task) {
+int ne16_nnx_dispatch(const ne16_dev_t *dev, ne16_task_t *task) {
   if (hwpe_task_queue_acquire_task(&dev->hwpe_dev, &task->id)) {
     return 1;
   }
@@ -55,7 +55,7 @@ int ne16_nnx_dispatch(ne16_dev_t *dev, ne16_task_t *task) {
   return 0;
 }
 
-int ne16_nnx_resolve_check(ne16_dev_t *dev, ne16_task_t *task) {
+int ne16_nnx_resolve_check(const ne16_dev_t *dev, ne16_task_t *task) {
 #if __PLATFORM__ == ARCHI_PLATFORM_GVSOC
   // GVSOC model has a broken running_id so resolve_check
   // conservativly looks if the task queue is empty.
@@ -68,7 +68,7 @@ int ne16_nnx_resolve_check(ne16_dev_t *dev, ne16_task_t *task) {
 #endif
 }
 
-void ne16_nnx_resolve_wait(ne16_dev_t *dev, ne16_task_t *task) {
+void ne16_nnx_resolve_wait(const ne16_dev_t *dev, ne16_task_t *task) {
   while (!ne16_nnx_resolve_check(dev, task)) {
     ne16_pulp_event_wait_and_clear();
   }
@@ -83,7 +83,7 @@ static inline uint32_t _get_tile_ptr(uint32_t ptr, int i, int j, int size_i,
          (j * (size_j - overlap_j) - offset_j) * stride_k;
 }
 
-void ne16_nnx_dispatch_stride2x2(ne16_dev_t *dev, ne16_task_t *task,
+void ne16_nnx_dispatch_stride2x2(const ne16_dev_t *dev, ne16_task_t *task,
                                  const uint32_t w_in, const uint32_t k_in,
                                  const uint32_t h_out, const uint32_t w_out,
                                  const uint32_t k_out, const uint8_t h_ker,

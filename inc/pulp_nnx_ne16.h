@@ -25,20 +25,20 @@
 
 /* PULP-NNX interface */
 
-void ne16_nnx_init(ne16_dev_t *dev, ne16_pulp_conf_t *conf);
-void ne16_nnx_term(ne16_dev_t *dev);
+void ne16_nnx_init(const ne16_dev_t *dev, ne16_pulp_conf_t *conf);
+void ne16_nnx_term(const ne16_dev_t *dev);
 
 /** ne16_nnx_dispatch_check
  *
  * Check whether you can dispatch to the accelerator.
  */
-int ne16_nnx_dispatch_check(ne16_dev_t *dev);
+int ne16_nnx_dispatch_check(const ne16_dev_t *dev);
 
 /** ne16_nnx_dispatch_wait
  *
  * Block until you can dispatch to the accelerator.
  */
-void ne16_nnx_dispatch_wait(ne16_dev_t *dev);
+void ne16_nnx_dispatch_wait(const ne16_dev_t *dev);
 
 /** ne16_nnx_dispatch
  *
@@ -46,19 +46,19 @@ void ne16_nnx_dispatch_wait(ne16_dev_t *dev);
  * Fails with return code 1 if the task cannot be dispatched. Otherwise returns
  * 0.
  */
-int ne16_nnx_dispatch(ne16_dev_t *dev, ne16_task_t *task);
+int ne16_nnx_dispatch(const ne16_dev_t *dev, ne16_task_t *task);
 
 /** ne16_nnx_resolve_check
  *
  * Check whether the task has been resolved.
  */
-int ne16_nnx_resolve_check(ne16_dev_t *dev, ne16_task_t *task);
+int ne16_nnx_resolve_check(const ne16_dev_t *dev, ne16_task_t *task);
 
 /** ne16_nnx_resolve_wait
  *
  * Block until you can resolve the task.
  */
-void ne16_nnx_resolve_wait(ne16_dev_t *dev, ne16_task_t *task);
+void ne16_nnx_resolve_wait(const ne16_dev_t *dev, ne16_task_t *task);
 
 /* Additional helper functions */
 
@@ -69,7 +69,7 @@ void ne16_nnx_resolve_wait(ne16_dev_t *dev, ne16_task_t *task);
  * tile the tile to the subtile's spatial dimensions (in this case 3x3 output).
  * Works only if the k_out is divisible by 2.
  */
-void ne16_nnx_dispatch_stride2x2(ne16_dev_t *dev, ne16_task_t *task,
+void ne16_nnx_dispatch_stride2x2(const ne16_dev_t *dev, ne16_task_t *task,
                                  const uint32_t w_in, const uint32_t k_in,
                                  const uint32_t h_out, const uint32_t w_out,
                                  const uint32_t k_out, const uint8_t h_ker,

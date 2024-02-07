@@ -30,8 +30,8 @@ typedef struct neureka_dev_t {
   hwpe_dev_t hwpe_dev; /* Implements the HWPE device interface */
 } neureka_dev_t;
 
-int neureka_task_queue_tasks_in_flight(neureka_dev_t *dev);
-int neureka_task_queue_empty(neureka_dev_t *dev);
-int neureka_task_queue_full(neureka_dev_t *dev);
+int neureka_task_queue_tasks_in_flight(const neureka_dev_t *dev);
+int neureka_task_queue_empty(const neureka_dev_t *dev);
+int neureka_task_queue_full(const neureka_dev_t *dev);
 
 #endif // __NEUREKA_H__
