@@ -42,8 +42,8 @@ typedef enum {
 
 typedef struct ne16_norm_t {
   ne16_norm_mode_e mode;
-  int flag_bias;
-  int flag_shift;
+  ne16_task_flag_e flag_bias;
+  ne16_task_flag_e flag_shift;
 } ne16_norm_t;
 
 typedef enum ne16_quant_mode_e {
@@ -59,9 +59,9 @@ typedef enum ne16_quant_function_e {
 
 typedef struct ne16_quant_t {
   // Shift amount must be in range 0x00-0x1F
-  unsigned shift_amount;
+  uint8_t shift_amount;
   ne16_quant_function_e function;
-  int flag_rounding;
+  ne16_task_flag_e flag_rounding;
 } ne16_quant_t;
 
 typedef struct ne16_stride_t {
@@ -157,8 +157,8 @@ void ne16_task_set_padding(ne16_task_t *task, const uint8_t top,
                            const uint8_t bottom, const uint8_t left,
                            const uint8_t right, const uint8_t value);
 void ne16_task_set_mask_filter(ne16_task_t *task, const uint8_t top,
-                               const uint8_t right, const uint8_t bottom,
-                               const uint8_t left);
+                               const uint8_t bottom, const uint8_t left,
+                               const uint8_t right);
 /** ne16_task_set_dims
  *
  * All the strides variables are strides between elements alongside that
@@ -172,8 +172,8 @@ void ne16_task_set_dims(ne16_task_t *task, const uint32_t w_in,
                         const uint32_t h_out_stride,
                         const uint32_t w_out_stride, const uint8_t padding_top,
                         const uint8_t padding_bottom,
-                        const uint8_t padding_right,
-                        const uint8_t padding_left);
+                        const uint8_t padding_left,
+                        const uint8_t padding_right);
 /** ne16_task_set_dims_stride2x2
  *
  * All the strides variables are strides between elements alongside that
@@ -186,7 +186,7 @@ void ne16_task_set_dims_stride2x2(
     const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
     const uint32_t h_out_stride, const uint32_t w_out_stride,
     const uint8_t h_ker, const uint8_t w_ker, const uint8_t padding_top,
-    const uint8_t padding_bottom, const uint8_t padding_right,
-    const uint8_t padding_left);
+    const uint8_t padding_bottom, const uint8_t padding_left,
+    const uint8_t padding_right);
 
 #endif // !__NE16_TASK_H__

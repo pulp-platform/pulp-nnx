@@ -47,8 +47,7 @@ void neureka_task_init(neureka_task_t *task) {
 
 void neureka_task_set_op_to_conv(neureka_task_t *task,
                                  const uint8_t kernel_shape,
-                                 const uint8_t depthwise,
-                                 const uint8_t stride) {
+                                 const uint8_t depthwise) {
   task->depthwise = depthwise;
   task->kernel_shape = kernel_shape;
   task->subtile_output_channel = depthwise ? NEUREKA_SUBTILE_INPUT_CHANNEL_3x3
@@ -217,8 +216,8 @@ void neureka_task_set_padding(neureka_task_t *task, const uint8_t top,
 }
 
 void neureka_task_set_mask_filter(neureka_task_t *task, const uint8_t top,
-                                  const uint8_t right, const uint8_t bottom,
-                                  const uint8_t left) {
+                                  const uint8_t bottom, const uint8_t left,
+                                  const uint8_t right) {
   task->data.cfg.filter_mask = ((top & 0xff) << 24) | ((right & 0xff) << 16) |
                                ((bottom & 0xff) << 8) | ((left & 0xff) << 0);
 }
@@ -229,7 +228,7 @@ void neureka_task_set_dims(
     const uint32_t h_out, const uint32_t w_out, const uint32_t k_out,
     const uint32_t h_out_stride, const uint32_t w_out_stride,
     const uint8_t padding_top, const uint8_t padding_bottom,
-    const uint8_t padding_right, const uint8_t padding_left) {
+    const uint8_t padding_left, const uint8_t padding_right) {
   neureka_task_set_strides(task, k_in, h_in_stride, w_in_stride, h_out_stride,
                            w_out_stride);
   neureka_task_set_counters(task, k_in, h_out, w_out, k_out, padding_bottom,
