@@ -42,8 +42,8 @@ typedef enum {
 
 typedef struct ne16_norm_t {
   ne16_norm_mode_e mode;
-  int flag_bias;
-  int flag_shift;
+  ne16_task_flag_e flag_bias;
+  ne16_task_flag_e flag_shift;
 } ne16_norm_t;
 
 typedef enum ne16_quant_mode_e {
@@ -59,9 +59,9 @@ typedef enum ne16_quant_function_e {
 
 typedef struct ne16_quant_t {
   // Shift amount must be in range 0x00-0x1F
-  unsigned shift_amount;
+  uint8_t shift_amount;
   ne16_quant_function_e function;
-  int flag_rounding;
+  ne16_task_flag_e flag_rounding;
 } ne16_quant_t;
 
 typedef struct ne16_stride_t {

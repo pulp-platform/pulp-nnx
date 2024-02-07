@@ -46,8 +46,8 @@ typedef enum {
 
 typedef struct neureka_norm_t {
   neureka_norm_mode_e mode;
-  int flag_bias;
-  int flag_shift;
+  neureka_task_flag_e flag_bias;
+  neureka_task_flag_e flag_shift;
 } neureka_norm_t;
 
 typedef enum neureka_quant_mode_e {
@@ -62,9 +62,9 @@ typedef enum neureka_quant_function_e {
 
 typedef struct neureka_quant_t {
   // Shift amount must be in range 0x00-0x1F
-  unsigned shift_amount;
+  uint8_t shift_amount;
   neureka_quant_function_e function;
-  int flag_rounding;
+  neureka_task_flag_e flag_rounding;
 } neureka_quant_t;
 
 typedef struct neureka_stride_t {
