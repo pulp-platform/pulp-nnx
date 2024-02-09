@@ -126,16 +126,18 @@ uint32_t neureka_pad_ptr(uint32_t ptr, const uint32_t width,
   return ptr - (padding_top * width + padding_left) * width_stride;
 }
 
-void neureka_task_set_ptrs(neureka_task_t *task, uint32_t input_ptr,
-                           uint32_t w_in, uint32_t w_in_stride,
-                           uint8_t padding_top, uint8_t padding_left,
-                           uint32_t output_ptr, uint32_t weights_ptr,
-                           uint32_t scale_ptr, uint32_t shift_ptr,
-                           uint32_t bias_ptr) {
+void neureka_task_set_ptrs_conv(neureka_task_t *task, uint32_t input_ptr,
+                                uint32_t w_in, uint32_t w_in_stride,
+                                uint8_t padding_top, uint8_t padding_left,
+                                uint32_t output_ptr, uint32_t weights_ptr) {
   task->data.infeat_ptr =
       neureka_pad_ptr(input_ptr, w_in, w_in_stride, padding_top, padding_left);
   task->data.outfeat_ptr = output_ptr;
   task->data.weights_ptr = weights_ptr;
+}
+
+void neureka_task_set_ptrs_norm_quant(neureka_task_t *task, uint32_t scale_ptr,
+                                      uint32_t shift_ptr, uint32_t bias_ptr) {
   task->data.scale_ptr = scale_ptr;
   task->data.scale_shift_ptr = shift_ptr;
   task->data.scale_bias_ptr = bias_ptr;

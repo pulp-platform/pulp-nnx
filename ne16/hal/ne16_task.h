@@ -133,11 +133,12 @@ uint32_t ne16_get_tile_padding(uint32_t padding, uint32_t i_height,
 uint32_t ne16_pad_ptr(uint32_t ptr, const uint32_t width,
                       const uint32_t width_stride, const uint8_t padding_top,
                       const uint8_t padding_left);
-void ne16_task_set_ptrs(ne16_task_t *task, uint32_t input_ptr, uint32_t w_in,
-                        uint32_t w_in_stride, uint8_t padding_top,
-                        uint8_t padding_left, uint32_t output_ptr,
-                        uint32_t weights_ptr, uint32_t scale_ptr,
-                        uint32_t shift_ptr, uint32_t bias_ptr);
+void ne16_task_set_ptrs_conv(ne16_task_t *task, uint32_t input_ptr,
+                             uint32_t w_in, uint32_t w_in_stride,
+                             uint8_t padding_top, uint8_t padding_left,
+                             uint32_t output_ptr, uint32_t weights_ptr);
+void ne16_task_set_ptrs_norm_quant(ne16_task_t *task, uint32_t scale_ptr,
+                                   uint32_t shift_ptr, uint32_t bias_ptr);
 /** ne16_task_set_strides
  *
  * All the strides variables are strides between elements alongside that

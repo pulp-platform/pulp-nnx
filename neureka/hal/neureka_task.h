@@ -142,12 +142,12 @@ uint32_t neureka_get_tile_padding(uint32_t padding, uint32_t i_height,
 uint32_t neureka_pad_ptr(uint32_t ptr, const uint32_t width,
                          const uint32_t width_stride, const uint8_t padding_top,
                          const uint8_t padding_left);
-void neureka_task_set_ptrs(neureka_task_t *task, uint32_t input_ptr,
-                           uint32_t w_in, uint32_t w_in_stride,
-                           uint8_t padding_top, uint8_t padding_left,
-                           uint32_t output_ptr, uint32_t weights_ptr,
-                           uint32_t scale_ptr, uint32_t shift_ptr,
-                           uint32_t bias_ptr);
+void neureka_task_set_ptrs_conv(neureka_task_t *task, uint32_t input_ptr,
+                                uint32_t w_in, uint32_t w_in_stride,
+                                uint8_t padding_top, uint8_t padding_left,
+                                uint32_t output_ptr, uint32_t weights_ptr);
+void neureka_task_set_ptrs_norm_quant(neureka_task_t *task, uint32_t scale_ptr,
+                                      uint32_t shift_ptr, uint32_t bias_ptr);
 /** neureka_task_set_strides
  *
  * All the strides variables are strides between elements alongside that
