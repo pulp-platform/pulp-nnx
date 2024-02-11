@@ -66,7 +66,8 @@ typedef ne16_pulp_conf_t nnx_bsp_conf_t;
 
 #include "neureka.h"
 #include "neureka_gvsoc.h"
-#include "neureka_siracusa_bsp.h"
+// this actually includes "neureka_siracusa_bsp.h" unless NNX_NEUREKA_TESTBENCH is defined
+#include "neureka_bsp.h"
 #include "neureka_task.h"
 #include "pulp_nnx_neureka.h"
 
