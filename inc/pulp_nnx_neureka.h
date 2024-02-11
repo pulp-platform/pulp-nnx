@@ -19,13 +19,13 @@
  */
 
 #include "neureka.h"
-#include "neureka_siracusa_bsp.h"
+#include "neureka_bsp.h"
 #include "neureka_task.h"
 #include <stdint.h>
 
 /* PULP-NNX interface */
 
-void neureka_nnx_init(neureka_dev_t *dev, neureka_siracusa_conf_t *conf);
+void neureka_nnx_init(neureka_dev_t *dev, neureka_bsp_conf_t *conf);
 void neureka_nnx_term(neureka_dev_t *dev);
 
 /** neureka_nnx_dispatch_check

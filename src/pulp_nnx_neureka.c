@@ -26,14 +26,14 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-void neureka_nnx_init(neureka_dev_t *dev, neureka_siracusa_conf_t *conf) {
-  neureka_siracusa_open(conf);
+void neureka_nnx_init(neureka_dev_t *dev, neureka_bsp_conf_t *conf) {
+  neureka_bsp_open(conf);
   hwpe_soft_clear(&dev->hwpe_dev);
 }
 
 void neureka_nnx_term(neureka_dev_t *dev) {
   hwpe_soft_clear(&dev->hwpe_dev);
-  neureka_siracusa_close();
+  neureka_bsp_close();
 }
 
 int neureka_nnx_dispatch_check(neureka_dev_t *dev) {
@@ -42,7 +42,7 @@ int neureka_nnx_dispatch_check(neureka_dev_t *dev) {
 
 void neureka_nnx_dispatch_wait(neureka_dev_t *dev) {
   while (!neureka_nnx_dispatch_check(dev)) {
-    neureka_siracusa_event_wait_and_clear();
+    neureka_bsp_event_wait_and_clear();
   }
 }
 
@@ -71,6 +71,6 @@ int neureka_nnx_resolve_check(neureka_dev_t *dev, neureka_task_t *task) {
 
 void neureka_nnx_resolve_wait(neureka_dev_t *dev, neureka_task_t *task) {
   while (!neureka_nnx_resolve_check(dev, task)) {
-    neureka_siracusa_event_wait_and_clear();
+    neureka_bsp_event_wait_and_clear();
   }
 }
