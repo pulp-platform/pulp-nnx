@@ -34,7 +34,7 @@ INC_DIRS += inc
 INC_DIRS += $(LIBDIR)/inc $(LIBDIR)/util
 
 ## Accelerator
-INC_DIRS += $(ACC_DIR)/hal $(ACC_DIR)/gvsoc $(ACC_DIR)/bsp
+INC_DIRS += $(ACC_DIR)/hal $(ACC_DIR)/gvsoc $(ACC_DIR)/bsp $(ACC_DIR)/bsp/siracusa
 
 ## Generated 
 INC_DIRS += gen/inc
