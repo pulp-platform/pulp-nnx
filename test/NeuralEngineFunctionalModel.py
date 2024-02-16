@@ -28,23 +28,33 @@ class NeuralEngineFunctionalModel:
         bias_type: Optional[IntegerType],
         has_bias: bool,
         has_relu: bool,
+        verbose: bool,
     ) -> torch.Tensor:
         # Scale accumulators are in 48bit, so keeping the data in 64bit
         tensor = tensor * scale
         assert tensor.dtype == torch.int64
 
+        if verbose:
+            print("INTERMEDIATE RESULTS (after scale):")
+            print(tensor)
+
         if has_bias:
             assert bias is not None
             assert bias_type is not None
-            # Saturating cast to int32
+
+            tensor = NeuralEngineFunctionalModel._cast(
+                tensor, bias_type, saturate=False
+            ).type(torch.int32)
+
+            tensor = tensor + bias
+
             tensor = NeuralEngineFunctionalModel._cast(
                 tensor, bias_type, saturate=True
             ).type(torch.int32)
 
-            tensor = tensor + bias
-            tensor = NeuralEngineFunctionalModel._cast(
-                tensor, bias_type, saturate=False
-            ).type(torch.int32)
+            if verbose:
+                print("INTERMEDIATE RESULTS (after bias):")
+                print(tensor)
 
         if has_relu:
             tensor = F.relu(tensor)
@@ -118,6 +128,7 @@ class NeuralEngineFunctionalModel:
                 bias_type,
                 has_bias,
                 has_relu,
+                verbose,
             )
 
         return output
