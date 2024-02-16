@@ -28,7 +28,7 @@
 - [ ] Scale type
     - [x] uint8
     - [ ] uint16
-    - [ ] uint32
+    - [x] uint32
 - [x] Bias type
     - [x] int32
 - [ ] Weight type
