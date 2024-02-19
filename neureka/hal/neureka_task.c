@@ -115,6 +115,12 @@ void neureka_task_set_weight_source(neureka_task_t *task,
   task->data.cfg.conf0 |= weight_source;
 }
 
+void neureka_task_set_activation_prefetch(neureka_task_t *task,
+                                    neureka_activation_prefetch_e activation_prefetch) {
+  task->data.cfg.conf0 &= ~NEUREKA_MASK_FLAG_ACTIVATION_PREFETCH;
+  task->data.cfg.conf0 |= activation_prefetch;
+}
+
 /** neureka_pad_ptr
  *
  * Calculate the pointer to the start of the ptr as if

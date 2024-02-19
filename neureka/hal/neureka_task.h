@@ -39,6 +39,11 @@ typedef enum neureka_weight_offset_mode_e {
   weightOffsetModeLayerWise = NEUREKA_FLAG_WEIGHT_OFFSET_LAYER_WISE
 } neureka_weight_offset_mode_e;
 
+typedef enum neureka_activation_prefetch_e {
+  activationPrefetchOn  = NEUREKA_FLAG_ACTIVATION_PREFETCH_ON,
+  activationPrefetchOff = NEUREKA_FLAG_ACTIVATION_PREFETCH_OFF
+} neureka_activation_prefetch_e;
+
 typedef enum {
   normMode8Bit = NEUREKA_NORM_MODE_8BIT,
   normMode32Bit = NEUREKA_NORM_MODE_32BIT
