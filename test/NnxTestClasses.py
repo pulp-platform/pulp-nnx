@@ -254,16 +254,22 @@ class NnxTestGenerator:
                 ).type(torch.int32)
             if global_shift is None:
                 global_shift = torch.Tensor([0]).type(torch.int32)
+                conv_kwargs = {
+                    **conf.__dict__,
+                    "out_type": NeuralEngineFunctionalModel.ACCUMULATOR_TYPE,
+                }
                 output = NeuralEngineFunctionalModel().convolution(
                     input,
                     weight,
                     scale,
                     bias,
                     global_shift,
-                    verbose=verbose,
-                    **conf.__dict__,
+                    verbose=False,
+                    **conv_kwargs,
                 )
-                NnxTestGenerator._calculate_global_shift(output, conf.out_type)
+                global_shift = NnxTestGenerator._calculate_global_shift(
+                    output, conf.out_type
+                )
 
         output = NeuralEngineFunctionalModel().convolution(
             input, weight, scale, bias, global_shift, verbose=verbose, **conf.__dict__

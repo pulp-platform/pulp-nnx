@@ -16,7 +16,6 @@ Github repo [link](https://github.com/siracusa-soc/ne).
     - [x] Bias (w/ and w/o)
     - [ ] Per-channel shift
     - [x] Per-layer shift
-    - [ ] Rounding
 - [x] Input type
     - [x] uint8
     - [x] int8
@@ -24,9 +23,9 @@ Github repo [link](https://github.com/siracusa-soc/ne).
     - [x] int8
     - [x] uint8 (only w/ Relu)
     - [x] int32
-- [ ] Scale type
+- [x] Scale type
     - [x] uint8
-    - [ ] uint32
+    - [x] uint32
 - [x] Bias type
     - [x] int32
 - [ ] Weight type
