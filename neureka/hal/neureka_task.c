@@ -133,6 +133,10 @@ void neureka_task_set_ptrs_conv(neureka_task_t *task, uint32_t input_ptr,
   task->data.infeat_ptr =
       neureka_pad_ptr(input_ptr, w_in, w_in_stride, padding_top, padding_left);
   task->data.outfeat_ptr = output_ptr;
+  if ((task->data.cfg.conf0 & NEUREKA_MASK_FLAG_WEIGHT_SOURCE) ==
+      NEUREKA_FLAG_WEIGHT_SOURCE_WMEM) {
+    weights_ptr -= 0x10400000;
+  }
   task->data.weights_ptr = weights_ptr;
 }
 
