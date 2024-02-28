@@ -23,15 +23,15 @@
 #define NEUREKA_STATUS_EMPTY (0x000)
 #define NEUREKA_STATUS_FULL (0x101)
 
-inline int neureka_task_queue_tasks_in_flight(neureka_dev_t *dev) {
+inline int neureka_task_queue_tasks_in_flight(const neureka_dev_t *dev) {
   uint32_t status = hwpe_task_queue_status(&dev->hwpe_dev);
   return (status & 0x1) + ((status >> 8) & 0x1);
 }
 
-inline int neureka_task_queue_empty(neureka_dev_t *dev) {
+inline int neureka_task_queue_empty(const neureka_dev_t *dev) {
   return hwpe_task_queue_status(&dev->hwpe_dev) == NEUREKA_STATUS_EMPTY;
 }
 
-inline int neureka_task_queue_full(neureka_dev_t *dev) {
+inline int neureka_task_queue_full(const neureka_dev_t *dev) {
   return hwpe_task_queue_status(&dev->hwpe_dev) == NEUREKA_STATUS_FULL;
 }

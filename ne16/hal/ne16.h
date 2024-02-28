@@ -30,8 +30,8 @@ typedef struct ne16_dev_t {
   hwpe_dev_t hwpe_dev; /* Implements the HWPE device interface */
 } ne16_dev_t;
 
-int ne16_task_queue_tasks_in_flight(ne16_dev_t *dev);
-int ne16_task_queue_empty(ne16_dev_t *dev);
-int ne16_task_queue_full(ne16_dev_t *dev);
+int ne16_task_queue_tasks_in_flight(const ne16_dev_t *dev);
+int ne16_task_queue_empty(const ne16_dev_t *dev);
+int ne16_task_queue_full(const ne16_dev_t *dev);
 
 #endif // __NE16_H__

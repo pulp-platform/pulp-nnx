@@ -39,14 +39,14 @@ typedef enum ne16_gvsoc_log_level_e {
   NE16_GVSOC_LOG_LEVEL_ALL = 3
 } ne16_gvsoc_log_level_e;
 
-static void ne16_gvsoc_log_activate(ne16_dev_t *dev,
+static void ne16_gvsoc_log_activate(const ne16_dev_t *dev,
                                     ne16_gvsoc_log_level_e log_level,
                                     ne16_gvsoc_log_format_e format) {
   hwpe_task_reg_write(&dev->hwpe_dev, NE16_REG_GVSOC_LOG_LEVEL, log_level);
   hwpe_task_reg_write(&dev->hwpe_dev, NE16_REG_GVSOC_LOG_FORMAT, format);
 }
 
-static void ne16_gvsoc_log_deactivate(ne16_dev_t *dev) {
+static void ne16_gvsoc_log_deactivate(const ne16_dev_t *dev) {
   hwpe_task_reg_write(&dev->hwpe_dev, NE16_REG_GVSOC_LOG_LEVEL,
                       NE16_GVSOC_LOG_LEVEL_CONFIG);
 }
