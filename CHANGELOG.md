@@ -9,6 +9,8 @@
 - isort check
 - publication citation
 - support 32bit scale
+- cmake support
+- const qualifier to `<acc>_dev_t` function arguments
 
 ### Changed
 
@@ -21,6 +23,10 @@
 
 - `k_in_stride`, `w_in_stride`, `k_out_stride`, and `w_out_stride` from `ne16_nnx_dispatch_stride2x2`
 - `mode` attribute from `ne16_quant_t` structure
+
+### Fixed
+
+- type conversion compiler warning
 
 ## [0.3.0] - 2024-01-14
 
