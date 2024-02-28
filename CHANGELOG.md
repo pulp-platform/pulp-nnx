@@ -11,6 +11,7 @@
 - support 32bit scale
 - cmake support
 - const qualifier to `<acc>_dev_t` function arguments
+- support for N-EUREKA's dedicated weight memory
 
 ### Changed
 

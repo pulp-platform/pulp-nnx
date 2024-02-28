@@ -22,20 +22,20 @@
 # Ne16TestClasses.py:Ne16TestConf().check_valid()
 
 # Input dimensions
-in_height = 4
+in_height = 19
 in_width = 3
-in_channel = 8
+in_channel = 43
 
 # Output dimensions
 # - height and width calculated from input dimensions
-out_channel = 8
+out_channel = 39
 
 # If depthwise, group == in_channel
 depthwise = false
 
 # Kernel shape
-kernel_shape.height = 3
-kernel_shape.width = 3
+kernel_shape.height = 1
+kernel_shape.width = 1
 
 # Stride
 stride.height = 1
@@ -58,4 +58,6 @@ bias_type = "int32"
 has_norm_quant = true
 has_bias = true
 has_relu = true
-wmem = "sram"
+
+# Weight memory source
+wmem = "tcdm"
