@@ -45,6 +45,9 @@ class HeaderWriter:
         return "#include <pmsis.h>\n\n"
 
     def define(self, name, expr):
+        if expr is None:
+            return f"#define {name.upper()}\n"
+
         if isinstance(expr, str):
             expr = f'"{expr}"'
         elif isinstance(expr, bool):
@@ -152,10 +155,10 @@ class HeaderWriter:
         with open(filepath, "w") as file:
             file.write(body)
 
-    def generate_vector_source(self, name, size, _type, init=None, golden=None):
+    def generate_vector_source(self, name, size, _type, init=None, golden=None, section="PI_L1"):
         render = ""
         render += f'#include "{name}.h"\n\n'
-        render += self.render_vector(name, "PI_L1 " + _type, size, init=init)
+        render += self.render_vector(name, f"{section} {_type}", size, init=init)
 
         if golden is not None:
             render += self.render_vector(
@@ -165,8 +168,8 @@ class HeaderWriter:
 
         self.generate_source(name, render)
 
-    def generate_vector_files(self, name, size, _type, init=None, golden=None):
-        self.generate_vector_source(name, size, _type, init, golden)
+    def generate_vector_files(self, name, size, _type, init=None, golden=None, section="PI_L1"):
+        self.generate_vector_source(name, size, _type, init, golden, section)
         self.generate_vector_header(name, size, _type, init, golden)
 
     def render_dims(self, name, dims):

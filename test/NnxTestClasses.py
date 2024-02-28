@@ -19,7 +19,7 @@
 from __future__ import annotations
 
 import os
-from typing import Callable, Optional, Set, Tuple, Type, Union
+from typing import Callable, Literal, Optional, Set, Tuple, Type, Union
 
 import numpy as np
 import numpy.typing as npt
@@ -29,6 +29,9 @@ from pydantic import BaseModel, PositiveInt, field_validator, model_validator
 from HeaderWriter import HeaderWriter
 from NeuralEngineFunctionalModel import NeuralEngineFunctionalModel
 from TestClasses import IntegerType, KernelShape, Padding, Stride, implies
+
+
+WmemLiteral = Literal["tcdm", "sram", "mram"]
 
 
 class NnxTestConf(BaseModel):
@@ -48,6 +51,7 @@ class NnxTestConf(BaseModel):
     has_norm_quant: bool
     has_bias: bool
     has_relu: bool
+    wmem: WmemLiteral = "tcdm"
 
     @model_validator(mode="after")  # type: ignore
     def check_valid_depthwise_channels(self) -> NnxTestConf:
@@ -346,8 +350,14 @@ class NnxTestHeaderGenerator:
             weight_type._bits,
             test.conf.depthwise,
         )
+        if test.conf.wmem == "sram":
+            section = "__attribute__((section(\".weightmem_sram\")))"
+        elif test.conf.wmem == "mram":
+            section = "__attribute__((section(\".weightmem_mram\")))"
+        else:
+            section = "PI_L1"
         self.header_writer.generate_vector_files(
-            "weight", _type="uint8_t", size=weight_init.size, init=weight_init
+            "weight", _type="uint8_t", size=weight_init.size, init=weight_init, section=section
         )
 
         # Render scale
@@ -420,5 +430,6 @@ class NnxTestHeaderGenerator:
                 "has_norm_quant": test.conf.has_norm_quant,
                 "has_bias": test.conf.has_bias,
                 "has_relu": test.conf.has_relu,
+                f"wmem_{test.conf.wmem}": None,
             },
         )

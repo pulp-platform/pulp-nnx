@@ -129,7 +129,7 @@ static void task_prepare(nnx_task_t *task) {
   nnx_task_set_weight_offset(task, weightOffsetModeLayerWise, WEIGHT_OFFSET);
 
 #ifdef NNX_NEUREKA
-#ifdef NEUREKA_WEIGHT_SOURCE_WMEM
+#if defined WMEM_SRAM || defined WMEM_MRAM
   neureka_task_set_weight_source(task, neurekaWeightSourceWmem);
 #else
   neureka_task_set_weight_source(task, neurekaWeightSourceTcdm);
