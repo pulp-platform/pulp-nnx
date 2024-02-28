@@ -103,6 +103,6 @@ class NeurekaTestConf(NnxTestConf):
     @field_validator("wmem")
     @classmethod
     def check_valid_wmem(cls, v: WmemLiteral) -> WmemLiteral:
-        _supported_wmem = ["tcdm", "sram", "mram"]
+        _supported_wmem = ["tcdm", "sram"]
         assert v in _supported_wmem, f"Unsupported wmem {v}. Supported {_supported_wmem}."
         return v

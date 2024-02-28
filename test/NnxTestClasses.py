@@ -31,7 +31,7 @@ from NeuralEngineFunctionalModel import NeuralEngineFunctionalModel
 from TestClasses import IntegerType, KernelShape, Padding, Stride, implies
 
 
-WmemLiteral = Literal["tcdm", "sram", "mram"]
+WmemLiteral = Literal["tcdm", "sram"]
 
 
 class NnxTestConf(BaseModel):
@@ -352,8 +352,6 @@ class NnxTestHeaderGenerator:
         )
         if test.conf.wmem == "sram":
             section = "__attribute__((section(\".weightmem_sram\")))"
-        elif test.conf.wmem == "mram":
-            section = "__attribute__((section(\".weightmem_mram\")))"
         else:
             section = "PI_L1"
         self.header_writer.generate_vector_files(
