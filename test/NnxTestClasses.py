@@ -30,7 +30,6 @@ from HeaderWriter import HeaderWriter
 from NeuralEngineFunctionalModel import NeuralEngineFunctionalModel
 from TestClasses import IntegerType, KernelShape, Padding, Stride, implies
 
-
 WmemLiteral = Literal["tcdm", "sram"]
 
 
@@ -351,11 +350,15 @@ class NnxTestHeaderGenerator:
             test.conf.depthwise,
         )
         if test.conf.wmem == "sram":
-            section = "__attribute__((section(\".weightmem_sram\")))"
+            section = '__attribute__((section(".weightmem_sram")))'
         else:
             section = "PI_L1"
         self.header_writer.generate_vector_files(
-            "weight", _type="uint8_t", size=weight_init.size, init=weight_init, section=section
+            "weight",
+            _type="uint8_t",
+            size=weight_init.size,
+            init=weight_init,
+            section=section,
         )
 
         # Render scale
@@ -406,14 +409,18 @@ class NnxTestHeaderGenerator:
                     "offset": weight_offset,
                 },
                 "scale": {
-                    "bits": test.conf.scale_type._bits
-                    if test.conf.scale_type is not None
-                    else 0
+                    "bits": (
+                        test.conf.scale_type._bits
+                        if test.conf.scale_type is not None
+                        else 0
+                    )
                 },
                 "bias": {
-                    "bits": test.conf.bias_type._bits
-                    if test.conf.bias_type is not None
-                    else 0
+                    "bits": (
+                        test.conf.bias_type._bits
+                        if test.conf.bias_type is not None
+                        else 0
+                    )
                 },
                 "padding": {
                     "top": test.conf.padding.top,

@@ -123,5 +123,4 @@ class IntegerType(BaseModel):
             exclude_none: bool = False,
             round_trip: bool = False,
             warnings: bool = True,
-        ) -> dict[str, Any]:
-            ...
+        ) -> dict[str, Any]: ...
