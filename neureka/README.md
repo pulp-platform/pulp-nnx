@@ -31,3 +31,4 @@ Github repo [link](https://github.com/siracusa-soc/ne).
 - [ ] Weight type
     - [x] int8
     - [ ] int2-7
+- [x] Dedicated weight memory

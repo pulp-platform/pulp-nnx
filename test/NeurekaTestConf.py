@@ -23,7 +23,7 @@ from typing import List, Optional, Union
 from pydantic import field_validator, model_validator
 
 from NeuralEngineFunctionalModel import NeuralEngineFunctionalModel
-from NnxTestClasses import NnxTestConf
+from NnxTestClasses import NnxTestConf, WmemLiteral
 from TestClasses import IntegerType, KernelShape, Stride, implies
 
 
@@ -99,3 +99,12 @@ class NeurekaTestConf(NnxTestConf):
             f"accumulator type {NeuralEngineFunctionalModel.ACCUMULATOR_TYPE}. Given output type {self.out_type}"
         )
         return self
+
+    @field_validator("wmem")
+    @classmethod
+    def check_valid_wmem(cls, v: WmemLiteral) -> WmemLiteral:
+        _supported_wmem = ["tcdm", "sram"]
+        assert (
+            v in _supported_wmem
+        ), f"Unsupported wmem {v}. Supported {_supported_wmem}."
+        return v

@@ -74,11 +74,11 @@ void ne16_nnx_resolve_wait(const ne16_dev_t *dev, ne16_task_t *task) {
   }
 }
 
-static inline uint32_t _get_tile_ptr(uint32_t ptr, int i, int j, int size_i,
-                                     uint32_t size_j, uint32_t size_k,
-                                     uint32_t stride_j, uint32_t stride_k,
-                                     uint32_t overlap_i, uint32_t overlap_j,
-                                     uint32_t offset_i, uint32_t offset_j) {
+static inline uint32_t _get_tile_addr(uint32_t ptr, int i, int j, int size_i,
+                                      uint32_t size_j, uint32_t size_k,
+                                      uint32_t stride_j, uint32_t stride_k,
+                                      uint32_t overlap_i, uint32_t overlap_j,
+                                      uint32_t offset_i, uint32_t offset_j) {
   return ptr + (i * (size_i - overlap_i) - offset_i) * stride_j +
          (j * (size_j - overlap_j) - offset_j) * stride_k;
 }
@@ -97,18 +97,18 @@ void ne16_nnx_dispatch_stride2x2(const ne16_dev_t *dev, ne16_task_t *task,
   const uint32_t output_height_offset = h_out % stride == 1 ? 1 : 0;
   const uint32_t output_width_offset = w_out % stride == 1 ? 1 : 0;
 
-  const uint32_t input_base = task->data.infeat_ptr;
-  const uint32_t output_base = task->data.outfeat_ptr;
+  const uint32_t input_base = task->data.infeat_addr;
+  const uint32_t output_base = task->data.outfeat_addr;
   const uint32_t tile_padding = task->data.cfg.padding;
 
   for (uint32_t i = 0; i < n_h; i++) {
     for (uint32_t j = 0; j < n_w; j++) {
-      task->data.infeat_ptr = _get_tile_ptr(
+      task->data.infeat_addr = _get_tile_addr(
           input_base, i, j, 3 + h_ker - 1, 3 + w_ker - 1, k_in,
           task->data.cfg.input_stride.d1, task->data.cfg.input_stride.d0,
           h_ker - stride, w_ker - stride, i == 0 ? 0 : input_height_offset,
           j == 0 ? 0 : input_width_offset);
-      task->data.outfeat_ptr = _get_tile_ptr(
+      task->data.outfeat_addr = _get_tile_addr(
           output_base, i, j, 2, 2, k_out, task->data.cfg.output_stride.d2 << 1,
           task->data.cfg.output_stride.d1 << 1, 0, 0,
           i == 0 ? 0 : output_height_offset, j == 0 ? 0 : output_width_offset);
