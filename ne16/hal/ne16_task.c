@@ -102,32 +102,33 @@ void ne16_task_set_weight_offset(ne16_task_t *task,
   task->data.cfg.weight_offset_factor = weight_offset;
 }
 
-/** ne16_pad_ptr
+/** ne16_pad_addr
  *
  * Calculate the pointer to the start of the ptr as if
  * it was the start to the padded data.
  * Necessary for input pointer when it's padded.
  */
-uint32_t ne16_pad_ptr(uint32_t ptr, const uint32_t width, uint32_t width_stride,
-                      const uint8_t padding_top, const uint8_t padding_left) {
+uint32_t ne16_pad_addr(uint32_t ptr, const uint32_t width,
+                       uint32_t width_stride, const uint8_t padding_top,
+                       const uint8_t padding_left) {
   return ptr - (padding_top * width + padding_left) * width_stride;
 }
 
-void ne16_task_set_ptrs_conv(ne16_task_t *task, uint32_t input_ptr,
+void ne16_task_set_addr_conv(ne16_task_t *task, uint32_t input_addr,
                              uint32_t w_in, uint32_t w_in_stride,
                              uint8_t padding_top, uint8_t padding_left,
-                             uint32_t output_ptr, uint32_t weights_ptr) {
-  task->data.infeat_ptr =
-      ne16_pad_ptr(input_ptr, w_in, w_in_stride, padding_top, padding_left);
-  task->data.outfeat_ptr = output_ptr;
-  task->data.weights_ptr = weights_ptr;
+                             uint32_t output_addr, uint32_t weights_addr) {
+  task->data.infeat_addr =
+      ne16_pad_addr(input_addr, w_in, w_in_stride, padding_top, padding_left);
+  task->data.outfeat_addr = output_addr;
+  task->data.weights_addr = weights_addr;
 }
 
-void ne16_task_set_ptrs_norm_quant(ne16_task_t *task, uint32_t scale_ptr,
-                                   uint32_t shift_ptr, uint32_t bias_ptr) {
-  task->data.scale_ptr = scale_ptr;
-  task->data.scale_shift_ptr = shift_ptr;
-  task->data.scale_bias_ptr = bias_ptr;
+void ne16_task_set_addr_norm_quant(ne16_task_t *task, uint32_t scale_addr,
+                                   uint32_t shift_addr, uint32_t bias_addr) {
+  task->data.scale_addr = scale_addr;
+  task->data.scale_shift_addr = shift_addr;
+  task->data.scale_bias_addr = bias_addr;
 }
 
 void ne16_task_set_strides(ne16_task_t *task, const uint32_t k_in,

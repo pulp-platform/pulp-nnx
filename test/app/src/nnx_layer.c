@@ -48,8 +48,8 @@ typedef ne16_task_flag_e nnx_task_flag_e;
 #define nnx_task_set_weight_offset ne16_task_set_weight_offset
 #define nnx_task_set_dims ne16_task_set_dims
 #define nnx_task_set_dims_stride2x2 ne16_task_set_dims_stride2x2
-#define nnx_task_set_ptrs_conv ne16_task_set_ptrs_conv
-#define nnx_task_set_ptrs_norm_quant ne16_task_set_ptrs_norm_quant
+#define nnx_task_set_addr_conv ne16_task_set_addr_conv
+#define nnx_task_set_addr_norm_quant ne16_task_set_addr_norm_quant
 
 #define NNX_GVSOC_LOG_LEVEL NE16_GVSOC_LOG_LEVEL_ALL
 #define NNX_GVSOC_LOG_FORMAT NE16_GVSOC_LOG_FORMAT_HEXADECIMAL
@@ -91,8 +91,8 @@ typedef neureka_task_flag_e nnx_task_flag_e;
 #define nnx_task_set_norm_quant neureka_task_set_norm_quant
 #define nnx_task_set_weight_offset neureka_task_set_weight_offset
 #define nnx_task_set_dims neureka_task_set_dims
-#define nnx_task_set_ptrs_conv neureka_task_set_ptrs_conv
-#define nnx_task_set_ptrs_norm_quant neureka_task_set_ptrs_norm_quant
+#define nnx_task_set_addr_conv neureka_task_set_addr_conv
+#define nnx_task_set_addr_norm_quant neureka_task_set_addr_norm_quant
 
 #define NNX_GVSOC_LOG_LEVEL NEUREKA_GVSOC_LOG_LEVEL_ALL
 #define NNX_GVSOC_LOG_FORMAT NEUREKA_GVSOC_LOG_FORMAT_HEXADECIMAL
@@ -129,7 +129,7 @@ static void task_prepare(nnx_task_t *task) {
   nnx_task_set_weight_offset(task, weightOffsetModeLayerWise, WEIGHT_OFFSET);
 
 #ifdef NNX_NEUREKA
-#ifdef NEUREKA_WEIGHT_SOURCE_WMEM
+#if defined WMEM_SRAM || defined WMEM_MRAM
   neureka_task_set_weight_source(task, neurekaWeightSourceWmem);
 #else
   neureka_task_set_weight_source(task, neurekaWeightSourceTcdm);
@@ -159,7 +159,7 @@ static void task_prepare(nnx_task_t *task) {
                     PADDING_RIGHT);
 #endif
 
-  nnx_task_set_ptrs_conv(task, (uint32_t)input, INPUT_WIDTH, w_in_stride,
+  nnx_task_set_addr_conv(task, (uint32_t)input, INPUT_WIDTH, w_in_stride,
                          PADDING_TOP, PADDING_LEFT, (uint32_t)output,
                          (uint32_t)weight);
 
@@ -172,7 +172,7 @@ static void task_prepare(nnx_task_t *task) {
 
   const nnx_task_flag_e flag_bias =
       HAS_BIAS ? nnxTaskFlagTrue : nnxTaskFlagFalse;
-  const uint32_t bias_ptr = (uint32_t)(HAS_BIAS ? bias : NULL);
+  const uint32_t bias_addr = (uint32_t)(HAS_BIAS ? bias : NULL);
 
   nnx_quant_function_e quant_function =
       HAS_RELU ? quantFunctionRelu : quantFunctionIdentity;
@@ -185,7 +185,8 @@ static void task_prepare(nnx_task_t *task) {
                                        .flag_bias = flag_bias,
                                        .flag_shift = nnxTaskFlagFalse});
 
-  nnx_task_set_ptrs_norm_quant(task, (uint32_t)scale, (uint32_t)NULL, bias_ptr);
+  nnx_task_set_addr_norm_quant(task, (uint32_t)scale, (uint32_t)NULL,
+                               bias_addr);
 #endif // HAS_NORM_QUANT
 }
 

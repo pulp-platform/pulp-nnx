@@ -98,12 +98,12 @@ typedef struct ne16_cfg_t {
 } ne16_cfg_t;
 
 typedef struct ne16_task_data_t {
-  uint32_t weights_ptr;
-  uint32_t infeat_ptr;
-  uint32_t outfeat_ptr;
-  uint32_t scale_ptr;
-  uint32_t scale_shift_ptr;
-  uint32_t scale_bias_ptr;
+  uint32_t weights_addr;
+  uint32_t infeat_addr;
+  uint32_t outfeat_addr;
+  uint32_t scale_addr;
+  uint32_t scale_shift_addr;
+  uint32_t scale_bias_addr;
   ne16_cfg_t cfg;
 } ne16_task_data_t;
 
@@ -130,15 +130,15 @@ void ne16_task_set_weight_offset(ne16_task_t *task,
 uint32_t ne16_get_tile_padding(uint32_t padding, uint32_t i_height,
                                uint32_t i_width, uint32_t n_height,
                                uint32_t n_width);
-uint32_t ne16_pad_ptr(uint32_t ptr, const uint32_t width,
-                      const uint32_t width_stride, const uint8_t padding_top,
-                      const uint8_t padding_left);
-void ne16_task_set_ptrs_conv(ne16_task_t *task, uint32_t input_ptr,
+uint32_t ne16_pad_addr(uint32_t ptr, const uint32_t width,
+                       const uint32_t width_stride, const uint8_t padding_top,
+                       const uint8_t padding_left);
+void ne16_task_set_addr_conv(ne16_task_t *task, uint32_t input_addr,
                              uint32_t w_in, uint32_t w_in_stride,
                              uint8_t padding_top, uint8_t padding_left,
-                             uint32_t output_ptr, uint32_t weights_ptr);
-void ne16_task_set_ptrs_norm_quant(ne16_task_t *task, uint32_t scale_ptr,
-                                   uint32_t shift_ptr, uint32_t bias_ptr);
+                             uint32_t output_addr, uint32_t weights_addr);
+void ne16_task_set_addr_norm_quant(ne16_task_t *task, uint32_t scale_addr,
+                                   uint32_t shift_addr, uint32_t bias_addr);
 /** ne16_task_set_strides
  *
  * All the strides variables are strides between elements alongside that
