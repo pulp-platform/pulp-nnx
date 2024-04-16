@@ -61,6 +61,10 @@ class NeuralEngineFunctionalModel:
 
         tensor = tensor >> global_shift
 
+        if verbose:
+            print("INTERMEDIATE RESULTS (after shift):")
+            print(tensor)
+
         # Saturate into out_type
         tensor = NeuralEngineFunctionalModel._cast(tensor, out_type, saturate=True)
 

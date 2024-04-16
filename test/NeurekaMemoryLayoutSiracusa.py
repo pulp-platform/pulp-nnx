@@ -21,10 +21,10 @@ import numpy as np
 import numpy.typing as npt
 
 
-class NeurekaMemoryLayout:
+class NeurekaMemoryLayoutSiracusa:
     _WEIGHT_BANDWIDTH = 256
     _CIN_SUBTILE_1x1 = 32
-    _CIN_SUBTILE_3x3 = 32
+    _CIN_SUBTILE_3x3 = 28
 
     @staticmethod
     def weightEncode(
@@ -43,9 +43,9 @@ class NeurekaMemoryLayout:
 
         cout, cin, height, width = weight.shape
         cinSubtile = (
-            NeurekaMemoryLayout._CIN_SUBTILE_3x3
+            NeurekaMemoryLayoutSiracusa._CIN_SUBTILE_3x3
             if height == 3
-            else NeurekaMemoryLayout._CIN_SUBTILE_1x1
+            else NeurekaMemoryLayoutSiracusa._CIN_SUBTILE_1x1
         )
 
         # Pad cin to be divisible with CIN_SUBTILE
@@ -79,25 +79,35 @@ class NeurekaMemoryLayout:
             # (-1, Weight Bandwidth)
             weight = np.pad(
                 weight,
-                ((0, 0), (0, NeurekaMemoryLayout._WEIGHT_BANDWIDTH - weight.shape[-1])),
+                ((0, 0), (0, NeurekaMemoryLayoutSiracusa._WEIGHT_BANDWIDTH - weight.shape[-1])),
                 "constant",
                 constant_values=0,
             )
         elif height == 1 and width == 1:
-            # (cout * cinMajor, Bits * cinSubtile)
-            weight = weight.reshape(-1, bits * cinSubtile)
-            # Pad only the last dimension to weight bandwidth size
+            # Tile cinSubtile into tiles of size 4
+            # (cout, cinMajor, Bits, Flattened spatial, cinSubtileMajor, cinSubtileTile)
+            weight = weight.reshape(
+                cout, cinMajor, bits, height * width, cinSubtile // 4, 4
+            )  # cout, cinMajor, bits, 1, 8, 4
+            # Pad bits to 8
+            if bits < 8:
+                # (cout, cinMajor, PaddedBits, Flattened spatial, cinSubtileMajor, cinSubtileTile)
+                weight = np.pad(
+                    weight,
+                    ((0, 0), (0, 0), (0, 8 - bits), (0, 0), (0, 0), (0, 0)),
+                    mode="constant",
+                    constant_values=0,
+                )
+            # (cout, cinMajor, Flattened spatial, cinSubtileMajor, PaddedBits, cinSubtileTile)
+            weight = weight.transpose(0, 1, 3, 4, 2, 5)
             # (-1, Weight Bandwidth)
-            weight = np.pad(
-                weight,
-                ((0, 0), (0, NeurekaMemoryLayout._WEIGHT_BANDWIDTH - weight.shape[-1])),
-                "constant",
-                constant_values=0,
-            )
+            weight = weight.reshape(
+                cout * cinMajor, NeurekaMemoryLayoutSiracusa._WEIGHT_BANDWIDTH
+            )  # cout*cinMajor, 256b
 
         # Prepare for packing
         # (-1, Weight Bandwidth Bytes, 8)
-        weightBandwidthBytes = int(np.ceil(NeurekaMemoryLayout._WEIGHT_BANDWIDTH / 8))
+        weightBandwidthBytes = int(np.ceil(NeurekaMemoryLayoutSiracusa._WEIGHT_BANDWIDTH / 8))
         weight = np.stack(np.split(weight, weightBandwidthBytes, axis=-1), axis=-2)
 
         # Pack bits
@@ -117,17 +127,17 @@ class NeurekaMemoryLayout:
     ) -> npt.NDArray[np.uint8]:
         """Reverse of weightEncode"""
         cinSubtile = (
-            NeurekaMemoryLayout._CIN_SUBTILE_3x3
+            NeurekaMemoryLayoutSiracusa._CIN_SUBTILE_3x3
             if height == 3
-            else NeurekaMemoryLayout._CIN_SUBTILE_1x1
+            else NeurekaMemoryLayoutSiracusa._CIN_SUBTILE_1x1
         )
         cinMajor = int(np.ceil(cin / cinSubtile))
         cinMinor = cinSubtile
-        weightBandwidthBytes = int(np.ceil(NeurekaMemoryLayout._WEIGHT_BANDWIDTH / 8))
+        weightBandwidthBytes = int(np.ceil(NeurekaMemoryLayoutSiracusa._WEIGHT_BANDWIDTH / 8))
 
         weight = weight.reshape(-1, weightBandwidthBytes, 1)
         weight = np.unpackbits(weight, axis=-1, count=8, bitorder="little")
-        weight = weight.reshape(-1, NeurekaMemoryLayout._WEIGHT_BANDWIDTH)
+        weight = weight.reshape(-1, NeurekaMemoryLayoutSiracusa._WEIGHT_BANDWIDTH)
 
         if height == 3 and width == 3:
             weight = weight[:, : height * width * cinMinor]
