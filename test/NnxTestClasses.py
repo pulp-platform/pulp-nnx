@@ -193,6 +193,12 @@ class NnxTest:
 
 class NnxTestGenerator:
     _DEFAULT_SEED = 0
+    _DEFAULT_WEIGHT_MEAN = 0.5 # as we use torch.floor(), this makes the generation unbiased
+    _DEFAULT_WEIGHT_STDEV = 0.27
+    _DEFAULT_SCALE_MAX_BIT_32BIT = 17
+    _DEFAULT_SCALE_MAX_BIT_16BIT = 11
+    _DEFAULT_SCALE_MAX_BIT_8BIT = 5
+    _DEFAULT_BIAS_MAX_BIT = 18
 
     @staticmethod
     def _calculate_global_shift(
@@ -204,8 +210,15 @@ class NnxTestGenerator:
         return torch.ceil(torch.log2(s / target_s)).type(torch.int32)
 
     @staticmethod
-    def _random_data(_type: IntegerType, shape: Tuple):
-        return torch.randint(_type.min, _type.max, size=shape)
+    def _random_data(_type: IntegerType, shape: Tuple, extremes: Tuple = None):
+        if extremes is None:
+            return torch.randint(_type.min, _type.max, size=shape)
+        else:
+            return torch.randint(max(_type.min, extremes[0]), min(_type.max, extremes[1]), size=shape)
+
+    @staticmethod
+    def _random_data_normal(_type: IntegerType, shape: Tuple, mean: float64 = 0.5, std: float64=0.27):
+        return torch.floor(torch.clip(torch.normal(mean, std, size=shape), _type.min, _type.max)).type(torch.int64)
 
     @staticmethod
     def from_conf(
@@ -236,7 +249,11 @@ class NnxTestGenerator:
             )
 
         if weight is None:
-            weight = NnxTestGenerator._random_data(
+            weight_mean = NnxTestGenerator._DEFAULT_WEIGHT_MEAN
+            weight_std  = NnxTestGenerator._DEFAULT_WEIGHT_STDEV * (1<<(conf.weight_type._bits-1)-1)
+            weight = NnxTestGenerator._random_data_normal(
+                mean = weight_mean,
+                std = weight_std,
                 _type=conf.weight_type,
                 shape=weight_shape,
             )
@@ -244,13 +261,19 @@ class NnxTestGenerator:
         if conf.has_norm_quant:
             if scale is None:
                 assert conf.scale_type is not None
+                # same limits as in old NE16 generator
+                scale_extremes = (1, (1<<NnxTestGenerator._DEFAULT_SCALE_MAX_BIT_32BIT)-1) if conf.scale_type._bits == 32 else \
+                                 (1, (1<<NnxTestGenerator._DEFAULT_SCALE_MAX_BIT_16BIT)-1) if conf.scale_type._bits == 16 else \
+                                 (1, (1<<NnxTestGenerator._DEFAULT_SCALE_MAX_BIT_8BIT)-1)  if conf.scale_type._bits == 8  else (1, (1<<18)-1)
                 scale = NnxTestGenerator._random_data(
-                    conf.scale_type, shape=scale_shape
+                    conf.scale_type, shape=scale_shape, extremes=scale_extremes
                 )
             if conf.has_bias and bias is None:
                 assert conf.bias_type is not None
+                # same limits as in old NE16 generator
+                bias_extremes = (-(1<<NnxTestGenerator._DEFAULT_BIAS_MAX_BIT), (1<<NnxTestGenerator._DEFAULT_BIAS_MAX_BIT)-1)
                 bias = NnxTestGenerator._random_data(
-                    conf.bias_type, shape=bias_shape
+                    conf.bias_type, shape=bias_shape, extremes=bias_extremes
                 ).type(torch.int32)
             if global_shift is None:
                 global_shift = torch.Tensor([0]).type(torch.int32)
