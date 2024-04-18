@@ -78,7 +78,6 @@ class NeurekaMemoryLayout:
             weight = weight.reshape(-1, height * width * cinSubtile)
             # Pad only the last dimension to weight bandwidth size
             # (-1, Weight Bandwidth)
-            print("DEBUG", weight.shape)
             weight = np.pad(
                 weight,
                 ((0, 0), (0, NeurekaMemoryLayout._WEIGHT_BANDWIDTH_3x3 - weight.shape[-1])),
