@@ -22,7 +22,8 @@ import numpy.typing as npt
 
 
 class NeurekaMemoryLayout:
-    _WEIGHT_BANDWIDTH = 256
+    _WEIGHT_BANDWIDTH_1x1 = 256
+    _WEIGHT_BANDWIDTH_3x3 = 288
     _CIN_SUBTILE_1x1 = 32
     _CIN_SUBTILE_3x3 = 32
 
@@ -77,12 +78,14 @@ class NeurekaMemoryLayout:
             weight = weight.reshape(-1, height * width * cinSubtile)
             # Pad only the last dimension to weight bandwidth size
             # (-1, Weight Bandwidth)
+            print("DEBUG", weight.shape)
             weight = np.pad(
                 weight,
-                ((0, 0), (0, NeurekaMemoryLayout._WEIGHT_BANDWIDTH - weight.shape[-1])),
+                ((0, 0), (0, NeurekaMemoryLayout._WEIGHT_BANDWIDTH_3x3 - weight.shape[-1])),
                 "constant",
                 constant_values=0,
             )
+            weightBandwidthBytes = int(np.ceil(NeurekaMemoryLayout._WEIGHT_BANDWIDTH_3x3 / 8))
         elif height == 1 and width == 1:
             # (cout * cinMajor, Bits * cinSubtile)
             weight = weight.reshape(-1, bits * cinSubtile)
@@ -90,14 +93,14 @@ class NeurekaMemoryLayout:
             # (-1, Weight Bandwidth)
             weight = np.pad(
                 weight,
-                ((0, 0), (0, NeurekaMemoryLayout._WEIGHT_BANDWIDTH - weight.shape[-1])),
+                ((0, 0), (0, NeurekaMemoryLayout._WEIGHT_BANDWIDTH_1x1 - weight.shape[-1])),
                 "constant",
                 constant_values=0,
             )
+            weightBandwidthBytes = int(np.ceil(NeurekaMemoryLayout._WEIGHT_BANDWIDTH_1x1 / 8))
 
         # Prepare for packing
         # (-1, Weight Bandwidth Bytes, 8)
-        weightBandwidthBytes = int(np.ceil(NeurekaMemoryLayout._WEIGHT_BANDWIDTH / 8))
         weight = np.stack(np.split(weight, weightBandwidthBytes, axis=-1), axis=-2)
 
         # Pack bits
