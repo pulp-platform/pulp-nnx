@@ -46,6 +46,8 @@
 
 #define NEUREKA_ECC_REGS_NUM (4)
 
+#define NEUREKA_ECC_REGS_NUM (4)
+
 /* TASK REGISTERS */
 
 // job configuration
