@@ -39,5 +39,6 @@ void hwpe_task_queue_write_task(hwpe_dev_t *dev, uint32_t *data, int len);
 void hwpe_task_queue_release_and_run(hwpe_dev_t *dev);
 void hwpe_task_queue_release(hwpe_dev_t *dev);
 uint8_t hwpe_last_task_id(hwpe_dev_t *dev);
+void hwpe_ecc_regs_check(hwpe_dev_t *dev, uint32_t *data, int len);
 
 #endif // !__HWPE_H__

@@ -59,3 +59,9 @@ int neureka_nnx_resolve_check(neureka_dev_t *dev, neureka_task_t *task);
  * Block until you can resolve the task.
  */
 void neureka_nnx_resolve_wait(neureka_dev_t *dev, neureka_task_t *task);
+
+/** neureka_nnx_read_ecc_regs
+ *
+ * Read ECC-related internal registers.
+ */
+void neureka_nnx_read_ecc_regs(neureka_dev_t *dev, uint32_t *ecc_regs);
