@@ -41,6 +41,8 @@
 #define NEUREKA_OUTPUT_BANDWIDTH_BYTES (32)
 #define NEUREKA_WEIGHT_BANDWIDTH_BYTES (32)
 
+#define NEUREKA_ECC_REGS_NUM (4)
+
 /* TASK REGISTERS */
 
 // job configuration

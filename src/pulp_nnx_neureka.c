@@ -74,3 +74,7 @@ void neureka_nnx_resolve_wait(neureka_dev_t *dev, neureka_task_t *task) {
     neureka_bsp_event_wait_and_clear();
   }
 }
+
+void neureka_nnx_read_ecc_regs(neureka_dev_t *dev, uint32_t *ecc_regs) {
+  hwpe_ecc_regs_check(&dev->hwpe_dev, ecc_regs, NEUREKA_ECC_REGS_NUM);
+}

@@ -29,6 +29,8 @@
 #define HWPE_SOFT_CLEAR 5
 #define HWPE_SWSYNC 6
 #define HWPE_TASK_REG_OFFSET 8
+#define HWPE_PARAMS_REG_OFFSET 48
+#define HWPE_ECC_REG_OFFSET (HWPE_TASK_REG_OFFSET+HWPE_PARAMS_REG_OFFSET)
 
 inline void hwpe_reg_write(hwpe_dev_t *dev, int reg, uint32_t value) {
   dev->base_addr[reg] = value;
@@ -82,4 +84,10 @@ void hwpe_task_queue_release(hwpe_dev_t *dev) {
 
 uint8_t hwpe_last_task_id(hwpe_dev_t *dev) {
   return (uint8_t)hwpe_reg_read(dev, HWPE_RUNNING_JOB);
+}
+
+void hwpe_ecc_regs_check(hwpe_dev_t *dev, uint32_t *data, int len) {
+  for (int i = 0; i < len; i++) {
+      data[i] = hwpe_reg_read(dev, HWPE_ECC_REG_OFFSET + i);
+  }
 }
