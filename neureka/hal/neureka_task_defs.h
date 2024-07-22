@@ -23,8 +23,12 @@
 
 /* ARCHITECTURE */
 
-#define NNX_NEUREKA_PE_H (4)
-#define NNX_NEUREKA_PE_W (4)
+#ifndef NNX_NEUREKA_PE_H
+  #define NNX_NEUREKA_PE_H (4)
+#endif
+#ifndef NNX_NEUREKA_PE_W
+  #define NNX_NEUREKA_PE_W (4)
+#endif
 #define NNX_NEUREKA_BANDWIDTH_1x1 (256)
 #define NNX_NEUREKA_BANDWIDTH_3x3 (288)
 
