@@ -88,15 +88,8 @@ class NeurekaMemoryLayout:
         elif height == 1 and width == 1:
             # (cout * cinMajor, Bits * cinSubtile)
             weight = weight.reshape(-1, bits * cinSubtile)
-            # Pad only the last dimension to weight bandwidth size
-            # (-1, Weight Bandwidth)
-            weight = np.pad(
-                weight,
-                ((0, 0), (0, NeurekaMemoryLayout._WEIGHT_BANDWIDTH_1x1 - weight.shape[-1])),
-                "constant",
-                constant_values=0,
-            )
-            weightBandwidthBytes = int(np.ceil(NeurekaMemoryLayout._WEIGHT_BANDWIDTH_1x1 / 8))
+            # No padding needed here
+            weightBandwidthBytes = int(np.ceil(bits * cinSubtile / 8))
 
         # Prepare for packing
         # (-1, Weight Bandwidth Bytes, 8)
