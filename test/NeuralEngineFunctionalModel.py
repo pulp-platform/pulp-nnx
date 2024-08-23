@@ -2,12 +2,22 @@ from typing import Optional
 
 import torch
 import torch.nn.functional as F
+import numpy as np
 
 from TestClasses import IntegerType, Padding, Stride
 
 
 class NeuralEngineFunctionalModel:
     ACCUMULATOR_TYPE = IntegerType(name="int32")
+
+    @staticmethod
+    def _tensor_to_hex(tensor):
+        int_tensor = np.asarray(torch.floor(tensor).to(torch.int64))
+        int_tensor[int_tensor < 0] = 0xffffffff + (int_tensor[int_tensor < 0]+1)
+        hex_tensor = np.empty(int_tensor.shape, dtype=object)
+        for idx in np.ndindex(int_tensor.shape):
+            hex_tensor[idx] = hex(int_tensor[idx].item())
+        return hex_tensor
 
     @staticmethod
     def _cast(
@@ -36,7 +46,10 @@ class NeuralEngineFunctionalModel:
 
         if verbose:
             print("INTERMEDIATE RESULTS (after scale):")
-            print(tensor)
+            current_threshold = np.get_printoptions()['threshold']
+            np.set_printoptions(threshold=np.inf)
+            print(NeuralEngineFunctionalModel._tensor_to_hex(tensor))
+            np.set_printoptions(threshold=current_threshold)
 
         if has_bias:
             assert bias is not None
@@ -54,7 +67,10 @@ class NeuralEngineFunctionalModel:
 
             if verbose:
                 print("INTERMEDIATE RESULTS (after bias):")
-                print(tensor)
+                current_threshold = np.get_printoptions()['threshold']
+                np.set_printoptions(threshold=np.inf)
+                print(NeuralEngineFunctionalModel._tensor_to_hex(tensor))
+                np.set_printoptions(threshold=current_threshold)
 
         if has_relu:
             tensor = F.relu(tensor)
@@ -63,7 +79,10 @@ class NeuralEngineFunctionalModel:
 
         if verbose:
             print("INTERMEDIATE RESULTS (after shift):")
-            print(tensor)
+            current_threshold = np.get_printoptions()['threshold']
+            np.set_printoptions(threshold=np.inf)
+            print(NeuralEngineFunctionalModel._tensor_to_hex(tensor))
+            np.set_printoptions(threshold=current_threshold)
 
         # Saturate into out_type
         tensor = NeuralEngineFunctionalModel._cast(tensor, out_type, saturate=True)
@@ -102,6 +121,15 @@ class NeuralEngineFunctionalModel:
             0,
         )
 
+        if verbose:
+            print("INPUTS (padded):")
+            current_threshold = np.get_printoptions()['threshold']
+            np.set_printoptions(threshold=np.inf)
+            print(NeuralEngineFunctionalModel._tensor_to_hex(input_padded))
+            print("WEIGHTS (padded):")
+            print(NeuralEngineFunctionalModel._tensor_to_hex(weight))
+            np.set_printoptions(threshold=current_threshold)
+
         # Accumulators are 32bit non-saturating.
         # Calculate in higher precision (int64)
         output = F.conv2d(
@@ -118,7 +146,10 @@ class NeuralEngineFunctionalModel:
 
         if verbose:
             print("INTERMEDIATE RESULTS (pre-normalization/requant):")
-            print(output)
+            current_threshold = np.get_printoptions()['threshold']
+            np.set_printoptions(threshold=np.inf)
+            print(NeuralEngineFunctionalModel._tensor_to_hex(output))
+            np.set_printoptions(threshold=current_threshold)
 
         if has_norm_quant:
             assert scale is not None

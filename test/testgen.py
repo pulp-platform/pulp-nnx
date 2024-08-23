@@ -86,21 +86,7 @@ def test_gen(
         exit(-1)
 
     test_conf = nnxTestConfCls.model_validate(test_conf_dict)
-    if test_conf_dict['synthetic_weights']:
-        import torch
-        weight = torch.zeros((test_conf.out_channel, 1 if test_conf.depthwise else test_conf.in_channel, test_conf.kernel_shape.height, test_conf.kernel_shape.width), dtype=torch.int64)
-        for i in range(0, min(weight.shape[0], weight.shape[1])):
-            weight[i,i,0,0] = 1
-    else:
-        weight = None
-    if test_conf_dict['synthetic_inputs']:
-        import torch
-        inputs = torch.zeros((1, test_conf.in_channel, test_conf.in_height, test_conf.in_width), dtype=torch.int64)
-        for i in range(test_conf.in_channel):
-            inputs[:, i,0,0] = i
-    else:
-        inputs = None
-    test = NnxTestGenerator.from_conf(test_conf, verbose=args.print_tensors, weight=weight, input=inputs)
+    test = NnxTestGenerator.from_conf(test_conf, verbose=args.print_tensors)
     if not args.skip_save:
         test.save(args.test_dir)
     if args.headers:
