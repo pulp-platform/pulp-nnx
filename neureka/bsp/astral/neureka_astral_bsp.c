@@ -93,8 +93,10 @@ void neureka_astral_event_wait_and_clear() {
 }
 
 static const neureka_dev_t neureka_astral_dev = {
-    .hwpe_dev = (struct hwpe_dev_t){
-        .base_addr = (volatile uint32_t *)NEUREKA_ASTRAL_BASE_ADDR}};
+  .hwpe_dev = (struct hwpe_dev_t) {
+    .base_addr = (volatile uint32_t *) NEUREKA_ASTRAL_BASE_ADDR
+  }
+};
 
 const neureka_dev_t *neureka_astral_get_dev() {
   return &neureka_astral_dev;
