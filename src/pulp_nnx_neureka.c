@@ -22,7 +22,6 @@
 #include "hwpe.h"
 #include "neureka.h"
 #include "pulp_nnx_util.h"
-#include <pmsis.h>
 #include <stdint.h>
 #include <sys/types.h>
 
