@@ -22,7 +22,6 @@
 #include "hwpe.h"
 #include "ne16.h"
 #include "pulp_nnx_util.h"
-#include <pmsis.h>
 #include <stdint.h>
 
 void ne16_nnx_init(const ne16_dev_t *dev, ne16_pulp_conf_t *conf) {

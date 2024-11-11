@@ -202,7 +202,7 @@ static void task_prepare(nnx_task_t *task) {
 }
 
 static void task_execute(nnx_task_t *task) {
-  nnx_dev_t *dev = nnx_bsp_get_dev();
+  const nnx_dev_t *dev = nnx_bsp_get_dev();
 
 #if __PLATFORM__ == ARCHI_PLATFORM_GVSOC
   nnx_gvsoc_log_activate(dev, NNX_GVSOC_LOG_LEVEL, NNX_GVSOC_LOG_FORMAT);
