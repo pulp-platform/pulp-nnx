@@ -41,7 +41,6 @@ add_link_options(
   -target riscv32-unknown-elf
   -MMD
   -MP
-  -nostartfiles
   -march=${ISA}
   --sysroot=${PICOLIBC_RISCV_ROOT}
   -L${COMPILER_RT_RISCV_ROOT}
