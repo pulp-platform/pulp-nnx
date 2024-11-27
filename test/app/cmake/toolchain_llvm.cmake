@@ -35,6 +35,7 @@ add_compile_options(
   --sysroot=${PICOLIBC_RISCV_ROOT}
   -fno-builtin-memcpy
   -fno-builtin-memset
+  -fcolor-diagnostics
 )
 
 add_link_options(
