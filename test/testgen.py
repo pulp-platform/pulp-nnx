@@ -83,7 +83,16 @@ def test_gen(
         exit(-1)
 
     test_conf = nnxTestConfCls.model_validate(test_conf_dict)
-    test = NnxTestGenerator.from_conf(test_conf, verbose=args.print_tensors)
+
+    method = NnxTestGenerator.DataGenerationMethod.RANDOM
+    if args.gen_ones:
+        method = NnxTestGenerator.DataGenerationMethod.ONES
+    if args.gen_incremented:
+        method = NnxTestGenerator.DataGenerationMethod.INCREMENTED
+
+    test = NnxTestGenerator.from_conf(
+        test_conf, data_generation_method=method, verbose=args.print_tensors
+    )
     if not args.skip_save:
         test.save(args.test_dir)
     if args.headers:
@@ -189,6 +198,20 @@ parser_test.add_argument(
     dest="print_tensors",
     help="Print tensor values to stdout.",
 )
+parser_test.add_argument(
+    "--gen-ones",
+    action="store_true",
+    default=False,
+    dest="gen_ones",
+    help="Generate all ones for input tensors, useful for testing arithmetic issues.",
+)
+parser_test.add_argument(
+    "--gen-incremented",
+    action="store_true",
+    default=False,
+    dest="gen_incremented",
+    help="Generate incremented values for input tensors, useful for testing tensor load issues.",
+)
 add_common_arguments(parser_test)
 parser_test.set_defaults(func=test_gen)
 
@@ -211,6 +234,10 @@ add_common_arguments(parser_regen)
 parser_regen.set_defaults(func=test_regen)
 
 args = parser.parse_args()
+
+assert not (
+    args.gen_ones and args.gen_incremented
+), "You can choose only one method for input generation."
 
 if args.accelerator == "ne16":
     nnxMemoryLayoutCls = Ne16MemoryLayout

@@ -25,6 +25,7 @@ import numpy as np
 import numpy.typing as npt
 import torch
 from pydantic import BaseModel, PositiveInt, field_validator, model_validator
+from enum import Enum
 
 from HeaderWriter import HeaderWriter
 from NeuralEngineFunctionalModel import NeuralEngineFunctionalModel
@@ -207,8 +208,48 @@ class NnxTestGenerator:
         return torch.ceil(torch.log2(s / target_s)).type(torch.int32)
 
     @staticmethod
-    def _random_data(_type: IntegerType, shape: Tuple):
+    def _generate_random(_type: IntegerType, shape: Tuple):
         return torch.randint(_type.min, _type.max, size=shape)
+
+    @staticmethod
+    def _generate_ones(_type: IntegerType, shape: Tuple):
+        _ = _type
+        return torch.ones(shape, dtype=torch.int64)
+
+    @staticmethod
+    def _generate_incremented(_type: IntegerType, shape: Tuple):
+        def incr_generator():
+            x = 0
+            while True:
+                yield x
+                x += 1
+                if x > _type.max:
+                    x = 0
+
+        return (
+            torch.from_numpy(
+                np.fromiter(incr_generator(), count=np.prod(shape), dtype=np.int64)
+            )
+            .reshape((shape[0], shape[2], shape[3], shape[1]))
+            .permute((0, 3, 1, 2))
+            .type(torch.int64)
+        )
+
+    class DataGenerationMethod(Enum):
+        RANDOM = 0
+        ONES = 1
+        INCREMENTED = 2
+
+    @staticmethod
+    def _generate_data(
+        _type: IntegerType, shape: Tuple, method: NnxTestGenerator.DataGenerationMethod
+    ):
+        if method == NnxTestGenerator.DataGenerationMethod.RANDOM:
+            return NnxTestGenerator._generate_random(_type, shape)
+        elif method == NnxTestGenerator.DataGenerationMethod.ONES:
+            return NnxTestGenerator._generate_ones(_type, shape)
+        elif method == NnxTestGenerator.DataGenerationMethod.INCREMENTED:
+            return NnxTestGenerator._generate_incremented(_type, shape)
 
     @staticmethod
     def from_conf(
@@ -218,6 +259,7 @@ class NnxTestGenerator:
         scale: Optional[torch.Tensor] = None,
         bias: Optional[torch.Tensor] = None,
         global_shift: Optional[torch.Tensor] = None,
+        data_generation_method: DataGenerationMethod = DataGenerationMethod.RANDOM,
         verbose: bool = False,
     ) -> NnxTest:
         torch.manual_seed(NnxTestGenerator._DEFAULT_SEED)
@@ -233,27 +275,33 @@ class NnxTestGenerator:
         bias_shape = (1, conf.out_channel, 1, 1)
 
         if input is None:
-            input = NnxTestGenerator._random_data(
+            input = NnxTestGenerator._generate_data(
                 _type=conf.in_type,
                 shape=input_shape,
+                method=data_generation_method,
             )
 
         if weight is None:
-            weight = NnxTestGenerator._random_data(
+            weight = NnxTestGenerator._generate_data(
                 _type=conf.weight_type,
                 shape=weight_shape,
+                method=data_generation_method,
             )
 
         if conf.has_norm_quant:
             if scale is None:
                 assert conf.scale_type is not None
-                scale = NnxTestGenerator._random_data(
-                    conf.scale_type, shape=scale_shape
+                scale = NnxTestGenerator._generate_data(
+                    conf.scale_type,
+                    shape=scale_shape,
+                    method=data_generation_method,
                 )
             if conf.has_bias and bias is None:
                 assert conf.bias_type is not None
-                bias = NnxTestGenerator._random_data(
-                    conf.bias_type, shape=bias_shape
+                bias = NnxTestGenerator._generate_data(
+                    conf.bias_type,
+                    shape=bias_shape,
+                    method=data_generation_method,
                 ).type(torch.int32)
             if global_shift is None:
                 global_shift = torch.Tensor([0]).type(torch.int32)
@@ -328,6 +376,7 @@ class NnxTestHeaderGenerator:
 
         # Render output
         out_ctype = test.conf.out_type.ctype()
+        out_signed = test.conf.out_type._signed
         out_data_golden = test.output.permute(0, 2, 3, 1).ravel()
         self.header_writer.generate_vector_files(
             "output",
@@ -398,6 +447,7 @@ class NnxTestHeaderGenerator:
                     "height": out_height,
                     "width": out_width,
                     "channel": out_channel,
+                    "signed": out_signed,
                     "bits": test.conf.out_type._bits,
                 },
                 "weight": {

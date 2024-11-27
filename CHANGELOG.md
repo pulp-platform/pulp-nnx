@@ -4,6 +4,7 @@
 
 ### Added
 
+- choice of data generation method (ones, incremented, or random)
 - N-EUREKA accelerator support: 3x3, 1x1, and 3x3 depthwise convolution kernels
 - Support for kernels without normalization and quantization for NE16
 - isort check
