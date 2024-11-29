@@ -71,6 +71,9 @@ def test_gen(
     nnxMemoryLayoutCls: Union[Type[Ne16MemoryLayout], Type[NeurekaMemoryLayout]],
     nnxTestConfCls: Type[NnxTestConf],
 ):
+    assert not (args.gen_ones and args.gen_incremented), \
+        "You can choose only one method for input generation."
+
     if args.conf.endswith(".toml"):
         test_conf_dict = toml.load(args.conf)
     elif args.conf.endswith(".json"):
@@ -232,9 +235,6 @@ add_common_arguments(parser_regen)
 parser_regen.set_defaults(func=test_regen)
 
 args = parser.parse_args()
-
-assert not (args.gen_ones and args.gen_incremented), \
-    "You can choose only one method for input generation."
 
 if args.accelerator == "ne16":
     nnxMemoryLayoutCls = Ne16MemoryLayout
