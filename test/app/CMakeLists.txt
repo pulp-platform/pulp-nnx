@@ -8,15 +8,15 @@ project(test-pulp-nnx
 
 add_executable(test-pulp-nnx)
 
-file(GLOB gen_srcs gen/src/*.c)
+file(GLOB gen_srcs CONFIGURE_DEPENDS gen/src/*.c)
 set(app_srcs src/main.c src/nnx_layer.c)
 
 target_sources(test-pulp-nnx PRIVATE ${app_srcs} ${gen_srcs})
 target_include_directories(test-pulp-nnx PRIVATE inc gen/inc)
 
 set(NUM_CORES 8 CACHE STRING "Set the number of cores used. Default 8")
-set(ACCELERATOR NE16 CACHE STRING "Choose an accelerator to compile the library for. Default NE16")
-set_property(CACHE ACCELERATOR PROPERTY STRINGS NE16 NEUREKA)
+set(ACCELERATOR ne16 CACHE STRING "Choose an accelerator to compile the library for. Default ne16")
+set_property(CACHE ACCELERATOR PROPERTY STRINGS ne16 neureka neureka_v2)
 
 # TODO: should this go into pulp-sdk
 add_compile_options(-DNUM_CORES=${NUM_CORES})
@@ -24,12 +24,17 @@ add_compile_options(-DNUM_CORES=${NUM_CORES})
 include(cmake/pulp-sdk-siracusa.cmake)
 target_link_libraries(test-pulp-nnx PRIVATE pulp-sdk)
 
-if (${ACCELERATOR} STREQUAL NE16)
+if (${ACCELERATOR} STREQUAL ne16)
 	set(USE_NE16 ON)
 	target_compile_definitions(test-pulp-nnx PRIVATE NNX_ACCELERATOR="ne16" NNX_NE16)
-elseif(${ACCELERATOR} STREQUAL NEUREKA)
+elseif(${ACCELERATOR} STREQUAL neureka)
 	set(USE_NEUREKA ON)
 	target_compile_definitions(test-pulp-nnx PRIVATE NNX_ACCELERATOR="neureka" NNX_NEUREKA)
+elseif(${ACCELERATOR} STREQUAL neureka_v2)
+	set(USE_NEUREKA_V2 ON)
+	target_compile_definitions(test-pulp-nnx PRIVATE NNX_ACCELERATOR="neureka_v2" NNX_NEUREKA_V2)
+else()
+	message(FATAL_ERROR "Unrecognized accelerator detected: \"${ACCELERATOR}\"")
 endif()
 
 add_subdirectory(../.. pulp-nnx)
