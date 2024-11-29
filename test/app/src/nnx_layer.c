@@ -152,16 +152,23 @@ typedef neureka_v2_task_flag_e nnx_task_flag_e;
 #endif // NNX_NE16 || NNX_NEUREKA || NNX_NEUREKA_V2
 
 // Generated headers
-#include "bias.h"
 #include "input.h"
-#include "layer_conf.h"
 #include "output.h"
-#include "scale.h"
 #include "weight.h"
+
+#include "layer_conf.h"
+
+// The HAS_NORM_QUANT and HAS_BIAS are defined in layer_conf.h
+#if HAS_NORM_QUANT != 0
+#include "scale.h"
+#if HAS_BIAS != 0
+#include "bias.h"
+#endif
+#endif
 
 static void task_prepare(nnx_task_t *task) {
   nnx_task_init(task);
-#ifdef NNX_NEUREKA
+#if defined NNX_NEUREKA || defined NNX_NEUREKA_V2
   nnx_task_set_op_to_conv(task, WEIGHT_HEIGHT, GROUPS > 1);
 #else
   nnx_task_set_op_to_conv(task, WEIGHT_HEIGHT, GROUPS > 1, STRIDE_HEIGHT);
@@ -178,26 +185,28 @@ static void task_prepare(nnx_task_t *task) {
 #else
   nnx_task_set_input_unsigned(task);
 #endif
-#endif
-
-#ifdef NNX_NEUREKA_V2
-#if INPUT_SIGNED == 1
-  neureka_task_set_activation_signed(task);
-#else
-  neureka_task_set_activation_unsigned(task);
-#endif
-#if OUTPUT_SIGNED == 1
-  neureka_task_set_outfeat_signed(task);
-#else
-  neureka_task_set_outfeat_unsigned(task);
-#endif
-#endif
-
-#if defined NNX_NEUREKA || defined NNX_NEUREKA_V2
 #if defined WMEM_SRAM || defined WMEM_MRAM
   neureka_task_set_weight_source(task, neurekaWeightSourceWmem);
 #else
   neureka_task_set_weight_source(task, neurekaWeightSourceTcdm);
+#endif
+#endif
+
+#ifdef NNX_NEUREKA_V2
+#if INPUT_SIGNED == 1
+  neureka_v2_task_set_activation_signed(task);
+#else
+  neureka_v2_task_set_activation_unsigned(task);
+#endif
+#if OUTPUT_SIGNED == 1
+  neureka_v2_task_set_outfeat_signed(task);
+#else
+  neureka_v2_task_set_outfeat_unsigned(task);
+#endif
+#if defined WMEM_SRAM || defined WMEM_MRAM
+  neureka_v2_task_set_weight_source(task, neurekaV2WeightSourceWmem);
+#else
+  neureka_v2_task_set_weight_source(task, neurekaV2WeightSourceTcdm);
 #endif
 #endif
 
