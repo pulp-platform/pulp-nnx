@@ -92,6 +92,10 @@ void neureka_v2_task_set_norm_quant(neureka_v2_task_t *task, neureka_v2_quant_t 
                           norm.flag_shift << NEUREKA_V2_SHIFT_FLAG_NORM_SHIFT;
 }
 
+void neureka_v2_task_set_weight_offset(neureka_v2_task_t *task, const int32_t weight_offset) {
+  task->data.cfg.weight_offset_factor = weight_offset;
+}
+
 void neureka_v2_task_set_activation_signed(neureka_v2_task_t *task) {
   task->data.cfg.conf0 |= NEUREKA_V2_FLAG_ACTIVATION_SIGNED;
 }

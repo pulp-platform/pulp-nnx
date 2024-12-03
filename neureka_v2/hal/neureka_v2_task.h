@@ -125,6 +125,7 @@ void neureka_v2_task_set_bits(neureka_v2_task_t *task, const uint8_t input_bits,
                            const uint8_t weight_bits);
 void neureka_v2_task_set_norm_quant(neureka_v2_task_t *task, neureka_v2_quant_t quant,
                                  neureka_v2_norm_t norm);
+void neureka_v2_task_set_weight_offset(neureka_v2_task_t *task, const int32_t weight_offset);
 void neureka_v2_task_set_activation_signed(neureka_v2_task_t *task);
 void neureka_v2_task_set_activation_unsigned(neureka_v2_task_t *task);
 void neureka_v2_task_set_outfeat_signed(neureka_v2_task_t *task);
