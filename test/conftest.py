@@ -25,6 +25,7 @@ import pytest
 from Ne16TestConf import Ne16TestConf
 from Ne16Weight import Ne16Weight
 from NeurekaTestConf import NeurekaTestConf
+from NeurekaV2TestConf import NeurekaV2TestConf
 from NeurekaV2Weight import NeurekaV2Weight
 from NeurekaWeight import NeurekaWeight
 from NnxTestClasses import NnxTest, NnxTestGenerator, NnxWeight
@@ -89,8 +90,8 @@ def pytest_generate_tests(metafunc):
         nnxWeightCls = NeurekaWeight
         nnxTestConfCls = NeurekaTestConf
     elif nnxName == "neureka_v2":
-        nnxWeightCls = NeurekaWeight
-        nnxTestConfCls = NeurekaTestConf
+        nnxWeightCls = NeurekaV2Weight
+        nnxTestConfCls = NeurekaV2TestConf
     else:
         assert (
             False

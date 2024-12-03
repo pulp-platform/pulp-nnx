@@ -29,6 +29,7 @@ from HeaderWriter import HeaderWriter
 from Ne16TestConf import Ne16TestConf
 from Ne16Weight import Ne16Weight
 from NeurekaTestConf import NeurekaTestConf
+from NeurekaV2TestConf import NeurekaV2TestConf
 from NeurekaV2Weight import NeurekaV2Weight
 from NeurekaWeight import NeurekaWeight
 from NnxTestClasses import (
@@ -52,9 +53,7 @@ def headers_gen(
     assert test is not None
     if not test.is_valid():
         test = NnxTestGenerator.from_conf(test.conf)
-    NnxTestHeaderGenerator(nnxWeightCls).generate(
-        args.test_dir, test
-    )
+    NnxTestHeaderGenerator(nnxWeightCls).generate(args.test_dir, test)
 
 
 def print_tensors(test: NnxTest):
@@ -77,8 +76,9 @@ def test_gen(
     nnxWeightCls: Type[NnxWeight],
     nnxTestConfCls: Type[NnxTestConf],
 ):
-    assert not (args.gen_ones and args.gen_incremented), \
-        "You can choose only one method for input generation."
+    assert not (
+        args.gen_ones and args.gen_incremented
+    ), "You can choose only one method for input generation."
 
     if args.conf.endswith(".toml"):
         test_conf_dict = toml.load(args.conf)
@@ -99,7 +99,9 @@ def test_gen(
     if args.gen_incremented:
         method = NnxTestGenerator.DataGenerationMethod.INCREMENTED
 
-    test = NnxTestGenerator.from_conf(test_conf, data_generation_method=method, verbose=args.print_tensors)
+    test = NnxTestGenerator.from_conf(
+        test_conf, data_generation_method=method, verbose=args.print_tensors
+    )
     if not args.skip_save:
         test.save(args.test_dir)
     if args.headers:
@@ -250,7 +252,7 @@ elif args.accelerator == "neureka":
     nnxTestConfCls = NeurekaTestConf
 elif args.accelerator == "neureka_v2":
     nnxWeightCls = NeurekaV2Weight
-    nnxTestConfCls = NeurekaTestConf
+    nnxTestConfCls = NeurekaV2TestConf
 else:
     assert False, f"Unsupported accelerator {args.accelerator}."
 
