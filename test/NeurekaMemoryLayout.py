@@ -105,15 +105,14 @@ class NeurekaMemoryLayout:
                 cout * cinMajor, NeurekaMemoryLayout._WEIGHT_BANDWIDTH
             )  # cout*cinMajor, 256b
 
-        # Prepare for packing
-        # (-1, Weight Bandwidth Bytes, 8)
-        weightBandwidthBytes = int(np.ceil(NeurekaMemoryLayout._WEIGHT_BANDWIDTH / 8))
-        weight = np.stack(np.split(weight, weightBandwidthBytes, axis=-1), axis=-2)
-
         # Pack bits
-        # (-1, Weight Bandwidth Bytes)
+        # (-1, 8)
+        weight = weight.reshape(-1, 8)
+        # (-1, 1)
         weight = np.packbits(weight, axis=-1, bitorder="little")
 
+        # Flatten the weights
+        # (-1, )
         return weight.flatten()
 
     @staticmethod

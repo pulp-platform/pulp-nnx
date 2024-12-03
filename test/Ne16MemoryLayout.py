@@ -63,15 +63,14 @@ class Ne16MemoryLayout:
         # (cout, cinMajor, Bits, flattened spatial, cinMinor)
         weight = weight.transpose(0, 1, 4, 3, 2)
 
-        # Prepare for packing
-        # (cout, cinMajor, Bits, flattened spatial, cinMinorBytes, 8)
-        cinMinorBytes = int(np.ceil(cinMinor / 8))
-        weight = np.stack(np.split(weight, cinMinorBytes, axis=-1), axis=-2)
-
-        # Pack
-        # (cout, cinMajor, Bits, flattened spatial, cinMinorBytes)
+        # Pack bits
+        # (-1, 8)
+        weight = weight.reshape(-1, 8)
+        # (-1, 1)
         weight = np.packbits(weight, axis=-1, bitorder="little")
 
+        # Flatten the weights
+        # (-1, )
         return weight.flatten()
 
     @staticmethod
