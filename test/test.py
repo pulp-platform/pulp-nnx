@@ -23,9 +23,7 @@ import subprocess
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Type, Union
 
-from Ne16MemoryLayout import Ne16MemoryLayout
-from NeurekaMemoryLayout import NeurekaMemoryLayout
-from NnxTestClasses import NnxTest, NnxTestConf, NnxTestHeaderGenerator
+from NnxTestClasses import NnxTest, NnxTestConf, NnxTestHeaderGenerator, NnxWeight
 
 HORIZONTAL_LINE = "\n" + "-" * 100 + "\n"
 
@@ -113,10 +111,10 @@ def test(
     nnxTestAndName: Tuple[NnxTest, str],
     timeout: int,
     nnxName: str,
-    nnxMemoryLayoutCls: Union[Type[Ne16MemoryLayout], Type[NeurekaMemoryLayout]],
+    nnxWeightCls: Type[NnxWeight],
 ):
     nnxTest, nnxTestName = nnxTestAndName
-    NnxTestHeaderGenerator(nnxMemoryLayoutCls.weightEncode).generate(
+    NnxTestHeaderGenerator(nnxWeightCls).generate(
         nnxTestName, nnxTest
     )
 

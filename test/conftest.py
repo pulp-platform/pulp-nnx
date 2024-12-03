@@ -22,13 +22,14 @@ from typing import Union
 import pydantic
 import pytest
 
-from Ne16MemoryLayout import Ne16MemoryLayout
 from Ne16TestConf import Ne16TestConf
-from NeurekaMemoryLayout import NeurekaMemoryLayout
+from Ne16Weight import Ne16Weight
 from NeurekaTestConf import NeurekaTestConf
-from NnxTestClasses import NnxTest, NnxTestGenerator
+from NeurekaV2Weight import NeurekaV2Weight
+from NeurekaWeight import NeurekaWeight
+from NnxTestClasses import NnxTest, NnxTestGenerator, NnxWeight
 
-_SUPPORTED_ACCELERATORS = ["ne16", "neureka"]
+_SUPPORTED_ACCELERATORS = ["ne16", "neureka", "neureka_v2"]
 
 
 def pytest_addoption(parser):
@@ -82,10 +83,13 @@ def pytest_generate_tests(metafunc):
     nnxName = metafunc.config.getoption("accelerator")
 
     if nnxName == "ne16":
-        nnxMemoryLayoutCls = Ne16MemoryLayout
+        nnxWeightCls = Ne16Weight
         nnxTestConfCls = Ne16TestConf
     elif nnxName == "neureka":
-        nnxMemoryLayoutCls = NeurekaMemoryLayout
+        nnxWeightCls = NeurekaWeight
+        nnxTestConfCls = NeurekaTestConf
+    elif nnxName == "neureka_v2":
+        nnxWeightCls = NeurekaWeight
         nnxTestConfCls = NeurekaTestConf
     else:
         assert (
@@ -125,4 +129,4 @@ def pytest_generate_tests(metafunc):
     metafunc.parametrize("nnxTestAndName", nnxTestAndNames)
     metafunc.parametrize("timeout", [timeout])
     metafunc.parametrize("nnxName", [nnxName])
-    metafunc.parametrize("nnxMemoryLayoutCls", [nnxMemoryLayoutCls])
+    metafunc.parametrize("nnxWeightCls", [nnxWeightCls])

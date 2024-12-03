@@ -175,8 +175,10 @@ static void task_prepare(nnx_task_t *task) {
 #endif
   nnx_task_set_bits(task, INPUT_BITS, OUTPUT_BITS, WEIGHT_BITS);
 
-#ifdef NNX_NE16
+#if defined NNX_NE16 || defined NNX_NEUREKA
   nnx_task_set_weight_offset(task, weightOffsetModeLayerWise, WEIGHT_OFFSET);
+#elif defined NNX_NEUREKA_V2
+  nnx_task_set_weight_offset(task, WEIGHT_OFFSET);
 #endif
 
 #ifdef NNX_NEUREKA
@@ -241,7 +243,11 @@ static void task_prepare(nnx_task_t *task) {
 
   const nnx_task_flag_e flag_bias =
       HAS_BIAS ? nnxTaskFlagTrue : nnxTaskFlagFalse;
-  const uint32_t bias_addr = (uint32_t)(HAS_BIAS ? bias : NULL);
+#if HAS_BIAS == 1
+  const uint32_t bias_addr = (uint32_t)bias;
+#else
+  const uint32_t bias_addr = (uint32_t)NULL;
+#endif
 
   nnx_quant_function_e quant_function =
       HAS_RELU ? quantFunctionRelu : quantFunctionIdentity;
