@@ -19,25 +19,30 @@
 import argparse
 import json
 import os
-from typing import Optional, Set, Type, Union
+from typing import Callable, Optional, Set, Type, Union
 
+import numpy as np
+import numpy.typing as npt
 import toml
 
-from Ne16MemoryLayout import Ne16MemoryLayout
+from HeaderWriter import HeaderWriter
 from Ne16TestConf import Ne16TestConf
-from NeurekaMemoryLayout import NeurekaMemoryLayout
+from Ne16Weight import Ne16Weight
 from NeurekaTestConf import NeurekaTestConf
+from NeurekaWeight import NeurekaWeight
 from NnxTestClasses import (
     NnxTest,
     NnxTestConf,
     NnxTestGenerator,
     NnxTestHeaderGenerator,
+    NnxWeight,
+    WmemLiteral,
 )
 
 
 def headers_gen(
     args,
-    nnxMemoryLayoutCls: Union[Type[Ne16MemoryLayout], Type[NeurekaMemoryLayout]],
+    nnxWeightCls: Type[NnxWeight],
     nnxTestConfCls: Type[NnxTestConf],
     test: Optional[NnxTest] = None,
 ):
@@ -46,9 +51,7 @@ def headers_gen(
     assert test is not None
     if not test.is_valid():
         test = NnxTestGenerator.from_conf(test.conf)
-    NnxTestHeaderGenerator(nnxMemoryLayoutCls.weightEncode).generate(
-        args.test_dir, test
-    )
+    NnxTestHeaderGenerator(nnxWeightCls).generate(args.test_dir, test)
 
 
 def print_tensors(test: NnxTest):
@@ -68,7 +71,7 @@ def print_tensors(test: NnxTest):
 
 def test_gen(
     args,
-    nnxMemoryLayoutCls: Union[Type[Ne16MemoryLayout], Type[NeurekaMemoryLayout]],
+    nnxWeightCls: Type[NnxWeight],
     nnxTestConfCls: Type[NnxTestConf],
 ):
     if args.conf.endswith(".toml"):
@@ -96,7 +99,7 @@ def test_gen(
     if not args.skip_save:
         test.save(args.test_dir)
     if args.headers:
-        headers_gen(args, nnxMemoryLayoutCls, nnxTestConfCls, test)
+        headers_gen(args, nnxWeightCls, nnxTestConfCls, test)
     if args.print_tensors:
         print_tensors(test)
 
@@ -126,10 +129,10 @@ def _regen_recursive(
 
 def test_regen(
     args,
-    nnxMemoryLayoutCls: Union[Type[Ne16MemoryLayout], Type[NeurekaMemoryLayout]],
+    nnxWeightCls: Type[NnxWeight],
     nnxTestConfCls: Type[NnxTestConf],
 ):
-    _ = nnxMemoryLayoutCls
+    _ = nnxWeightCls
     regen_tensors = set(args.tensors + ["output"])
 
     for test_dir in args.test_dirs:
@@ -240,12 +243,12 @@ assert not (
 ), "You can choose only one method for input generation."
 
 if args.accelerator == "ne16":
-    nnxMemoryLayoutCls = Ne16MemoryLayout
+    nnxWeightCls = Ne16Weight
     nnxTestConfCls = Ne16TestConf
 elif args.accelerator == "neureka":
-    nnxMemoryLayoutCls = NeurekaMemoryLayout
+    nnxWeightCls = NeurekaWeight
     nnxTestConfCls = NeurekaTestConf
 else:
     assert False, f"Unsupported accelerator {args.accelerator}."
 
-args.func(args, nnxMemoryLayoutCls, nnxTestConfCls)
+args.func(args, nnxWeightCls, nnxTestConfCls)

@@ -172,7 +172,11 @@ static void task_prepare(nnx_task_t *task) {
 
   const nnx_task_flag_e flag_bias =
       HAS_BIAS ? nnxTaskFlagTrue : nnxTaskFlagFalse;
-  const uint32_t bias_addr = (uint32_t)(HAS_BIAS ? bias : NULL);
+#if HAS_BIAS == 1
+  const uint32_t bias_addr = (uint32_t)bias;
+#else
+  const uint32_t bias_addr = (uint32_t)NULL;
+#endif
 
   nnx_quant_function_e quant_function =
       HAS_RELU ? quantFunctionRelu : quantFunctionIdentity;
