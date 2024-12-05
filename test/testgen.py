@@ -19,7 +19,8 @@
 import argparse
 import json
 import os
-from typing import Optional, Set, Type, Union
+from typing import Literal, Optional, Set, Type, Union
+import typing
 
 import toml
 
@@ -108,7 +109,7 @@ def test_gen(
 
 def _regen(
     path: Union[str, os.PathLike],
-    regen_tensors: Set[str],
+    regen_tensors: Set[NnxTestGenerator.TensorName],
     nnxTestConfCls: Type[NnxTestConf],
 ) -> None:
     test = NnxTest.load(nnxTestConfCls, path)
@@ -118,7 +119,7 @@ def _regen(
 
 def _regen_recursive(
     path: Union[str, os.PathLike],
-    regen_tensors: Set[str],
+    regen_tensors: Set[NnxTestGenerator.TensorName],
     nnxTestConfCls: Type[NnxTestConf],
 ) -> None:
     if NnxTest.is_test_dir(path):
@@ -135,13 +136,12 @@ def test_regen(
     nnxTestConfCls: Type[NnxTestConf],
 ):
     _ = nnxWeightCls
-    regen_tensors = set(args.tensors + ["output"])
+    regen_tensors = set(args.tensors)
 
-    for test_dir in args.test_dirs:
-        if args.recurse:
-            _regen_recursive(test_dir, regen_tensors, nnxTestConfCls)
-        else:
-            _regen(test_dir, regen_tensors, nnxTestConfCls)
+    if args.recursive:
+        _regen_recursive(args.test_dir, regen_tensors, nnxTestConfCls)
+    else:
+        _regen(args.test_dir, regen_tensors, nnxTestConfCls)
 
 
 def add_common_arguments(parser: argparse.ArgumentParser):
@@ -222,10 +222,12 @@ parser_test.set_defaults(func=test_gen)
 
 parser_regen = subparsers.add_parser("regen", description="Regenerate test tensors.")
 parser_regen.add_argument(
-    "tensors",
+    "--tensor",
     type=str,
-    nargs="?",
-    default=[],
+    dest="tensors",
+    choices=typing.get_args(NnxTestGenerator.TensorName),
+    action='append',
+    default=['output'],
     help="Tensors that should be regenerated. Output included by default.",
 )
 parser_regen.add_argument(
