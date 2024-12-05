@@ -158,7 +158,9 @@ class NeurekaWeight(NnxWeight):
         return weight
 
     @staticmethod
-    def source_generate(wmem: WmemLiteral, init: npt.NDArray[np.uint8], header_writer: HeaderWriter) -> None:
+    def source_generate(
+        wmem: WmemLiteral, init: npt.NDArray[np.uint8], header_writer: HeaderWriter
+    ) -> None:
         if wmem == "sram":
             section = '__attribute__((section(".weightmem_sram")))'
         elif wmem == "mram":

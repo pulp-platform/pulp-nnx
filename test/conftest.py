@@ -17,6 +17,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
+import subprocess
 from typing import Union
 
 import pydantic
@@ -28,7 +29,7 @@ from NeurekaTestConf import NeurekaTestConf
 from NeurekaV2TestConf import NeurekaV2TestConf
 from NeurekaV2Weight import NeurekaV2Weight
 from NeurekaWeight import NeurekaWeight
-from NnxTestClasses import NnxTest, NnxTestGenerator, NnxWeight
+from NnxTestClasses import NnxTest, NnxTestGenerator
 
 _SUPPORTED_ACCELERATORS = ["ne16", "neureka", "neureka_v2"]
 
@@ -70,6 +71,13 @@ def pytest_addoption(parser):
         default=120,
         help="Execution timeout in seconds. Default: 120s",
     )
+    parser.addoption(
+        "--build-flow",
+        dest="build_flow",
+        choices=["make", "cmake"],
+        default="make",
+        help="Choose the build flow. Default: make",
+    )
 
 
 def _find_test_dirs(path: Union[str, os.PathLike]):
@@ -82,6 +90,7 @@ def pytest_generate_tests(metafunc):
     regenerate = metafunc.config.getoption("regenerate")
     timeout = metafunc.config.getoption("timeout")
     nnxName = metafunc.config.getoption("accelerator")
+    build_flow = metafunc.config.getoption("build_flow")
 
     if nnxName == "ne16":
         nnxWeightCls = Ne16Weight
@@ -127,7 +136,16 @@ def pytest_generate_tests(metafunc):
                 )
             )
 
+    if build_flow == "cmake":
+        os.makedirs("app/build/gvsoc_workdir", exist_ok=True)
+        assert "GVSOC" in os.environ, "The GVSOC environment variable is not set."
+        subprocess.run(
+            f"cmake -Sapp -Bapp/build -GNinja -DCMAKE_TOOLCHAIN_FILE=cmake/toolchain_llvm.cmake -DACCELERATOR={nnxName}".split(),
+            check=True,
+        )
+
     metafunc.parametrize("nnxTestAndName", nnxTestAndNames)
     metafunc.parametrize("timeout", [timeout])
     metafunc.parametrize("nnxName", [nnxName])
     metafunc.parametrize("nnxWeightCls", [nnxWeightCls])
+    metafunc.parametrize("build_flow", [build_flow])

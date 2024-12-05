@@ -21,12 +21,12 @@ from __future__ import annotations
 import os
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Callable, Literal, Optional, Set, Tuple, Type, Union
+from typing import Literal, Optional, Set, Tuple, Type, Union
 
 import numpy as np
 import numpy.typing as npt
 import torch
-from pydantic import BaseModel, PositiveInt, field_validator, model_validator
+from pydantic import BaseModel, PositiveInt, model_validator
 
 from HeaderWriter import HeaderWriter
 from NeuralEngineFunctionalModel import NeuralEngineFunctionalModel
@@ -226,11 +226,15 @@ class NnxTestGenerator:
                 x += 1
                 if x > _type.max:
                     x = 0
-        return torch.from_numpy(
-            np.fromiter(incr_generator(), count=np.prod(shape), dtype=np.int64)
-        ).reshape(
-            (shape[0], shape[2], shape[3], shape[1])
-        ).permute((0, 3, 1, 2)).type(torch.int64)
+
+        return (
+            torch.from_numpy(
+                np.fromiter(incr_generator(), count=np.prod(shape), dtype=np.int64)
+            )
+            .reshape((shape[0], shape[2], shape[3], shape[1]))
+            .permute((0, 3, 1, 2))
+            .type(torch.int64)
+        )
 
     class DataGenerationMethod(Enum):
         RANDOM = 0
@@ -238,7 +242,9 @@ class NnxTestGenerator:
         INCREMENTED = 2
 
     @staticmethod
-    def _generate_data(_type: IntegerType, shape: Tuple, method: NnxTestGenerator.DataGenerationMethod):
+    def _generate_data(
+        _type: IntegerType, shape: Tuple, method: NnxTestGenerator.DataGenerationMethod
+    ):
         if method == NnxTestGenerator.DataGenerationMethod.RANDOM:
             return NnxTestGenerator._generate_random(_type, shape)
         elif method == NnxTestGenerator.DataGenerationMethod.ONES:
@@ -287,13 +293,15 @@ class NnxTestGenerator:
             if scale is None:
                 assert conf.scale_type is not None
                 scale = NnxTestGenerator._generate_data(
-                    conf.scale_type, shape=scale_shape,
+                    conf.scale_type,
+                    shape=scale_shape,
                     method=data_generation_method,
                 )
             if conf.has_bias and bias is None:
                 assert conf.bias_type is not None
                 bias = NnxTestGenerator._generate_data(
-                    conf.bias_type, shape=bias_shape,
+                    conf.bias_type,
+                    shape=bias_shape,
                     method=data_generation_method,
                 ).type(torch.int32)
             if global_shift is None:
@@ -342,9 +350,7 @@ class NnxWeight(ABC):
     @staticmethod
     @abstractmethod
     def encode(
-        weight: npt.NDArray[np.uint8],
-        bits: int,
-        depthwise: bool = False
+        weight: npt.NDArray[np.uint8], bits: int, depthwise: bool = False
     ) -> npt.NDArray[np.uint8]:
         """Unroll weight into expected memory format
 
@@ -368,9 +374,7 @@ class NnxWeight(ABC):
     @staticmethod
     @abstractmethod
     def source_generate(
-        wmem: WmemLiteral,
-        init: npt.NDArray[np.uint8],
-        header_writer: HeaderWriter
+        wmem: WmemLiteral, init: npt.NDArray[np.uint8], header_writer: HeaderWriter
     ) -> None:
         """Function implementing generation of weight's sources"""
         ...
@@ -429,7 +433,9 @@ class NnxTestHeaderGenerator:
             test.conf.depthwise,
         )
 
-        self.nnxWeightCls.source_generate(test.conf.wmem, weight_init, self.header_writer)
+        self.nnxWeightCls.source_generate(
+            test.conf.wmem, weight_init, self.header_writer
+        )
 
         # Render scale
         if test.scale is not None:

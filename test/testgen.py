@@ -19,13 +19,10 @@
 import argparse
 import json
 import os
-from typing import Callable, Optional, Set, Type, Union
+from typing import Optional, Set, Type, Union
 
-import numpy as np
-import numpy.typing as npt
 import toml
 
-from HeaderWriter import HeaderWriter
 from Ne16TestConf import Ne16TestConf
 from Ne16Weight import Ne16Weight
 from NeurekaTestConf import NeurekaTestConf
@@ -38,7 +35,6 @@ from NnxTestClasses import (
     NnxTestGenerator,
     NnxTestHeaderGenerator,
     NnxWeight,
-    WmemLiteral,
 )
 
 

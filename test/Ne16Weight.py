@@ -100,7 +100,9 @@ class Ne16Weight(NnxWeight):
         return weight
 
     @staticmethod
-    def source_generate(wmem: WmemLiteral, init: npt.NDArray[np.uint8], header_writer: HeaderWriter) -> None:
+    def source_generate(
+        wmem: WmemLiteral, init: npt.NDArray[np.uint8], header_writer: HeaderWriter
+    ) -> None:
         assert wmem == "tcdm", f"Invalid wmem source provided: {wmem}"
         section = "PI_L1"
 

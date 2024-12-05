@@ -21,7 +21,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Type, Union
+from typing import Dict, Literal, Optional, Tuple, Type, Union
 
 from NnxTestClasses import NnxTest, NnxTestConf, NnxTestHeaderGenerator, NnxWeight
 
@@ -93,12 +93,11 @@ def execute_command(
     return status, msg, stdout, stderr
 
 
-def assert_message(
-    msg: str, test_name: str, cmd: str, stdout: str, stderr: Optional[str] = None
-):
+def assert_message(msg: str, test_name: str, stdout: str, stderr: Optional[str] = None):
     retval = (
         f"Test {test_name} failed: {msg}\n"
-        f"Command: {cmd}\n" + HORIZONTAL_LINE + f"\nCaptured stdout:\n{stdout}\n"
+        + HORIZONTAL_LINE
+        + f"\nCaptured stdout:\n{stdout}\n"
     )
 
     if stderr is not None:
@@ -107,35 +106,58 @@ def assert_message(
     return retval
 
 
+def build(nnxName: str, flow: Literal["make", "cmake"]) -> None:
+    env = os.environ
+
+    if flow == "make":
+        cmd = "make -C app all platform=gvsoc"
+        env["ACCELERATOR"] = nnxName
+    elif flow == "cmake":
+        cmd = "cmake --build app/build"
+
+    subprocess.run(cmd.split(), check=True, capture_output=True, text=True, env=env)
+
+
+def run(nnxName: str, flow: Literal["make", "cmake"]) -> str:
+    env = os.environ
+
+    if flow == "make":
+        cmd = "make -C app run platform=gvsoc"
+        env["ACCELERATOR"] = nnxName
+    elif flow == "cmake":
+        bin = os.path.abspath("app/build/test-pulp-nnx")
+        gvsoc = os.environ["GVSOC"]
+        cmd = f"{gvsoc} --binary {bin} --work-dir app/build/gvsoc_workdir --target siracusa image flash run"
+
+    proc = subprocess.run(
+        cmd.split(), check=True, capture_output=True, text=True, env=env
+    )
+
+    return proc.stdout
+
+
 def test(
     nnxTestAndName: Tuple[NnxTest, str],
     timeout: int,
     nnxName: str,
     nnxWeightCls: Type[NnxWeight],
+    build_flow: Literal["cmake", "make"],
 ):
     nnxTest, nnxTestName = nnxTestAndName
-    NnxTestHeaderGenerator(nnxWeightCls).generate(
-        nnxTestName, nnxTest
-    )
+    NnxTestHeaderGenerator(nnxWeightCls).generate(nnxTestName, nnxTest)
 
-    Path("app/src/nnx_layer.c").touch()
-    cmd = f"make -C app all run platform=gvsoc"
-    passed, msg, stdout, stderr = execute_command(
-        cmd=cmd, timeout=timeout, envflags={"ACCELERATOR": nnxName}
-    )
-
-    assert passed, assert_message(msg, nnxTestName, cmd, stdout, stderr)
+    build(nnxName, build_flow)
+    stdout = run(nnxName, build_flow)
 
     match_success = re.search(r"> Success! No errors found.", stdout)
     match_fail = re.search(r"> Failure! Found (\d*)/(\d*) errors.", stdout)
 
     assert match_success or match_fail, assert_message(
-        "No regexes matched.", nnxTestName, cmd, stdout
+        "No regexes matched.", nnxTestName, stdout
     )
 
     assert not match_fail, assert_message(
         f"Errors found: {match_fail.group(1)}/{match_fail.group(2)}",
         nnxTestName,
-        cmd,
         stdout,
     )
