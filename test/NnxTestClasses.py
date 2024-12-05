@@ -21,7 +21,7 @@ from __future__ import annotations
 import os
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Callable, Literal, Optional, Set, Tuple, Type, Union
+from typing import Literal, Optional, Set, Tuple, Type, Union, get_args
 
 import numpy as np
 import numpy.typing as npt
@@ -337,9 +337,13 @@ class NnxTestGenerator:
             global_shift=global_shift,
         )
 
+    TensorName = Literal["input", "output", "weight", "scale", "bias"]
+
     @staticmethod
-    def regenerate(test: NnxTest, regen_tensors: Set[str]) -> NnxTest:
-        test_tensors = set(["input", "output", "weight", "scale", "bias"])
+    def regenerate(
+        test: NnxTest, regen_tensors: Set[NnxTestGenerator.TensorName]
+    ) -> NnxTest:
+        test_tensors = set(get_args(NnxTestGenerator.TensorName))
         load_tensors = test_tensors - regen_tensors
         kwargs = {tensor: getattr(test, tensor) for tensor in load_tensors}
         return NnxTestGenerator.from_conf(test.conf, **kwargs)
