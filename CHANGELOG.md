@@ -15,6 +15,7 @@
 
 ### Changed
 
+- the `wmem` field in the test configurations is now required
 - `ne16_task_init` got split into smaller parts: `ne16_task_init`, `ne16_task_set_op_to_conv`, `ne16_task_set_weight_offset`, `ne16_task_set_bits`, `ne16_task_set_norm_quant`
 - strides in `ne16_task_set_strides`, `ne16_task_set_dims`, and `ne16_task_set_ptrs` are now strides between consecutive elements in that dimension
 - `ne16_task_queue_size` is now `NE16_TASK_QUEUE_SIZE`

@@ -109,7 +109,10 @@ def pytest_generate_tests(metafunc):
                 test.save_data(test_dir)
             nnxTestAndNames.append((test, test_dir))
         except pydantic.ValidationError as e:
-            _ = e
+            for error in e.errors():
+                if error["type"] == "missing":
+                    raise e
+
             nnxTestAndNames.append(
                 pytest.param(
                     (None, test_dir),

@@ -25,5 +25,6 @@
     "bias_type": "int32",
     "has_norm_quant": false,
     "has_bias": false,
-    "has_relu": false
+    "has_relu": false,
+    "wmem": "tcdm"
 }
