@@ -19,6 +19,7 @@
 from __future__ import annotations
 
 import os
+import typing
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Literal, Optional, Set, Tuple, Type, Union, get_args
@@ -206,7 +207,8 @@ class NnxTestGenerator:
         """Calculate global shift so that the output values are in the range of out_type"""
         s = tensor.type(torch.float64).std()
         target_s = 2 ** (out_type._bits - 1)
-        return torch.ceil(torch.log2(s / target_s)).type(torch.int32)
+        shift = torch.ceil(torch.log2(s / target_s))
+        return torch.clamp(shift, 0, 255).type(torch.uint8)
 
     @staticmethod
     def _generate_random(_type: IntegerType, shape: Tuple):
@@ -305,7 +307,7 @@ class NnxTestGenerator:
                     method=data_generation_method,
                 ).type(torch.int32)
             if global_shift is None:
-                global_shift = torch.Tensor([0]).type(torch.int32)
+                global_shift = torch.Tensor([0]).type(torch.uint8)
                 conv_kwargs = {
                     **conf.__dict__,
                     "out_type": NeuralEngineFunctionalModel.ACCUMULATOR_TYPE,
