@@ -59,7 +59,7 @@ class NeurekaV2TestConf(NnxTestConf):
     @field_validator("out_type")
     @classmethod
     def check_valid_out_type(cls, v: IntegerType) -> IntegerType:
-        NeurekaV2TestConf._check_type("out_type", v, ["uint8", "int8", "int32"])
+        NeurekaV2TestConf._check_type("out_type", v, ["uint8", "int8"])
         return v
 
     @field_validator("weight_type")
@@ -72,7 +72,7 @@ class NeurekaV2TestConf(NnxTestConf):
     @classmethod
     def check_valid_scale_type(cls, v: Optional[IntegerType]) -> Optional[IntegerType]:
         if v is not None:
-            NeurekaV2TestConf._check_type("scale_type", v, ["uint8", "uint32"])
+            NeurekaV2TestConf._check_type("scale_type", v, ["int8"])
         return v
 
     @field_validator("bias_type")
