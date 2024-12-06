@@ -73,19 +73,6 @@ class NeurekaV2Weight(NnxWeight):
         # (cout, cinMajor, Bits, Flattened spatial, cinSubtile)
         weight = weight.transpose(0, 1, 4, 3, 2)
 
-        # Pad bits to fit into weight bandwidth
-        if height == 3 and width == 3:
-            # (cout * cinMajor * Bits, H * W * cinSubtile)
-            weight = weight.reshape(-1, height * width * cinSubtile)
-            # Pad only the last dimension to weight bandwidth size
-            # (-1, Weight Bandwidth Bits)
-            weight = np.pad(
-                weight,
-                ((0, 0), (0, NeurekaV2Weight._WEIGHT_BANDWIDTH - weight.shape[-1])),
-                "constant",
-                constant_values=0,
-            )
-
         # Pack bits into bytes
         # (-1, 8)
         weight = weight.reshape(-1, 8)
