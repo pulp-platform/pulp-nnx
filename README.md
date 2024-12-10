@@ -53,7 +53,7 @@ The library was tested with following pairs of SDKs and compilers:
 | SDK | SDK Commit Hash | Compiler | Compiler Commit Hash |
 | --- | --------------- | -------- | -------------------- |
 | gap\_sdk (obtainable from GreenWaves Technologies) | 90df4ce219 | [gap\_gnu\_toolchain](https://github.com/GreenWaves-Technologies/gap_gnu_toolchain) | 360fd4f9d6 |
-| [pulp-sdk](https://github.com/Scheremo/pulp-sdk) | c216298881 | [pulp-riscv-gnu-toolchain](https://github.com/GreenWaves-Technologies/gap_gnu_toolchain) | 9938bd8fcf (release v1.0.16) |
+| [pulp-sdk](https://github.com/Scheremo/pulp-sdk) | c216298881 | [pulp-riscv-gnu-toolchain](https://github.com/pulp-platform/pulp-riscv-gnu-toolchain) | 9938bd8fcf (release v1.0.16) |
 
 ## Contributing
 
