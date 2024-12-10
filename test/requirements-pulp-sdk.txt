@@ -1,0 +1,4 @@
+argcomplete
+pyelftools
+scons
+six
