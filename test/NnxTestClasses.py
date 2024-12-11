@@ -50,7 +50,7 @@ class NnxTestConf(BaseModel):
     has_norm_quant: bool
     has_bias: bool
     has_relu: bool
-    wmem: WmemLiteral = "tcdm"
+    wmem: WmemLiteral
 
     @model_validator(mode="after")  # type: ignore
     def check_valid_depthwise_channels(self) -> NnxTestConf:
