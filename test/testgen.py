@@ -27,10 +27,7 @@ import numpy.typing as npt
 import toml
 
 from HeaderWriter import HeaderWriter
-from Ne16TestConf import Ne16TestConf
-from Ne16Weight import Ne16Weight
-from NeurekaTestConf import NeurekaTestConf
-from NeurekaWeight import NeurekaWeight
+from NnxMapping import NnxMapping, NnxName
 from NnxTestClasses import (
     NnxTest,
     NnxTestConf,
@@ -43,8 +40,8 @@ from NnxTestClasses import (
 
 def headers_gen(
     args,
-    nnxWeightCls: Type[NnxWeight],
     nnxTestConfCls: Type[NnxTestConf],
+    nnxWeightCls: Type[NnxWeight],
     test: Optional[NnxTest] = None,
 ):
     if test is None:
@@ -72,8 +69,8 @@ def print_tensors(test: NnxTest):
 
 def test_gen(
     args,
-    nnxWeightCls: Type[NnxWeight],
     nnxTestConfCls: Type[NnxTestConf],
+    nnxWeightCls: Type[NnxWeight],
 ):
     if args.conf.endswith(".toml"):
         test_conf_dict = toml.load(args.conf)
@@ -100,7 +97,7 @@ def test_gen(
     if not args.skip_save:
         test.save(args.test_dir)
     if args.headers:
-        headers_gen(args, nnxWeightCls, nnxTestConfCls, test)
+        headers_gen(args, nnxTestConfCls, nnxWeightCls, test)
     if args.print_tensors:
         print_tensors(test)
 
@@ -130,8 +127,8 @@ def _regen_recursive(
 
 def test_regen(
     args,
-    nnxWeightCls: Type[NnxWeight],
     nnxTestConfCls: Type[NnxTestConf],
+    nnxWeightCls: Type[NnxWeight],
 ):
     _ = nnxWeightCls
     regen_tensors = set(args.tensors)
@@ -155,8 +152,9 @@ def add_common_arguments(parser: argparse.ArgumentParser):
     parser.add_argument(
         "-a",
         "--accelerator",
-        choices=["ne16", "neureka"],
-        default="ne16",
+        type=NnxName,
+        choices=list(NnxName),
+        default=NnxName.ne16,
         help="Choose an accelerator. Default: ne16",
     )
 
@@ -244,13 +242,6 @@ assert not (
     args.gen_ones and args.gen_incremented
 ), "You can choose only one method for input generation."
 
-if args.accelerator == "ne16":
-    nnxWeightCls = Ne16Weight
-    nnxTestConfCls = Ne16TestConf
-elif args.accelerator == "neureka":
-    nnxWeightCls = NeurekaWeight
-    nnxTestConfCls = NeurekaTestConf
-else:
-    assert False, f"Unsupported accelerator {args.accelerator}."
+testConfCls, weightCls = NnxMapping[args.accelerator]
 
-args.func(args, nnxWeightCls, nnxTestConfCls)
+args.func(args, testConfCls, weightCls)
