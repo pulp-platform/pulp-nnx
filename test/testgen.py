@@ -22,8 +22,6 @@ import os
 import typing
 from typing import Optional, Set, Type, Union
 
-import numpy as np
-import numpy.typing as npt
 import toml
 
 from HeaderWriter import HeaderWriter
@@ -34,7 +32,6 @@ from NnxTestClasses import (
     NnxTestGenerator,
     NnxTestHeaderGenerator,
     NnxWeight,
-    WmemLiteral,
 )
 
 
@@ -72,6 +69,10 @@ def test_gen(
     nnxTestConfCls: Type[NnxTestConf],
     nnxWeightCls: Type[NnxWeight],
 ):
+    assert not (
+        args.gen_ones and args.gen_incremented
+    ), "You can choose only one method for input generation."
+
     if args.conf.endswith(".toml"):
         test_conf_dict = toml.load(args.conf)
     elif args.conf.endswith(".json"):
@@ -237,10 +238,6 @@ add_common_arguments(parser_regen)
 parser_regen.set_defaults(func=test_regen)
 
 args = parser.parse_args()
-
-assert not (
-    args.gen_ones and args.gen_incremented
-), "You can choose only one method for input generation."
 
 testConfCls, weightCls = NnxMapping[args.accelerator]
 
