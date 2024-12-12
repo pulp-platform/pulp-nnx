@@ -183,9 +183,9 @@ static void task_prepare(nnx_task_t *task) {
 
 #ifdef NNX_NEUREKA
 #if INPUT_SIGNED == 1
-  nnx_task_set_input_signed(task);
+  neureka_task_set_input_signed(task);
 #else
-  nnx_task_set_input_unsigned(task);
+  neureka_task_set_input_unsigned(task);
 #endif
 #if defined WMEM_SRAM || defined WMEM_MRAM
   neureka_task_set_weight_source(task, neurekaWeightSourceWmem);
