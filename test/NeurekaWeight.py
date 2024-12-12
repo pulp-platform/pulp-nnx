@@ -20,14 +20,17 @@
 import numpy as np
 import numpy.typing as npt
 
+from HeaderWriter import HeaderWriter
+from NnxTestClasses import NnxWeight, WmemLiteral
 
-class NeurekaMemoryLayout:
+
+class NeurekaWeight(NnxWeight):
     _WEIGHT_BANDWIDTH = 256
     _CIN_SUBTILE_1x1 = 32
     _CIN_SUBTILE_3x3 = 28
 
     @staticmethod
-    def weightEncode(
+    def encode(
         weight: npt.NDArray[np.uint8], bits: int, depthwise: bool = False
     ) -> npt.NDArray[np.uint8]:
         """Unroll weight into expected memory format
@@ -43,9 +46,9 @@ class NeurekaMemoryLayout:
 
         cout, cin, height, width = weight.shape
         cinSubtile = (
-            NeurekaMemoryLayout._CIN_SUBTILE_3x3
+            NeurekaWeight._CIN_SUBTILE_3x3
             if height == 3
-            else NeurekaMemoryLayout._CIN_SUBTILE_1x1
+            else NeurekaWeight._CIN_SUBTILE_1x1
         )
 
         # Pad cin to be divisible with CIN_SUBTILE
@@ -79,7 +82,7 @@ class NeurekaMemoryLayout:
             # (-1, Weight Bandwidth)
             weight = np.pad(
                 weight,
-                ((0, 0), (0, NeurekaMemoryLayout._WEIGHT_BANDWIDTH - weight.shape[-1])),
+                ((0, 0), (0, NeurekaWeight._WEIGHT_BANDWIDTH - weight.shape[-1])),
                 "constant",
                 constant_values=0,
             )
@@ -102,7 +105,7 @@ class NeurekaMemoryLayout:
             weight = weight.transpose(0, 1, 3, 4, 2, 5)
             # (-1, Weight Bandwidth)
             weight = weight.reshape(
-                cout * cinMajor, NeurekaMemoryLayout._WEIGHT_BANDWIDTH
+                cout * cinMajor, NeurekaWeight._WEIGHT_BANDWIDTH
             )  # cout*cinMajor, 256b
 
         # Pack bits
@@ -116,7 +119,7 @@ class NeurekaMemoryLayout:
         return weight.flatten()
 
     @staticmethod
-    def weightDecode(
+    def decode(
         weight: npt.NDArray[np.uint8],
         bits: int,
         cout: int,
@@ -124,19 +127,19 @@ class NeurekaMemoryLayout:
         height: int,
         width: int,
     ) -> npt.NDArray[np.uint8]:
-        """Reverse of weightEncode"""
+        """Reverse of encode"""
         cinSubtile = (
-            NeurekaMemoryLayout._CIN_SUBTILE_3x3
+            NeurekaWeight._CIN_SUBTILE_3x3
             if height == 3
-            else NeurekaMemoryLayout._CIN_SUBTILE_1x1
+            else NeurekaWeight._CIN_SUBTILE_1x1
         )
         cinMajor = int(np.ceil(cin / cinSubtile))
         cinMinor = cinSubtile
-        weightBandwidthBytes = int(np.ceil(NeurekaMemoryLayout._WEIGHT_BANDWIDTH / 8))
+        weightBandwidthBytes = int(np.ceil(NeurekaWeight._WEIGHT_BANDWIDTH / 8))
 
         weight = weight.reshape(-1, weightBandwidthBytes, 1)
         weight = np.unpackbits(weight, axis=-1, count=8, bitorder="little")
-        weight = weight.reshape(-1, NeurekaMemoryLayout._WEIGHT_BANDWIDTH)
+        weight = weight.reshape(-1, NeurekaWeight._WEIGHT_BANDWIDTH)
 
         if height == 3 and width == 3:
             weight = weight[:, : height * width * cinMinor]
@@ -153,3 +156,22 @@ class NeurekaMemoryLayout:
         weight = weight[:, :cin, :, :]
 
         return weight
+
+    @staticmethod
+    def source_generate(
+        wmem: WmemLiteral, init: npt.NDArray[np.uint8], header_writer: HeaderWriter
+    ) -> None:
+        if wmem == "sram":
+            section = '__attribute__((section(".weightmem_sram")))'
+        elif wmem == "mram":
+            section = '__attribute__((section(".weightmem_mram")))'
+        else:
+            section = "PI_L1"
+
+        header_writer.generate_vector_files(
+            "weight",
+            _type="uint8_t",
+            size=init.size,
+            init=init,
+            section=section,
+        )

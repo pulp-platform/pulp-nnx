@@ -22,13 +22,9 @@ from typing import Union
 import pydantic
 import pytest
 
-from Ne16MemoryLayout import Ne16MemoryLayout
-from Ne16TestConf import Ne16TestConf
-from NeurekaMemoryLayout import NeurekaMemoryLayout
-from NeurekaTestConf import NeurekaTestConf
+from NnxMapping import NnxMapping, NnxName
 from NnxTestClasses import NnxTest, NnxTestGenerator
-
-_SUPPORTED_ACCELERATORS = ["ne16", "neureka"]
+from TestClasses import implies
 
 
 def pytest_addoption(parser):
@@ -52,8 +48,9 @@ def pytest_addoption(parser):
     parser.addoption(
         "-A",
         "--accelerator",
-        choices=_SUPPORTED_ACCELERATORS,
-        default="ne16",
+        type=NnxName,
+        choices=list(NnxName),
+        default=NnxName.ne16,
         help="Choose an accelerator to test. Default: ne16",
     )
     parser.addoption(
@@ -81,17 +78,6 @@ def pytest_generate_tests(metafunc):
     timeout = metafunc.config.getoption("timeout")
     nnxName = metafunc.config.getoption("accelerator")
 
-    if nnxName == "ne16":
-        nnxMemoryLayoutCls = Ne16MemoryLayout
-        nnxTestConfCls = Ne16TestConf
-    elif nnxName == "neureka":
-        nnxMemoryLayoutCls = NeurekaMemoryLayout
-        nnxTestConfCls = NeurekaTestConf
-    else:
-        assert (
-            False
-        ), f"Given accelerator {nnxName} not supported. Supported accelerators: {_SUPPORTED_ACCELERATORS}"
-
     if recursive:
         tests_dirs = test_dirs
         test_dirs = []
@@ -99,7 +85,8 @@ def pytest_generate_tests(metafunc):
             test_dirs.extend(_find_test_dirs(tests_dir))
 
     # Load valid tests
-    nnxTestAndNames = []
+    nnxTestNames = []
+    nnxTestConfCls = NnxMapping[nnxName].testConfCls
     for test_dir in test_dirs:
         try:
             test = NnxTest.load(nnxTestConfCls, test_dir)
@@ -107,22 +94,21 @@ def pytest_generate_tests(metafunc):
             if not test.is_valid() or regenerate:
                 test = NnxTestGenerator.from_conf(test.conf)
                 test.save_data(test_dir)
-            nnxTestAndNames.append((test, test_dir))
+            nnxTestNames.append(test_dir)
         except pydantic.ValidationError as e:
             for error in e.errors():
                 if error["type"] == "missing":
                     raise e
 
-            nnxTestAndNames.append(
+            nnxTestNames.append(
                 pytest.param(
-                    (None, test_dir),
+                    test_dir,
                     marks=pytest.mark.skipif(
                         True, reason=f"Invalid test {test_dir}: {e.errors}"
                     ),
                 )
             )
 
-    metafunc.parametrize("nnxTestAndName", nnxTestAndNames)
-    metafunc.parametrize("timeout", [timeout])
     metafunc.parametrize("nnxName", [nnxName])
-    metafunc.parametrize("nnxMemoryLayoutCls", [nnxMemoryLayoutCls])
+    metafunc.parametrize("nnxTestName", nnxTestNames)
+    metafunc.parametrize("timeout", [timeout])

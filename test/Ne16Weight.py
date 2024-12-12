@@ -19,12 +19,15 @@
 import numpy as np
 import numpy.typing as npt
 
+from HeaderWriter import HeaderWriter
+from NnxTestClasses import NnxWeight, WmemLiteral
 
-class Ne16MemoryLayout:
+
+class Ne16Weight(NnxWeight):
     _CIN_SUBTILE = 16
 
     @staticmethod
-    def weightEncode(
+    def encode(
         weight: npt.NDArray[np.uint8], bits: int, depthwise: bool = False
     ) -> npt.NDArray[np.uint8]:
         """Unroll weight into expected memory format
@@ -39,8 +42,8 @@ class Ne16MemoryLayout:
         cout, cin, height, width = weight.shape
 
         # Pad cin to be divisible with CIN_SUBTILE
-        if cin % Ne16MemoryLayout._CIN_SUBTILE != 0:
-            cinPad = Ne16MemoryLayout._CIN_SUBTILE - cin % Ne16MemoryLayout._CIN_SUBTILE
+        if cin % Ne16Weight._CIN_SUBTILE != 0:
+            cinPad = Ne16Weight._CIN_SUBTILE - cin % Ne16Weight._CIN_SUBTILE
             weight = np.pad(
                 weight,
                 ((0, 0), (0, cinPad), (0, 0), (0, 0)),
@@ -51,8 +54,8 @@ class Ne16MemoryLayout:
 
         # Reshape into (cout, cinMajor, cinMinor, flattened spatial, 1)
         # The 1 at the end is required by the unpacking
-        cinMajor = cin // Ne16MemoryLayout._CIN_SUBTILE
-        cinMinor = Ne16MemoryLayout._CIN_SUBTILE
+        cinMajor = cin // Ne16Weight._CIN_SUBTILE
+        cinMinor = Ne16Weight._CIN_SUBTILE
         weight = weight.reshape(cout, cinMajor, cinMinor, height * width, 1)
 
         # Unpack 'bits' bits in little order, e.g. bits=4: 3 => [1, 1, 0, 0]
@@ -74,7 +77,7 @@ class Ne16MemoryLayout:
         return weight.flatten()
 
     @staticmethod
-    def weightDecode(
+    def decode(
         weight: npt.NDArray[np.uint8],
         bits: int,
         cout: int,
@@ -82,9 +85,8 @@ class Ne16MemoryLayout:
         height: int,
         width: int,
     ) -> npt.NDArray[np.uint8]:
-        """Reverse of weight_roll"""
-        cinMajor = int(np.ceil(cin / Ne16MemoryLayout._CIN_SUBTILE))
-        cinMinor = Ne16MemoryLayout._CIN_SUBTILE
+        cinMajor = int(np.ceil(cin / Ne16Weight._CIN_SUBTILE))
+        cinMinor = Ne16Weight._CIN_SUBTILE
         cinMinorBytes = int(np.ceil(cinMinor / 8))
 
         weight = weight.reshape(cout, cinMajor, bits, height * width, cinMinorBytes, 1)
@@ -96,3 +98,18 @@ class Ne16MemoryLayout:
         weight = weight[:, :cin, :, :]
 
         return weight
+
+    @staticmethod
+    def source_generate(
+        wmem: WmemLiteral, init: npt.NDArray[np.uint8], header_writer: HeaderWriter
+    ) -> None:
+        assert wmem == "tcdm", f"Invalid wmem source provided: {wmem}"
+        section = "PI_L1"
+
+        header_writer.generate_vector_files(
+            "weight",
+            _type="uint8_t",
+            size=init.size,
+            init=init,
+            section=section,
+        )
