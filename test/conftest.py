@@ -17,11 +17,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
+import subprocess
 from typing import Union
 
 import pydantic
 import pytest
 
+from NnxBuildFlow import CmakeBuildFlow, NnxBuildFlowName
 from NnxMapping import NnxMapping, NnxName
 from NnxTestClasses import NnxTest, NnxTestGenerator
 from TestClasses import implies
@@ -65,6 +67,14 @@ def pytest_addoption(parser):
         default=120,
         help="Execution timeout in seconds. Default: 120s",
     )
+    parser.addoption(
+        "--build-flow",
+        dest="buildFlowName",
+        type=NnxBuildFlowName,
+        choices=list(NnxBuildFlowName),
+        default=NnxBuildFlowName.make,
+        help="Choose the build flow. Default: make",
+    )
 
 
 def _find_test_dirs(path: Union[str, os.PathLike]):
@@ -77,6 +87,11 @@ def pytest_generate_tests(metafunc):
     regenerate = metafunc.config.getoption("regenerate")
     timeout = metafunc.config.getoption("timeout")
     nnxName = metafunc.config.getoption("accelerator")
+    buildFlowName = metafunc.config.getoption("buildFlowName")
+
+    assert implies(
+        buildFlowName == NnxBuildFlowName.cmake, nnxName == NnxName.neureka_v2
+    ), "The cmake build flow has been tested only with the neureka_v2 accelerator"
 
     if recursive:
         tests_dirs = test_dirs
@@ -109,6 +124,10 @@ def pytest_generate_tests(metafunc):
                 )
             )
 
+    if buildFlowName == NnxBuildFlowName.cmake:
+        CmakeBuildFlow(nnxName).prepare()
+
     metafunc.parametrize("nnxName", [nnxName])
+    metafunc.parametrize("buildFlowName", [buildFlowName])
     metafunc.parametrize("nnxTestName", nnxTestNames)
     metafunc.parametrize("timeout", [timeout])

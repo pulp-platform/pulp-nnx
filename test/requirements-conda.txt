@@ -3,3 +3,4 @@ pydantic
 pytest
 pytorch==1.11.0
 toml
+ninja

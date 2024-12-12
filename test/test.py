@@ -21,8 +21,9 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Type, Union
+from typing import Dict, Literal, Optional, Tuple, Type, Union
 
+from NnxBuildFlow import NnxBuildFlowClsMapping, NnxBuildFlowName
 from NnxMapping import NnxMapping, NnxName
 from NnxTestClasses import NnxTest, NnxTestConf, NnxTestHeaderGenerator, NnxWeight
 
@@ -94,12 +95,11 @@ def execute_command(
     return status, msg, stdout, stderr
 
 
-def assert_message(
-    msg: str, test_name: str, cmd: str, stdout: str, stderr: Optional[str] = None
-):
+def assert_message(msg: str, test_name: str, stdout: str, stderr: Optional[str] = None):
     retval = (
         f"Test {test_name} failed: {msg}\n"
-        f"Command: {cmd}\n" + HORIZONTAL_LINE + f"\nCaptured stdout:\n{stdout}\n"
+        + HORIZONTAL_LINE
+        + f"\nCaptured stdout:\n{stdout}\n"
     )
 
     if stderr is not None:
@@ -110,6 +110,7 @@ def assert_message(
 
 def test(
     nnxName: NnxName,
+    buildFlowName: NnxBuildFlowName,
     nnxTestName: str,
     timeout: int,
 ):
@@ -120,24 +121,19 @@ def test(
 
     NnxTestHeaderGenerator(weightCls).generate(nnxTestName, nnxTest)
 
-    Path("app/src/nnx_layer.c").touch()
-    cmd = f"make -C app all run platform=gvsoc"
-    passed, msg, stdout, stderr = execute_command(
-        cmd=cmd, timeout=timeout, envflags={"ACCELERATOR": str(nnxName)}
-    )
-
-    assert passed, assert_message(msg, nnxTestName, cmd, stdout, stderr)
+    buildFlow = NnxBuildFlowClsMapping[buildFlowName](nnxName)
+    buildFlow.build()
+    stdout = buildFlow.run()
 
     match_success = re.search(r"> Success! No errors found.", stdout)
     match_fail = re.search(r"> Failure! Found (\d*)/(\d*) errors.", stdout)
 
     assert match_success or match_fail, assert_message(
-        "No regexes matched.", nnxTestName, cmd, stdout
+        "No regexes matched.", nnxTestName, stdout
     )
 
     assert not match_fail, assert_message(
         f"Errors found: {match_fail.group(1)}/{match_fail.group(2)}",
         nnxTestName,
-        cmd,
         stdout,
     )
