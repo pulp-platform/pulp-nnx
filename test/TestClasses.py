@@ -97,30 +97,14 @@ class IntegerType(BaseModel):
     def __str__(self) -> str:
         return self.name
 
-    def __eq__(self, __value: object) -> bool:
-        if isinstance(__value, str):
-            return self.name == __value
-        elif isinstance(__value, IntegerType):
-            return self.name == __value.name
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, str):
+            return self.name == other
+        elif isinstance(other, IntegerType):
+            return self.name == other.name
         else:
             return False
 
     @model_serializer
     def ser_model(self) -> str:
         return self.name
-
-    if TYPE_CHECKING:
-        # Ensure type checkers see the correct return type
-        def model_dump(
-            self,
-            *,
-            mode: Literal["json", "python"] | str = "python",
-            include: Any = None,
-            exclude: Any = None,
-            by_alias: bool = False,
-            exclude_unset: bool = False,
-            exclude_defaults: bool = False,
-            exclude_none: bool = False,
-            round_trip: bool = False,
-            warnings: bool = True,
-        ) -> dict[str, Any]: ...

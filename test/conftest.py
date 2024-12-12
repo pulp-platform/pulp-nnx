@@ -22,12 +22,7 @@ from typing import Union
 import pydantic
 import pytest
 
-from NnxMapping import (
-    NnxName,
-    NnxTestConfClsFromName,
-    is_valid_nnx_name,
-    valid_nnx_names,
-)
+from NnxMapping import NnxMapping, NnxName
 from NnxTestClasses import NnxTest, NnxTestGenerator
 from TestClasses import implies
 
@@ -53,8 +48,9 @@ def pytest_addoption(parser):
     parser.addoption(
         "-A",
         "--accelerator",
-        choices=valid_nnx_names(),
-        default="ne16",
+        type=NnxName,
+        choices=list(NnxName),
+        default=NnxName.ne16,
         help="Choose an accelerator to test. Default: ne16",
     )
     parser.addoption(
@@ -82,10 +78,6 @@ def pytest_generate_tests(metafunc):
     timeout = metafunc.config.getoption("timeout")
     nnxName = metafunc.config.getoption("accelerator")
 
-    assert is_valid_nnx_name(
-        nnxName
-    ), f"Given accelerator {nnxName} not supported. Supported accelerators: {valid_nnx_names()}"
-
     if recursive:
         tests_dirs = test_dirs
         test_dirs = []
@@ -94,7 +86,7 @@ def pytest_generate_tests(metafunc):
 
     # Load valid tests
     nnxTestNames = []
-    nnxTestConfCls = NnxTestConfClsFromName(nnxName)
+    nnxTestConfCls = NnxMapping[nnxName].testConfCls
     for test_dir in test_dirs:
         try:
             test = NnxTest.load(nnxTestConfCls, test_dir)

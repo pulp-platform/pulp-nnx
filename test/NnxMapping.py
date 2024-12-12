@@ -1,4 +1,5 @@
-from typing import List, Literal, get_args
+from enum import Enum
+from typing import Dict, NamedTuple, Type
 
 from Ne16TestConf import Ne16TestConf
 from Ne16Weight import Ne16Weight
@@ -6,26 +7,21 @@ from NeurekaTestConf import NeurekaTestConf
 from NeurekaWeight import NeurekaWeight
 from NnxTestClasses import NnxTestConf, NnxWeight
 
-NnxName = Literal["ne16", "neureka"]
+
+class NnxName(Enum):
+    ne16 = "ne16"
+    neureka = "neureka"
+
+    def __str__(self):
+        return self.value
 
 
-def valid_nnx_names() -> List[str]:
-    return get_args(NnxName)
+class NnxAcceleratorClasses(NamedTuple):
+    testConfCls: Type[NnxTestConf]
+    weightCls: Type[NnxWeight]
 
 
-def is_valid_nnx_name(name: str) -> bool:
-    return name in valid_nnx_names()
-
-
-def NnxWeightClsFromName(name: NnxName) -> NnxWeight:
-    if name == "ne16":
-        return Ne16Weight
-    elif name == "neureka":
-        return NeurekaWeight
-
-
-def NnxTestConfClsFromName(name: NnxName) -> NnxTestConf:
-    if name == "ne16":
-        return Ne16TestConf
-    elif name == "neureka":
-        return NeurekaTestConf
+NnxMapping: Dict[NnxName, NnxAcceleratorClasses] = {
+    NnxName.ne16: NnxAcceleratorClasses(Ne16TestConf, Ne16Weight),
+    NnxName.neureka: NnxAcceleratorClasses(NeurekaTestConf, NeurekaWeight),
+}

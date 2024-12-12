@@ -23,7 +23,7 @@ import subprocess
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Type, Union
 
-from NnxMapping import NnxName, NnxTestConfClsFromName, NnxWeightClsFromName
+from NnxMapping import NnxMapping, NnxName
 from NnxTestClasses import NnxTest, NnxTestConf, NnxTestHeaderGenerator, NnxWeight
 
 HORIZONTAL_LINE = "\n" + "-" * 100 + "\n"
@@ -110,20 +110,20 @@ def assert_message(
 
 def test(
     nnxName: NnxName,
-    nnxTestName: Tuple[NnxTest, str],
+    nnxTestName: str,
     timeout: int,
 ):
-    nnxTestConfCls = NnxTestConfClsFromName(nnxName)
-    # conftest.py makes sure the test is valid and generated
-    nnxTest = NnxTest.load(nnxTestConfCls, nnxTestName)
+    testConfCls, weightCls = NnxMapping[nnxName]
 
-    nnxWeightCls = NnxWeightClsFromName(nnxName)
-    NnxTestHeaderGenerator(nnxWeightCls).generate(nnxTestName, nnxTest)
+    # conftest.py makes sure the test is valid and generated
+    nnxTest = NnxTest.load(testConfCls, nnxTestName)
+
+    NnxTestHeaderGenerator(weightCls).generate(nnxTestName, nnxTest)
 
     Path("app/src/nnx_layer.c").touch()
     cmd = f"make -C app all run platform=gvsoc"
     passed, msg, stdout, stderr = execute_command(
-        cmd=cmd, timeout=timeout, envflags={"ACCELERATOR": nnxName}
+        cmd=cmd, timeout=timeout, envflags={"ACCELERATOR": str(nnxName)}
     )
 
     assert passed, assert_message(msg, nnxTestName, cmd, stdout, stderr)
