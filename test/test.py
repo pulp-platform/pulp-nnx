@@ -23,9 +23,8 @@ import subprocess
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Type, Union
 
-from Ne16MemoryLayout import Ne16MemoryLayout
-from NeurekaMemoryLayout import NeurekaMemoryLayout
-from NnxTestClasses import NnxTest, NnxTestConf, NnxTestHeaderGenerator
+from NnxMapping import NnxMapping, NnxName
+from NnxTestClasses import NnxTest, NnxTestConf, NnxTestHeaderGenerator, NnxWeight
 
 HORIZONTAL_LINE = "\n" + "-" * 100 + "\n"
 
@@ -110,20 +109,21 @@ def assert_message(
 
 
 def test(
-    nnxTestAndName: Tuple[NnxTest, str],
+    nnxName: NnxName,
+    nnxTestName: str,
     timeout: int,
-    nnxName: str,
-    nnxMemoryLayoutCls: Union[Type[Ne16MemoryLayout], Type[NeurekaMemoryLayout]],
 ):
-    nnxTest, nnxTestName = nnxTestAndName
-    NnxTestHeaderGenerator(nnxMemoryLayoutCls.weightEncode).generate(
-        nnxTestName, nnxTest
-    )
+    testConfCls, weightCls = NnxMapping[nnxName]
+
+    # conftest.py makes sure the test is valid and generated
+    nnxTest = NnxTest.load(testConfCls, nnxTestName)
+
+    NnxTestHeaderGenerator(weightCls).generate(nnxTestName, nnxTest)
 
     Path("app/src/nnx_layer.c").touch()
     cmd = f"make -C app all run platform=gvsoc"
     passed, msg, stdout, stderr = execute_command(
-        cmd=cmd, timeout=timeout, envflags={"ACCELERATOR": nnxName}
+        cmd=cmd, timeout=timeout, envflags={"ACCELERATOR": str(nnxName)}
     )
 
     assert passed, assert_message(msg, nnxTestName, cmd, stdout, stderr)

@@ -4,6 +4,8 @@
 
 ### Added
 
+- add NnxMapping dictionary that maps accelerator name to the accelerator specific classes
+- choice of data generation method (ones, incremented, or random)
 - N-EUREKA accelerator support: 3x3, 1x1, and 3x3 depthwise convolution kernels
 - Support for kernels without normalization and quantization for NE16
 - isort check
@@ -15,6 +17,8 @@
 
 ### Changed
 
+- conftest now passes only strings to test.py to improve readability of pytest logs
+- NnxMemoryLayout is now NnxWeight and also has a method for source generation
 - the `wmem` field in the test configurations is now required
 - `ne16_task_init` got split into smaller parts: `ne16_task_init`, `ne16_task_set_op_to_conv`, `ne16_task_set_weight_offset`, `ne16_task_set_bits`, `ne16_task_set_norm_quant`
 - strides in `ne16_task_set_strides`, `ne16_task_set_dims`, and `ne16_task_set_ptrs` are now strides between consecutive elements in that dimension
@@ -28,6 +32,7 @@
 
 ### Fixed
 
+- global shift should have been of type uint8 not int32
 - type conversion compiler warning
 
 ## [0.3.0] - 2024-01-14
