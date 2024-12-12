@@ -19,7 +19,6 @@
 from __future__ import annotations
 
 import os
-import typing
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Literal, Optional, Set, Tuple, Type, Union, get_args
@@ -27,13 +26,13 @@ from typing import Literal, Optional, Set, Tuple, Type, Union, get_args
 import numpy as np
 import numpy.typing as npt
 import torch
-from pydantic import BaseModel, PositiveInt, field_validator, model_validator
+from pydantic import BaseModel, PositiveInt, model_validator
 
 from HeaderWriter import HeaderWriter
 from NeuralEngineFunctionalModel import NeuralEngineFunctionalModel
 from TestClasses import IntegerType, KernelShape, Padding, Stride, implies
 
-WmemLiteral = Literal["tcdm", "sram"]
+WmemLiteral = Literal["tcdm", "sram", "mram"]
 
 
 class NnxTestConf(BaseModel):
