@@ -23,6 +23,7 @@ import subprocess
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Type, Union
 
+from NnxMapping import NnxName, NnxTestConfClsFromName, NnxWeightClsFromName
 from NnxTestClasses import NnxTest, NnxTestConf, NnxTestHeaderGenerator, NnxWeight
 
 HORIZONTAL_LINE = "\n" + "-" * 100 + "\n"
@@ -108,12 +109,15 @@ def assert_message(
 
 
 def test(
-    nnxTestAndName: Tuple[NnxTest, str],
+    nnxName: NnxName,
+    nnxTestName: Tuple[NnxTest, str],
     timeout: int,
-    nnxName: str,
-    nnxWeightCls: Type[NnxWeight],
 ):
-    nnxTest, nnxTestName = nnxTestAndName
+    nnxTestConfCls = NnxTestConfClsFromName(nnxName)
+    # conftest.py makes sure the test is valid and generated
+    nnxTest = NnxTest.load(nnxTestConfCls, nnxTestName)
+
+    nnxWeightCls = NnxWeightClsFromName(nnxName)
     NnxTestHeaderGenerator(nnxWeightCls).generate(nnxTestName, nnxTest)
 
     Path("app/src/nnx_layer.c").touch()
