@@ -1,5 +1,4 @@
-########## Stage 1: Large image to build toolchains and emulator ##########
-FROM ubuntu:22.04 AS builder
+FROM ubuntu:22.04
 
 RUN DEBIAN_FRONTEND=noninteractive \
 	apt-get update && \
@@ -21,7 +20,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
 	&& apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
 
-COPY requirements-pip.txt requirements-pulp-sdk.txt ./
+COPY requirements-pip.txt docker/requirements-pulp-sdk.txt ./
 RUN pip3 install --no-cache-dir -r requirements-pip.txt -r requirements-pulp-sdk.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
 ENV PULP_SDK_HOME="/pulp-sdk"
