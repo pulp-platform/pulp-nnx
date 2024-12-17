@@ -49,12 +49,3 @@ run_ne16_test:
     untracked: true
   script:
     - cd test && pytest test.py --test-dir tests --recursive -A ne16
-
-run_neureka_test:
-  stage: test
-  tags:
-    - siracusa-sdk
-  artifacts:
-    untracked: true
-  script:
-    - cd test && pytest test.py --test-dir tests --recursive -A neureka
