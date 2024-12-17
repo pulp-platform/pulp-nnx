@@ -1,0 +1,6 @@
+numpy==1.26.4
+pydantic
+pytest
+torch==1.11.0
+toml
+ninja
