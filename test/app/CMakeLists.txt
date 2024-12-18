@@ -16,7 +16,7 @@ target_include_directories(test-pulp-nnx PRIVATE inc gen/inc)
 
 set(NUM_CORES 8 CACHE STRING "Set the number of cores used. Default 8")
 set(ACCELERATOR neureka CACHE STRING "Choose an accelerator to compile the library for. Default ne16")
-set_property(CACHE ACCELERATOR PROPERTY STRINGS neureka)
+set_property(CACHE ACCELERATOR PROPERTY STRINGS neureka neureka_v2)
 
 add_compile_options(-DNUM_CORES=${NUM_CORES})
 
@@ -26,6 +26,9 @@ target_link_libraries(test-pulp-nnx PRIVATE pulp-sdk)
 if(${ACCELERATOR} STREQUAL neureka)
 	set(USE_NEUREKA ON)
 	target_compile_definitions(test-pulp-nnx PRIVATE NNX_ACCELERATOR="neureka" NNX_NEUREKA)
+elseif(${ACCELERATOR} STREQUAL neureka_v2)
+	set(USE_NEUREKA_V2 ON)
+	target_compile_definitions(test-pulp-nnx PRIVATE NNX_ACCELERATOR="neureka_v2" NNX_NEUREKA_V2)
 else()
 	message(FATAL_ERROR "Unrecognized accelerator detected: \"${ACCELERATOR}\"")
 endif()
