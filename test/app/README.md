@@ -4,7 +4,7 @@
 
 There are two build flows given for the test app, the Make one and the CMake one.
 Both flows use a flag `ACCELERATOR` to decide which accelerator to build the application for.
-Currently, the only choice is _neureka_.
+Choices are _neureka_ and _neureka_v2_.
 
 ### Make
 
