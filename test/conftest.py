@@ -77,6 +77,31 @@ def pytest_addoption(parser):
     )
 
 
+@pytest.fixture
+def timeout(request) -> int:
+    return request.config.getoption("--timeout")
+
+
+@pytest.fixture
+def nnxName(request) -> NnxName:
+    return request.config.getoption("--accelerator")
+
+
+@pytest.fixture
+def buildFlowName(request) -> NnxBuildFlowName:
+    nnxName = request.config.getoption("--accelerator")
+    buildFlowName = request.config.getoption("buildFlowName")
+
+    assert implies(
+        buildFlowName == NnxBuildFlowName.cmake, nnxName == NnxName.neureka_v2
+    ), "The cmake build flow has been tested only with the neureka_v2 accelerator"
+
+    if buildFlowName == NnxBuildFlowName.cmake:
+        CmakeBuildFlow(nnxName).prepare()
+
+    return buildFlowName
+
+
 def _find_test_dirs(path: Union[str, os.PathLike]):
     return [dirpath for dirpath, _, _ in os.walk(path) if NnxTest.is_test_dir(dirpath)]
 
@@ -85,13 +110,7 @@ def pytest_generate_tests(metafunc):
     test_dirs = metafunc.config.getoption("test_dirs")
     recursive = metafunc.config.getoption("recursive")
     regenerate = metafunc.config.getoption("regenerate")
-    timeout = metafunc.config.getoption("timeout")
     nnxName = metafunc.config.getoption("accelerator")
-    buildFlowName = metafunc.config.getoption("buildFlowName")
-
-    assert implies(
-        buildFlowName == NnxBuildFlowName.cmake, nnxName == NnxName.neureka_v2
-    ), "The cmake build flow has been tested only with the neureka_v2 accelerator"
 
     if recursive:
         tests_dirs = test_dirs
@@ -124,10 +143,4 @@ def pytest_generate_tests(metafunc):
                 )
             )
 
-    if buildFlowName == NnxBuildFlowName.cmake:
-        CmakeBuildFlow(nnxName).prepare()
-
-    metafunc.parametrize("nnxName", [nnxName])
-    metafunc.parametrize("buildFlowName", [buildFlowName])
     metafunc.parametrize("nnxTestName", nnxTestNames)
-    metafunc.parametrize("timeout", [timeout])
