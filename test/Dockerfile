@@ -31,6 +31,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
 		libtool \
 		patchutils \
 		python3 \
+		python3-pip \
 		texinfo \
 		zlib1g-dev \
 	&& apt-get clean && \
