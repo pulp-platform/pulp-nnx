@@ -30,82 +30,8 @@ from NnxTestClasses import NnxTest, NnxTestConf, NnxTestHeaderGenerator, NnxWeig
 HORIZONTAL_LINE = "\n" + "-" * 100 + "\n"
 
 
-def try_decode(stream: Optional[Union[bytes, str]]) -> Optional[str]:
-    if stream is None:
-        return None
-    elif isinstance(stream, str):
-        return stream
-    elif isinstance(stream, bytes):
-        _, encoding = locale.getlocale()
-        assert encoding is not None, "ERROR: locale encoding is None"
-        return stream.decode(encoding)
-    else:
-        assert False, f"ERROR: Unexpected datatype {type(stream)} of stream."
-
-
-def captured_output(
-    exception: Union[subprocess.CalledProcessError, subprocess.TimeoutExpired]
-) -> Tuple[Optional[str], Optional[str]]:
-    stdout = try_decode(exception.stdout)
-    stderr = try_decode(exception.stderr)
-    return stdout, stderr
-
-
-def execute_command(
-    cmd: str,
-    timeout: int = 30,
-    cflags: Optional[str] = None,
-    envflags: Optional[Dict[str, str]] = None,
-) -> Tuple[bool, str, str, Optional[str]]:
-    env = os.environ
-    if cflags:
-        env["APP_CFLAGS"] = '"' + " ".join(cflags) + '"'
-    if envflags:
-        for key, value in envflags.items():
-            env[key] = value
-
-    status = None
-    stdout = None
-
-    try:
-        proc = subprocess.run(
-            cmd.split(),
-            check=True,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            env=env,
-        )
-        status = True
-        msg = "OK"
-        stdout = proc.stdout
-        stderr = proc.stderr
-    except subprocess.CalledProcessError as e:
-        status = False
-        msg = f"Build failed with exit status {e.returncode}."
-        stdout, stderr = captured_output(e)
-    except subprocess.TimeoutExpired as e:
-        status = False
-        msg = f"Timeout after {timeout}s."
-        stdout, stderr = captured_output(e)
-
-    if stdout is None:
-        stdout = "<no stdout>"
-
-    return status, msg, stdout, stderr
-
-
-def assert_message(msg: str, test_name: str, stdout: str, stderr: Optional[str] = None):
-    retval = (
-        f"Test {test_name} failed: {msg}\n"
-        + HORIZONTAL_LINE
-        + f"\nCaptured stdout:\n{stdout}\n"
-    )
-
-    if stderr is not None:
-        retval += f"\nCaptured stderr:\n{stderr}\n"
-
-    return retval
+def assert_message(msg: str, test_name: str, stdout: str):
+    return f"Test {test_name} failed: {msg}\n" + HORIZONTAL_LINE + f"\nCaptured stdout:\n{stdout}\n"
 
 
 def test(
