@@ -20,6 +20,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
 		build-essential \
 		ca-certificates \
 		curl \
+		cmake \
 		flex \
 		gawk \
 		git \
@@ -45,8 +46,8 @@ COPY docker/build_riscv_gnu_toolchain.sh ./
 RUN ./build_riscv_gnu_toolchain.sh
 
 # Build pulp-sdk
-COPY docker/requirements-pulp-sdk.txt ./
-RUN pip3 install --no-cache-dir -r requirements-pulp-sdk.txt
+COPY docker/requirements-build-pulp-sdk.txt docker/requirements-run-pulp-sdk.txt ./
+RUN pip3 install --no-cache-dir -r requirements-build-pulp-sdk.txt -r requirements-run-pulp-sdk.txt
 ENV PULP_RISCV_GCC_TOOLCHAIN=${TOOLCHAIN_GNU_INSTALL_DIR}
 COPY docker/get_pulp_sdk.sh ./
 RUN ./get_pulp_sdk.sh
@@ -68,6 +69,9 @@ RUN DEBIAN_FRONTEND=noninteractive \
 		cmake \
 		curl \
 		git \
+		libgmp-dev \
+		libmpc-dev \
+		libmpfr-dev \
 		make \
 		python3 \
 		python3-pip \
@@ -76,11 +80,11 @@ RUN DEBIAN_FRONTEND=noninteractive \
 	&& apt-get clean && \
 	rm -rf /var/lib/apt/lists/*
 
-COPY requirements-pip.txt docker/requirements-pulp-sdk.txt ./
-RUN pip3 install --no-cache-dir -r requirements-pip.txt -r requirements-pulp-sdk.txt --extra-index-url https://download.pytorch.org/whl/cpu
+COPY requirements-pip.txt docker/requirements-run-pulp-sdk.txt ./
+RUN pip3 install --no-cache-dir -r requirements-pip.txt -r requirements-run-pulp-sdk.txt --extra-index-url https://download.pytorch.org/whl/cpu
 
 ENV PULP_SDK_HOME="/pulp-sdk"
 ENV PULP_RISCV_GCC_TOOLCHAIN=${TOOLCHAIN_GNU_INSTALL_DIR}
 
 COPY --from=builder ${TOOLCHAIN_GNU_INSTALL_DIR} ${TOOLCHAIN_GNU_INSTALL_DIR}
-COPY --from=builder /pulp-sdk ./
+COPY --from=builder /pulp-sdk /pulp-sdk
