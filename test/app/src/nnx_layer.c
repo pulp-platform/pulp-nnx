@@ -110,12 +110,19 @@ typedef neureka_task_flag_e nnx_task_flag_e;
 #endif // NNX_NE16 || NNX_NEUREKA
 
 // Generated headers
-#include "bias.h"
 #include "input.h"
-#include "layer_conf.h"
 #include "output.h"
-#include "scale.h"
 #include "weight.h"
+
+#include "layer_conf.h"
+
+// The HAS_NORM_QUANT and HAS_BIAS are defined in layer_conf.h
+#if HAS_NORM_QUANT != 0
+#include "scale.h"
+#if HAS_BIAS != 0
+#include "bias.h"
+#endif
+#endif
 
 static void task_prepare(nnx_task_t *task) {
   nnx_task_init(task);
