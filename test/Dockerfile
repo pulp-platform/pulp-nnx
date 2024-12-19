@@ -20,6 +20,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
 		build-essential \
 		ca-certificates \
 		curl \
+		cmake \
 		flex \
 		gawk \
 		git \
