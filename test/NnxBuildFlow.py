@@ -55,7 +55,7 @@ class MakeBuildFlow(NnxBuildFlow):
 
 class CmakeBuildFlow(NnxBuildFlow):
     BINARY_NAME = "test-pulp-nnx"
-    TOOLCHAIN_FILE = "cmake/toolchain_llvm.cmake"
+    TOOLCHAIN_FILE = "cmake/toolchain_gnu.cmake"
     GVSOC_TARGET = "siracusa"
 
     def __init__(self, nnxName: NnxName) -> None:
