@@ -32,8 +32,8 @@ def assert_message(msg: str, test_name: str, stdout: str):
 def test(
     nnxName: NnxName,
     buildFlowName: NnxBuildFlowName,
-    nnxTestName: str,
     wmem: NnxWmem,
+    nnxTestName: str,
 ):
     testConfCls, weightCls = NnxMapping[nnxName]
 

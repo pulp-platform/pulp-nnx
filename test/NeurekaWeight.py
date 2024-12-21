@@ -17,6 +17,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import List
 import numpy as np
 import numpy.typing as npt
 
@@ -28,6 +29,10 @@ class NeurekaWeight(NnxWeight):
     _WEIGHT_BANDWIDTH = 256
     _CIN_SUBTILE_1x1 = 32
     _CIN_SUBTILE_3x3 = 28
+
+    @classmethod
+    def supported_wmem(cls) -> List[NnxWmem]:
+        return [NnxWmem.tcdm, NnxWmem.sram]
 
     def encode(
         self, weight: npt.NDArray[np.uint8], bits: int, depthwise: bool = False
