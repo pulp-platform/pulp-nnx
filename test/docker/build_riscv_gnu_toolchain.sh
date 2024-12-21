@@ -6,4 +6,4 @@ set -euo pipefail
 mkdir -p $TOOLCHAIN_GNU_INSTALL_DIR
 cd riscv-gnu-toolchain
 ./configure --prefix=$TOOLCHAIN_GNU_INSTALL_DIR --with-arch=rv32imfcxpulpv3 --with-abi=ilp32 --enable-multilib
-make
+make -j 8

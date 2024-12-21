@@ -96,3 +96,6 @@ COPY --from=builder /gvsoc/install /gvsoc
 
 ENV TOOLCHAIN_GNU_INSTALL_DIR=${TOOLCHAIN_GNU_INSTALL_DIR}
 ENV GVSOC="/gvsoc/bin/gvsoc"
+
+COPY docker/requirements-run-gvsoc.txt ./
+RUN pip3 install --no-cache-dir -r requirements-run-gvsoc.txt
