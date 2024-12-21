@@ -62,12 +62,6 @@ def pytest_addoption(parser):
         help="Save the generated test data to their respective folders.",
     )
     parser.addoption(
-        "--timeout",
-        type=int,
-        default=120,
-        help="Execution timeout in seconds. Default: 120s",
-    )
-    parser.addoption(
         "--build-flow",
         dest="buildFlowName",
         type=NnxBuildFlowName,
@@ -75,11 +69,6 @@ def pytest_addoption(parser):
         default=NnxBuildFlowName.make,
         help="Choose the build flow. Default: make",
     )
-
-
-@pytest.fixture
-def timeout(request) -> int:
-    return request.config.getoption("--timeout")
 
 
 @pytest.fixture

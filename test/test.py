@@ -38,7 +38,6 @@ def test(
     nnxName: NnxName,
     buildFlowName: NnxBuildFlowName,
     nnxTestName: str,
-    timeout: int,
 ):
     testConfCls, weightCls = NnxMapping[nnxName]
 
