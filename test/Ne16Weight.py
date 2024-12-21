@@ -16,6 +16,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import List
 import numpy as np
 import numpy.typing as npt
 
@@ -25,6 +26,10 @@ from NnxTestClasses import NnxWeight, NnxWmem
 
 class Ne16Weight(NnxWeight):
     _CIN_SUBTILE = 16
+
+    @classmethod
+    def supported_wmem(cls) -> List[NnxWmem]:
+        return [NnxWmem.tcdm]
 
     def encode(
         self, weight: npt.NDArray[np.uint8], bits: int, depthwise: bool = False

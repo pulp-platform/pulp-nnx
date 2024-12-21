@@ -21,7 +21,7 @@ from __future__ import annotations
 import os
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Literal, Optional, Set, Tuple, Type, Union, get_args
+from typing import List, Literal, Optional, Set, Tuple, Type, Union, get_args
 
 import numpy as np
 import numpy.typing as npt
@@ -359,7 +359,18 @@ class NnxTestGenerator:
 class NnxWeight(ABC):
 
     def __init__(self, wmem: NnxWmem) -> None:
+        assert self.valid_wmem(wmem), f'Unsupported weight memory destination: {wmem}. Supported: {self.supported_wmem()}'
         self.wmem = wmem
+
+    @classmethod
+    def valid_wmem(cls, wmem: NnxWmem) -> bool:
+        return wmem in cls.supported_wmem()
+
+    @classmethod
+    @abstractmethod
+    def supported_wmem(cls) -> List[NnxWmem]:
+        """Returns a list of supported wmem"""
+        ...
 
     @abstractmethod
     def encode(
@@ -524,6 +535,6 @@ class NnxTestHeaderGenerator:
                 "has_norm_quant": test.conf.has_norm_quant,
                 "has_bias": test.conf.has_bias,
                 "has_relu": test.conf.has_relu,
-                f"wmem_{test.conf.wmem}": None,
+                f"wmem_{self.nnxWeight.wmem}": None,
             },
         )
