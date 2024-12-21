@@ -16,16 +16,11 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-import locale
-import os
 import re
-import subprocess
-from pathlib import Path
-from typing import Dict, Literal, Optional, Tuple, Type, Union
 
 from NnxBuildFlow import NnxBuildFlowClsMapping, NnxBuildFlowName
 from NnxMapping import NnxMapping, NnxName
-from NnxTestClasses import NnxTest, NnxTestConf, NnxTestHeaderGenerator, NnxWeight
+from NnxTestClasses import NnxTest, NnxTestHeaderGenerator
 
 HORIZONTAL_LINE = "\n" + "-" * 100 + "\n"
 
