@@ -25,6 +25,5 @@
     },
     "has_norm_quant": true,
     "has_bias": true,
-    "has_relu": false,
-    "wmem": "sram"
+    "has_relu": false
 }
