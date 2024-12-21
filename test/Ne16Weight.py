@@ -20,15 +20,14 @@ import numpy as np
 import numpy.typing as npt
 
 from HeaderWriter import HeaderWriter
-from NnxTestClasses import NnxWeight, WmemLiteral
+from NnxTestClasses import NnxWeight, NnxWmem
 
 
 class Ne16Weight(NnxWeight):
     _CIN_SUBTILE = 16
 
-    @staticmethod
     def encode(
-        weight: npt.NDArray[np.uint8], bits: int, depthwise: bool = False
+        self, weight: npt.NDArray[np.uint8], bits: int, depthwise: bool = False
     ) -> npt.NDArray[np.uint8]:
         """Unroll weight into expected memory format
 
@@ -76,8 +75,8 @@ class Ne16Weight(NnxWeight):
         # (-1, )
         return weight.flatten()
 
-    @staticmethod
     def decode(
+        self,
         weight: npt.NDArray[np.uint8],
         bits: int,
         cout: int,
@@ -99,11 +98,10 @@ class Ne16Weight(NnxWeight):
 
         return weight
 
-    @staticmethod
     def source_generate(
-        wmem: WmemLiteral, init: npt.NDArray[np.uint8], header_writer: HeaderWriter
+        self, init: npt.NDArray[np.uint8], header_writer: HeaderWriter
     ) -> None:
-        assert wmem == "tcdm", f"Invalid wmem source provided: {wmem}"
+        assert self.wmem == NnxWmem.tcdm, f"Unsupported weight memory destination {self.wmem}"
         section = "PI_L1"
 
         header_writer.generate_vector_files(

@@ -17,7 +17,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import os
-import subprocess
 from typing import Union
 
 import pydantic
@@ -25,7 +24,7 @@ import pytest
 
 from NnxBuildFlow import CmakeBuildFlow, NnxBuildFlowName
 from NnxMapping import NnxMapping, NnxName
-from NnxTestClasses import NnxTest, NnxTestGenerator
+from NnxTestClasses import NnxTest, NnxTestGenerator, NnxWmem
 from TestClasses import implies
 
 
@@ -69,6 +68,14 @@ def pytest_addoption(parser):
         default=NnxBuildFlowName.make,
         help="Choose the build flow. Default: make",
     )
+    parser.addoption(
+        "--wmem",
+        dest="wmem",
+        type=NnxWmem,
+        choices=list(NnxWmem),
+        default=NnxWmem.tcdm,
+        help="Choose the weight memory destination. Default: tcdm",
+    )
 
 
 @pytest.fixture
@@ -89,6 +96,11 @@ def buildFlowName(request) -> NnxBuildFlowName:
         CmakeBuildFlow(nnxName).prepare()
 
     return buildFlowName
+
+
+@pytest.fixture
+def wmem(request) -> NnxWmem:
+    return request.config.getoption("wmem")
 
 
 def _find_test_dirs(path: Union[str, os.PathLike]):

@@ -32,7 +32,14 @@ from HeaderWriter import HeaderWriter
 from NeuralEngineFunctionalModel import NeuralEngineFunctionalModel
 from TestClasses import IntegerType, KernelShape, Padding, Stride, implies
 
-WmemLiteral = Literal["tcdm", "sram", "mram"]
+
+class NnxWmem(Enum):
+    tcdm = "tcdm"
+    sram = "sram"
+    mram = "mram"
+
+    def __str__(self) -> str:
+        return self.value
 
 
 class NnxTestConf(BaseModel):
@@ -52,7 +59,6 @@ class NnxTestConf(BaseModel):
     has_norm_quant: bool
     has_bias: bool
     has_relu: bool
-    wmem: WmemLiteral
 
     @model_validator(mode="after")  # type: ignore
     def check_valid_depthwise_channels(self) -> NnxTestConf:
@@ -352,10 +358,12 @@ class NnxTestGenerator:
 
 class NnxWeight(ABC):
 
-    @staticmethod
+    def __init__(self, wmem: NnxWmem) -> None:
+        self.wmem = wmem
+
     @abstractmethod
     def encode(
-        weight: npt.NDArray[np.uint8], bits: int, depthwise: bool = False
+        self, weight: npt.NDArray[np.uint8], bits: int, depthwise: bool = False
     ) -> npt.NDArray[np.uint8]:
         """Unroll weight into expected memory format
 
@@ -363,9 +371,9 @@ class NnxWeight(ABC):
         """
         ...
 
-    @staticmethod
     @abstractmethod
     def decode(
+        self,
         weight: npt.NDArray[np.uint8],
         bits: int,
         cout: int,
@@ -376,10 +384,9 @@ class NnxWeight(ABC):
         """Reverse of encode"""
         ...
 
-    @staticmethod
     @abstractmethod
     def source_generate(
-        wmem: WmemLiteral, init: npt.NDArray[np.uint8], header_writer: HeaderWriter
+        self, init: npt.NDArray[np.uint8], header_writer: HeaderWriter
     ) -> None:
         """Function implementing generation of weight's sources"""
         ...
@@ -390,7 +397,7 @@ class NnxTestHeaderGenerator:
 
     def __init__(
         self,
-        nnxWeightCls: Type[NnxWeight],
+        nnxWeight: NnxWeight,
         headers_dir: Optional[Union[str, os.PathLike]] = None,
     ):
         if headers_dir is None:
@@ -398,7 +405,7 @@ class NnxTestHeaderGenerator:
         self.header_writer = HeaderWriter(headers_dir)
         # function that takes the weights in CoutCinK format, bitwidth, and a depthwise flag,
         # and returns a numpy array of dtype=np.uint8 of data in a layout correct for the accelerator
-        self.nnxWeightCls = nnxWeightCls
+        self.nnxWeight = nnxWeight
 
     def generate(self, test_name: str, test: NnxTest):
         assert test.input is not None and test.output is not None
@@ -432,14 +439,14 @@ class NnxTestHeaderGenerator:
         weight_offset = -(2 ** (weight_bits - 1))
         weight_out_ch, weight_in_ch, weight_ks_h, weight_ks_w = test.weight.shape
         weight_data: np.ndarray = test.weight.numpy() - weight_offset
-        weight_init = self.nnxWeightCls.encode(
+        weight_init = self.nnxWeight.encode(
             weight_data.astype(np.uint8),
             weight_type._bits,
             test.conf.depthwise,
         )
 
-        self.nnxWeightCls.source_generate(
-            test.conf.wmem, weight_init, self.header_writer
+        self.nnxWeight.source_generate(
+            weight_init, self.header_writer
         )
 
         # Render scale

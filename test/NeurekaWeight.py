@@ -21,7 +21,7 @@ import numpy as np
 import numpy.typing as npt
 
 from HeaderWriter import HeaderWriter
-from NnxTestClasses import NnxWeight, WmemLiteral
+from NnxTestClasses import NnxWeight, NnxWmem
 
 
 class NeurekaWeight(NnxWeight):
@@ -29,9 +29,8 @@ class NeurekaWeight(NnxWeight):
     _CIN_SUBTILE_1x1 = 32
     _CIN_SUBTILE_3x3 = 28
 
-    @staticmethod
     def encode(
-        weight: npt.NDArray[np.uint8], bits: int, depthwise: bool = False
+        self, weight: npt.NDArray[np.uint8], bits: int, depthwise: bool = False
     ) -> npt.NDArray[np.uint8]:
         """Unroll weight into expected memory format
 
@@ -118,8 +117,8 @@ class NeurekaWeight(NnxWeight):
         # (-1, )
         return weight.flatten()
 
-    @staticmethod
     def decode(
+        self,
         weight: npt.NDArray[np.uint8],
         bits: int,
         cout: int,
@@ -157,16 +156,17 @@ class NeurekaWeight(NnxWeight):
 
         return weight
 
-    @staticmethod
     def source_generate(
-        wmem: WmemLiteral, init: npt.NDArray[np.uint8], header_writer: HeaderWriter
+        self, init: npt.NDArray[np.uint8], header_writer: HeaderWriter
     ) -> None:
-        if wmem == "sram":
+        if self.wmem == NnxWmem.sram:
             section = '__attribute__((section(".weightmem_sram")))'
-        elif wmem == "mram":
+        elif self.wmem == NnxWmem.mram:
             section = '__attribute__((section(".weightmem_mram")))'
-        else:
+        elif self.wmem == NnxWmem.tcdm:
             section = "PI_L1"
+        else:
+            assert False, f"Unsupported weight memory destination {self.wmem}"
 
         header_writer.generate_vector_files(
             "weight",

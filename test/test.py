@@ -20,7 +20,7 @@ import re
 
 from NnxBuildFlow import NnxBuildFlowClsMapping, NnxBuildFlowName
 from NnxMapping import NnxMapping, NnxName
-from NnxTestClasses import NnxTest, NnxTestHeaderGenerator
+from NnxTestClasses import NnxTest, NnxTestHeaderGenerator, NnxWmem
 
 HORIZONTAL_LINE = "\n" + "-" * 100 + "\n"
 
@@ -33,13 +33,14 @@ def test(
     nnxName: NnxName,
     buildFlowName: NnxBuildFlowName,
     nnxTestName: str,
+    wmem: NnxWmem,
 ):
     testConfCls, weightCls = NnxMapping[nnxName]
 
     # conftest.py makes sure the test is valid and generated
     nnxTest = NnxTest.load(testConfCls, nnxTestName)
 
-    NnxTestHeaderGenerator(weightCls).generate(nnxTestName, nnxTest)
+    NnxTestHeaderGenerator(weightCls(wmem)).generate(nnxTestName, nnxTest)
 
     buildFlow = NnxBuildFlowClsMapping[buildFlowName](nnxName)
     buildFlow.build()
