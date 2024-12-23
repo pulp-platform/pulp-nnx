@@ -1,4 +1,4 @@
-name: Test Neureka
+name: Test Neureka v2
 on: push
 jobs:
   test:
@@ -11,6 +11,4 @@ jobs:
         shell: bash
         working-directory: test
         run: |
-          source /pulp-sdk/configs/siracusa.sh
-          pytest test.py -T tests -R -A neureka --build-flow=make --wmem=tcdm
-          pytest test.py -T tests -R -A neureka --build-flow=make --wmem=sram
+          pytest test.py -T tests -R -A neureka_v2 --build-flow=cmake --wmem=mram
