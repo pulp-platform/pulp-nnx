@@ -3,11 +3,13 @@ on: push
 jobs:
   python-lint:
     runs-on: ubuntu-latest
-    working-directory: test
     steps:
       - uses: actions/checkout@v4
       - uses: psf/black@stable
+        working-directory: test
       - uses: jakebailey/pyright-action@v2
+        working-directory: test
       - uses: isort/isort-action@v1
+        working-directory: test
         with:
             requirements-files: "requirements-pip.txt"
