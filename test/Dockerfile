@@ -52,6 +52,10 @@ ENV PULP_RISCV_GCC_TOOLCHAIN=${TOOLCHAIN_GNU_INSTALL_DIR}
 COPY docker/get_pulp_sdk.sh ./
 RUN ./get_pulp_sdk.sh
 
+# Build gvsoc
+COPY docker/clone_and_build_gvsoc.sh ./
+RUN ./clone_and_build_gvsoc.sh
+
 
 # Minimal image
 FROM ubuntu:22.04
@@ -88,3 +92,10 @@ ENV PULP_RISCV_GCC_TOOLCHAIN=${TOOLCHAIN_GNU_INSTALL_DIR}
 
 COPY --from=builder ${TOOLCHAIN_GNU_INSTALL_DIR} ${TOOLCHAIN_GNU_INSTALL_DIR}
 COPY --from=builder /pulp-sdk /pulp-sdk
+COPY --from=builder /gvsoc/install /gvsoc
+
+ENV TOOLCHAIN_GNU_INSTALL_DIR=${TOOLCHAIN_GNU_INSTALL_DIR}
+ENV GVSOC="/gvsoc/bin/gvsoc"
+
+COPY docker/requirements-run-gvsoc.txt ./
+RUN pip3 install --no-cache-dir -r requirements-run-gvsoc.txt
