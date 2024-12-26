@@ -8,10 +8,10 @@ jobs:
       - uses: psf/black@stable
         with:
           src: "test"
+      - uses: jakebailey/pyright-action@v2
+        with:
+          working-directory: test
       - uses: isort/isort-action@v1
         with:
           sort-paths: "test"
           requirements-files: "requirements-pip.txt"
-      - uses: jakebailey/pyright-action@v2
-        with:
-          working-directory: test
