@@ -1,5 +1,5 @@
 name: "Test Ne16 (GitLab)"
-on: pull_request
+on: push
 jobs:
   gitlab-ci:
     runs-on: ubuntu-latest
