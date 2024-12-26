@@ -1,0 +1,23 @@
+name: Linting
+on: push
+jobs:
+  python-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: psf/black@stable
+        with:
+          src: "test"
+      # Needed by pyright
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10' 
+          cache: 'pip'
+      - run: |
+          pip install -r test/requirements.txt
+      - uses: jakebailey/pyright-action@v2
+        with:
+          working-directory: test
+      - uses: isort/isort-action@v1
+        with:
+          sort-paths: "test"

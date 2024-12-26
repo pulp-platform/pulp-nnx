@@ -1,7 +1,5 @@
-name: gitlab-ci
-
-on: [ push, pull_request, workflow_dispatch ]
-
+name: "Test Ne16 (GitLab)"
+on: pull_request
 jobs:
   gitlab-ci:
     runs-on: ubuntu-latest
