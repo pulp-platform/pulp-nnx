@@ -14,7 +14,7 @@ jobs:
           python-version: '3.10' 
           cache: 'pip'
       - run: |
-          pip install -r test/requirements-pip.txt
+          pip install -r test/requirements.txt
       - uses: jakebailey/pyright-action@v2
         with:
           working-directory: test
