@@ -106,7 +106,9 @@ class Ne16Weight(NnxWeight):
     def source_generate(
         self, init: npt.NDArray[np.uint8], header_writer: HeaderWriter
     ) -> None:
-        assert self.wmem == NnxWmem.tcdm, f"Unsupported weight memory destination {self.wmem}"
+        assert (
+            self.wmem == NnxWmem.tcdm
+        ), f"Unsupported weight memory destination {self.wmem}"
         section = "PI_L1"
 
         header_writer.generate_vector_files(

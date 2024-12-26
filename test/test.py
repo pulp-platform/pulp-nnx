@@ -26,7 +26,11 @@ HORIZONTAL_LINE = "\n" + "-" * 100 + "\n"
 
 
 def assert_message(msg: str, test_name: str, stdout: str):
-    return f"Test {test_name} failed: {msg}\n" + HORIZONTAL_LINE + f"\nCaptured stdout:\n{stdout}\n"
+    return (
+        f"Test {test_name} failed: {msg}\n"
+        + HORIZONTAL_LINE
+        + f"\nCaptured stdout:\n{stdout}\n"
+    )
 
 
 def test(

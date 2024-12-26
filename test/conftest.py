@@ -103,7 +103,9 @@ def wmem(request) -> NnxWmem:
     _wmem = request.config.getoption("wmem")
     nnxName = request.config.getoption("accelerator")
     _, weightCls = NnxMapping[nnxName]
-    assert weightCls.valid_wmem(_wmem), f'Unsupported weight memory destination: {_wmem}. Supported: {weightCls.supported_wmem()}'
+    assert weightCls.valid_wmem(
+        _wmem
+    ), f"Unsupported weight memory destination: {_wmem}. Supported: {weightCls.supported_wmem()}"
     return _wmem
 
 

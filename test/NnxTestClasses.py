@@ -359,7 +359,9 @@ class NnxTestGenerator:
 class NnxWeight(ABC):
 
     def __init__(self, wmem: NnxWmem) -> None:
-        assert self.valid_wmem(wmem), f'Unsupported weight memory destination: {wmem}. Supported: {self.supported_wmem()}'
+        assert self.valid_wmem(
+            wmem
+        ), f"Unsupported weight memory destination: {wmem}. Supported: {self.supported_wmem()}"
         self.wmem = wmem
 
     @classmethod
@@ -456,9 +458,7 @@ class NnxTestHeaderGenerator:
             test.conf.depthwise,
         )
 
-        self.nnxWeight.source_generate(
-            weight_init, self.header_writer
-        )
+        self.nnxWeight.source_generate(weight_init, self.header_writer)
 
         # Render scale
         if test.scale is not None:
