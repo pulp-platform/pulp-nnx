@@ -1,0 +1,13 @@
+name: Test Neureka
+on: push
+jobs:
+  python-lint:
+    runs-on: ubuntu-latest
+    working-directory: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: psf/black@stable
+      - uses: jakebailey/pyright-action@v2
+      - uses: isort/isort-action@v1
+        with:
+            requirements-files: "requirements-pip.txt"
