@@ -40,10 +40,12 @@ typedef enum neureka_v2_gvsoc_log_level_e {
   NEUREKA_V2_GVSOC_LOG_LEVEL_ALL = 3
 } neureka_v2_gvsoc_log_level_e;
 
-static void neureka_v2_gvsoc_log_activate(const neureka_v2_dev_t *dev,
-                                       neureka_v2_gvsoc_log_level_e log_level,
-                                       neureka_v2_gvsoc_log_format_e format) {
-  hwpe_task_reg_write(&dev->hwpe_dev, NEUREKA_V2_REG_GVSOC_LOG_LEVEL, log_level);
+static void
+neureka_v2_gvsoc_log_activate(const neureka_v2_dev_t *dev,
+                              neureka_v2_gvsoc_log_level_e log_level,
+                              neureka_v2_gvsoc_log_format_e format) {
+  hwpe_task_reg_write(&dev->hwpe_dev, NEUREKA_V2_REG_GVSOC_LOG_LEVEL,
+                      log_level);
   hwpe_task_reg_write(&dev->hwpe_dev, NEUREKA_V2_REG_GVSOC_LOG_FORMAT, format);
 }
 

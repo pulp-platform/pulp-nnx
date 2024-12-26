@@ -40,7 +40,7 @@ int main() {
 
   printf("\n");
   layer_info();
-  
+
 #ifdef NNX_NEUREKA_V2
   // We have to initialize the mram/sram weight memory from l2
   memcpy((void *)weight, (void *)weight_l2, WEIGHT_SIZE);

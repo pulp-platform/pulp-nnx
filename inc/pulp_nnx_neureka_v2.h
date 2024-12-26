@@ -25,7 +25,8 @@
 
 /* PULP-NNX interface */
 
-void neureka_v2_nnx_init(const neureka_v2_dev_t *dev, neureka_v2_siracusa_conf_t *conf);
+void neureka_v2_nnx_init(const neureka_v2_dev_t *dev,
+                         neureka_v2_siracusa_conf_t *conf);
 void neureka_v2_nnx_term(const neureka_v2_dev_t *dev);
 
 /** neureka_v2_nnx_dispatch_check
@@ -46,16 +47,19 @@ void neureka_v2_nnx_dispatch_wait(const neureka_v2_dev_t *dev);
  * Fails with return code 1 if the task cannot be dispatched. Otherwise returns
  * 0.
  */
-int neureka_v2_nnx_dispatch(const neureka_v2_dev_t *dev, neureka_v2_task_t *task);
+int neureka_v2_nnx_dispatch(const neureka_v2_dev_t *dev,
+                            neureka_v2_task_t *task);
 
 /** neureka_v2_nnx_resolve_check
  *
  * Check whether the task has been resolved.
  */
-int neureka_v2_nnx_resolve_check(const neureka_v2_dev_t *dev, neureka_v2_task_t *task);
+int neureka_v2_nnx_resolve_check(const neureka_v2_dev_t *dev,
+                                 neureka_v2_task_t *task);
 
 /** neureka_v2_nnx_resolve_wait
  *
  * Block until you can resolve the task.
  */
-void neureka_v2_nnx_resolve_wait(const neureka_v2_dev_t *dev, neureka_v2_task_t *task);
+void neureka_v2_nnx_resolve_wait(const neureka_v2_dev_t *dev,
+                                 neureka_v2_task_t *task);
