@@ -3,7 +3,6 @@ on: push
 jobs:
   python-lint:
     runs-on: ubuntu-latest
-    container: ghcr.io/pulp-platform/pulp-nnx:main-test
     steps:
       - uses: actions/checkout@v4
       - uses: psf/black@stable
