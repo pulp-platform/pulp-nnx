@@ -1,4 +1,4 @@
-name: "[GitLab] Ne16 tests"
+name: "Test Ne16 (GitLab)"
 on: pull_request
 jobs:
   gitlab-ci:
