@@ -41,6 +41,7 @@ _Note: The accelerator can provide additional helper functions if needed._
 
 - [NE16](ne16/README.md)
 - [Neureka](neureka/README.md)
+- [Neureka v2](neureka_v2/README.md)
 
 ## Testing
 
@@ -50,15 +51,15 @@ You can find information about testing in the dedicated [README](test/README.md)
 
 The library was tested with following pairs of SDKs and compilers:
 
-| SDK | SDK Commit Hash | Compiler | Compiler Commit Hash |
-| --- | --------------- | -------- | -------------------- |
-| gap\_sdk (obtainable from GreenWaves Technologies) | 90df4ce219 | [gap\_gnu\_toolchain](https://github.com/GreenWaves-Technologies/gap_gnu_toolchain) | 360fd4f9d6 |
-| [pulp-sdk](https://github.com/Scheremo/pulp-sdk) | c216298881 | [pulp-riscv-gnu-toolchain](https://github.com/pulp-platform/pulp-riscv-gnu-toolchain) | 9938bd8fcf (release v1.0.16) |
+| Accelerator | SDK | SDK Commit Hash | Compiler | Compiler Commit Hash |
+| ----------- | --- | --------------- | -------- | -------------------- |
+| NE16 | gap\_sdk (obtainable from GreenWaves Technologies) | 90df4ce219 | [gap\_gnu\_toolchain](https://github.com/GreenWaves-Technologies/gap_gnu_toolchain) | 360fd4f9d6 |
+| Neureka, Neureka v2 | [pulp-sdk](https://github.com/Scheremo/pulp-sdk) | c216298881 | [riscv-gnu-toolchain](https://github.com/pulp-platform/riscv-gnu-toolchain.git) | 11ba51e (release v2.6.0) |
 
 ## Contributing
 
 Bug reports and feature requests should be reported through issues.
-All the development should be done through forks and merged onto the `dev` branch with pull requests.
+All the development should be done through forks and merged onto the `main` branch with pull requests.
 
 ## Versioning
 

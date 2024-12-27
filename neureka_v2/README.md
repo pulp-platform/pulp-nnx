@@ -1,8 +1,8 @@
-# Neureka
+# Neureka v2
 
 ## Docs
 
-Gvsoc model repo [link](https://github.com/gvsoc/gvsoc-pulp/tree/prasadar/siracusa/pulp/neureka).
+Gvsoc model repo [link](https://github.com/lukamac/gvsoc-pulp/tree/fix-vectorload).
 
 ## Implemented features
 
@@ -11,7 +11,7 @@ Gvsoc model repo [link](https://github.com/gvsoc/gvsoc-pulp/tree/prasadar/siracu
 - [x] Depthwise convolution w/ kernel shape 3x3
 - [ ] Normalization and quantization
     - [x] With
-    - [x] Without
+    - [ ] Without
     - [x] Relu (w/ and w/o)
     - [x] Bias (w/ and w/o)
     - [ ] Per-channel shift
@@ -22,13 +22,16 @@ Gvsoc model repo [link](https://github.com/gvsoc/gvsoc-pulp/tree/prasadar/siracu
 - [x] Output type
     - [x] int8
     - [x] uint8 (only w/ Relu)
-    - [x] int32
+    - [ ] int32
 - [x] Scale type
-    - [x] uint8
-    - [x] uint32
+    - [x] int8
+    - [ ] int32
 - [x] Bias type
     - [x] int32
 - [ ] Weight type
     - [x] int8
     - [ ] int2-7
-- [x] Dedicated weight memory
+- [ ] Weight memory
+    - [ ] Shared TCDM
+    - [x] Private SRAM
+    - [x] Private MRAM
