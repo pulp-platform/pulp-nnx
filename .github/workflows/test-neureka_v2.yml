@@ -1,0 +1,14 @@
+name: Test Neureka v2
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: ghcr.io/pulp-platform/pulp-nnx:main-test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Run test
+        shell: bash
+        working-directory: test
+        run: |
+          pytest test.py -T tests -R -A neureka_v2 --build-flow=cmake --wmem=mram

@@ -1,9 +1,11 @@
 # Changelog
 
-## [Unreleased]
+## [0.4.0] - 2024-12-30
 
 ### Added
 
+- NnxBuildFlow and CmakeBuildFlow
+- Neureka V2 support
 - github action for testing neureka
 - add NnxMapping dictionary that maps accelerator name to the accelerator specific classes
 - choice of data generation method (ones, incremented, or random)
@@ -18,6 +20,8 @@
 
 ### Changed
 
+- wmem is no more a test configuration argument but a command line argument
+- neureka is now tested with a more recent gcc version
 - python requirements are changed into requirements-pip and requirements-conda
 - conftest now passes only strings to test.py to improve readability of pytest logs
 - NnxMemoryLayout is now NnxWeight and also has a method for source generation

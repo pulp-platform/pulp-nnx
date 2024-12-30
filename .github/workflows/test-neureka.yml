@@ -12,4 +12,5 @@ jobs:
         working-directory: test
         run: |
           source /pulp-sdk/configs/siracusa.sh
-          pytest test.py -T tests -R -A neureka
+          pytest test.py -T tests -R -A neureka --build-flow=make --wmem=tcdm
+          pytest test.py -T tests -R -A neureka --build-flow=make --wmem=sram
