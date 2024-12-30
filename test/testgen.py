@@ -24,7 +24,6 @@ from typing import Optional, Set, Type, Union
 
 import toml
 
-from HeaderWriter import HeaderWriter
 from NnxMapping import NnxMapping, NnxName
 from NnxTestClasses import (
     NnxTest,
@@ -32,13 +31,14 @@ from NnxTestClasses import (
     NnxTestGenerator,
     NnxTestHeaderGenerator,
     NnxWeight,
+    NnxWmem,
 )
 
 
 def headers_gen(
     args,
     nnxTestConfCls: Type[NnxTestConf],
-    nnxWeightCls: Type[NnxWeight],
+    nnxWeight: NnxWeight,
     test: Optional[NnxTest] = None,
 ):
     if test is None:
@@ -46,7 +46,7 @@ def headers_gen(
     assert test is not None
     if not test.is_valid():
         test = NnxTestGenerator.from_conf(test.conf)
-    NnxTestHeaderGenerator(nnxWeightCls).generate(args.test_dir, test)
+    NnxTestHeaderGenerator(nnxWeight).generate(args.test_dir, test)
 
 
 def print_tensors(test: NnxTest):
@@ -67,7 +67,7 @@ def print_tensors(test: NnxTest):
 def test_gen(
     args,
     nnxTestConfCls: Type[NnxTestConf],
-    nnxWeightCls: Type[NnxWeight],
+    nnxWeight: NnxWeight,
 ):
     assert not (
         args.gen_ones and args.gen_incremented
@@ -98,7 +98,7 @@ def test_gen(
     if not args.skip_save:
         test.save(args.test_dir)
     if args.headers:
-        headers_gen(args, nnxTestConfCls, nnxWeightCls, test)
+        headers_gen(args, nnxTestConfCls, nnxWeight, test)
     if args.print_tensors:
         print_tensors(test)
 
@@ -129,9 +129,9 @@ def _regen_recursive(
 def test_regen(
     args,
     nnxTestConfCls: Type[NnxTestConf],
-    nnxWeightCls: Type[NnxWeight],
+    nnxWeight: NnxWeight,
 ):
-    _ = nnxWeightCls
+    _ = nnxWeight
     regen_tensors = set(args.tensors)
 
     if args.recursive:
@@ -149,7 +149,6 @@ def add_common_arguments(parser: argparse.ArgumentParser):
         required=True,
         help="Path to the test.",
     )
-
     parser.add_argument(
         "-a",
         "--accelerator",
@@ -157,6 +156,14 @@ def add_common_arguments(parser: argparse.ArgumentParser):
         choices=list(NnxName),
         default=NnxName.ne16,
         help="Choose an accelerator. Default: ne16",
+    )
+    parser.add_argument(
+        "--wmem",
+        dest="wmem",
+        type=NnxWmem,
+        choices=list(NnxWmem),
+        default=NnxWmem.tcdm,
+        help="Choose the weight memory destination. Default: tcdm",
     )
 
 
@@ -241,4 +248,4 @@ args = parser.parse_args()
 
 testConfCls, weightCls = NnxMapping[args.accelerator]
 
-args.func(args, testConfCls, weightCls)
+args.func(args, testConfCls, weightCls(args.wmem))

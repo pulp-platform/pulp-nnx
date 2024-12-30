@@ -23,6 +23,11 @@
 #include "layer_util.h"
 #include "nnx_layer.h"
 #include "output.h"
+#ifdef NNX_NEUREKA_V2
+#include "string.h"
+#include "weight.h"
+#include "weight_l2.h"
+#endif
 
 int main() {
   struct pi_device cl_dev;
@@ -35,6 +40,11 @@ int main() {
 
   printf("\n");
   layer_info();
+
+#ifdef NNX_NEUREKA_V2
+  // We have to initialize the mram/sram weight memory from l2
+  memcpy((void *)weight, (void *)weight_l2, WEIGHT_SIZE);
+#endif
 
   pi_cluster_conf_init(&cl_conf);
   pi_open_from_conf(&cl_dev, &cl_conf);

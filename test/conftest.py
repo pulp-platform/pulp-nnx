@@ -22,8 +22,9 @@ from typing import Union
 import pydantic
 import pytest
 
+from NnxBuildFlow import CmakeBuildFlow, NnxBuildFlowName
 from NnxMapping import NnxMapping, NnxName
-from NnxTestClasses import NnxTest, NnxTestGenerator
+from NnxTestClasses import NnxTest, NnxTestGenerator, NnxWmem
 from TestClasses import implies
 
 
@@ -60,11 +61,52 @@ def pytest_addoption(parser):
         help="Save the generated test data to their respective folders.",
     )
     parser.addoption(
-        "--timeout",
-        type=int,
-        default=120,
-        help="Execution timeout in seconds. Default: 120s",
+        "--build-flow",
+        dest="buildFlowName",
+        type=NnxBuildFlowName,
+        choices=list(NnxBuildFlowName),
+        default=NnxBuildFlowName.make,
+        help="Choose the build flow. Default: make",
     )
+    parser.addoption(
+        "--wmem",
+        dest="wmem",
+        type=NnxWmem,
+        choices=list(NnxWmem),
+        default=NnxWmem.tcdm,
+        help="Choose the weight memory destination. Default: tcdm",
+    )
+
+
+@pytest.fixture
+def nnxName(request) -> NnxName:
+    return request.config.getoption("--accelerator")
+
+
+@pytest.fixture
+def buildFlowName(request) -> NnxBuildFlowName:
+    nnxName = request.config.getoption("--accelerator")
+    buildFlowName = request.config.getoption("buildFlowName")
+
+    assert implies(
+        buildFlowName == NnxBuildFlowName.cmake, nnxName == NnxName.neureka_v2
+    ), "The cmake build flow has been tested only with the neureka_v2 accelerator"
+
+    if buildFlowName == NnxBuildFlowName.cmake:
+        CmakeBuildFlow(nnxName).prepare()
+
+    return buildFlowName
+
+
+@pytest.fixture
+def wmem(request) -> NnxWmem:
+    _wmem = request.config.getoption("wmem")
+    nnxName = request.config.getoption("accelerator")
+    _, weightCls = NnxMapping[nnxName]
+    assert weightCls.valid_wmem(
+        _wmem
+    ), f"Unsupported weight memory destination: {_wmem}. Supported: {weightCls.supported_wmem()}"
+    return _wmem
 
 
 def _find_test_dirs(path: Union[str, os.PathLike]):
@@ -75,7 +117,6 @@ def pytest_generate_tests(metafunc):
     test_dirs = metafunc.config.getoption("test_dirs")
     recursive = metafunc.config.getoption("recursive")
     regenerate = metafunc.config.getoption("regenerate")
-    timeout = metafunc.config.getoption("timeout")
     nnxName = metafunc.config.getoption("accelerator")
 
     if recursive:
@@ -109,6 +150,4 @@ def pytest_generate_tests(metafunc):
                 )
             )
 
-    metafunc.parametrize("nnxName", [nnxName])
     metafunc.parametrize("nnxTestName", nnxTestNames)
-    metafunc.parametrize("timeout", [timeout])

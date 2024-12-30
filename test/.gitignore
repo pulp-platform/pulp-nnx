@@ -1,4 +1,6 @@
 BUILD
+build
+app/build*
 __pycache__
 .cache
 .pytest_cache

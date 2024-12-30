@@ -25,6 +25,5 @@
     },
     "has_norm_quant": true,
     "has_bias": false,
-    "has_relu": false,
-    "wmem": "tcdm"
+    "has_relu": false
 }

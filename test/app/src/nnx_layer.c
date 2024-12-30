@@ -107,7 +107,49 @@ typedef neureka_task_flag_e nnx_task_flag_e;
 #define nnx_resolve_wait neureka_nnx_resolve_wait
 #define nnx_term neureka_nnx_term
 
-#endif // NNX_NE16 || NNX_NEUREKA
+#elif defined NNX_NEUREKA_V2
+
+#include "neureka_v2.h"
+#include "neureka_v2_gvsoc.h"
+#include "neureka_v2_siracusa_bsp.h"
+#include "neureka_v2_task.h"
+#include "pulp_nnx_neureka_v2.h"
+
+typedef neureka_v2_norm_mode_e nnx_norm_mode_e;
+typedef neureka_v2_quant_t nnx_quant_t;
+typedef neureka_v2_quant_function_e nnx_quant_function_e;
+typedef neureka_v2_norm_t nnx_norm_t;
+typedef neureka_v2_task_t nnx_task_t;
+typedef neureka_v2_dev_t nnx_dev_t;
+typedef neureka_v2_siracusa_conf_t nnx_bsp_conf_t;
+typedef neureka_v2_task_flag_e nnx_task_flag_e;
+
+#define nnxTaskFlagTrue neurekaV2TaskFlagTrue
+#define nnxTaskFlagFalse neurekaV2TaskFlagFalse
+
+#define nnx_task_init neureka_v2_task_init
+#define nnx_task_set_op_to_conv neureka_v2_task_set_op_to_conv
+#define nnx_task_set_bits neureka_v2_task_set_bits
+#define nnx_task_set_norm_quant neureka_v2_task_set_norm_quant
+#define nnx_task_set_weight_offset neureka_v2_task_set_weight_offset
+#define nnx_task_set_dims neureka_v2_task_set_dims
+#define nnx_task_set_addr_conv neureka_v2_task_set_addr_conv
+#define nnx_task_set_addr_norm_quant neureka_v2_task_set_addr_norm_quant
+
+#define NNX_GVSOC_LOG_LEVEL NEUREKA_V2_GVSOC_LOG_LEVEL_ALL
+#define NNX_GVSOC_LOG_FORMAT NEUREKA_V2_GVSOC_LOG_FORMAT_HEXADECIMAL
+#define nnx_gvsoc_log_activate neureka_v2_gvsoc_log_activate
+#define nnx_gvsoc_log_deactivate neureka_v2_gvsoc_log_deactivate
+
+#define nnx_bsp_get_dev neureka_v2_siracusa_get_dev
+
+#define nnx_init neureka_v2_nnx_init
+#define nnx_dispatch_wait neureka_v2_nnx_dispatch_wait
+#define nnx_dispatch neureka_v2_nnx_dispatch
+#define nnx_resolve_wait neureka_v2_nnx_resolve_wait
+#define nnx_term neureka_v2_nnx_term
+
+#endif // NNX_NE16 || NNX_NEUREKA || NNX_NEUREKA_V2
 
 // Generated headers
 #include "input.h"
@@ -126,25 +168,47 @@ typedef neureka_task_flag_e nnx_task_flag_e;
 
 static void task_prepare(nnx_task_t *task) {
   nnx_task_init(task);
-#ifdef NNX_NEUREKA
+#if defined NNX_NEUREKA || defined NNX_NEUREKA_V2
   nnx_task_set_op_to_conv(task, WEIGHT_HEIGHT, GROUPS > 1);
 #else
   nnx_task_set_op_to_conv(task, WEIGHT_HEIGHT, GROUPS > 1, STRIDE_HEIGHT);
 #endif
   nnx_task_set_bits(task, INPUT_BITS, OUTPUT_BITS, WEIGHT_BITS);
 
+#if defined NNX_NE16 || defined NNX_NEUREKA
   nnx_task_set_weight_offset(task, weightOffsetModeLayerWise, WEIGHT_OFFSET);
+#elif defined NNX_NEUREKA_V2
+  nnx_task_set_weight_offset(task, WEIGHT_OFFSET);
+#endif
 
 #ifdef NNX_NEUREKA
+#if INPUT_SIGNED == 1
+  neureka_task_set_input_signed(task);
+#else
+  neureka_task_set_input_unsigned(task);
+#endif
 #if defined WMEM_SRAM || defined WMEM_MRAM
   neureka_task_set_weight_source(task, neurekaWeightSourceWmem);
 #else
   neureka_task_set_weight_source(task, neurekaWeightSourceTcdm);
 #endif
+#endif
+
+#ifdef NNX_NEUREKA_V2
 #if INPUT_SIGNED == 1
-  neureka_task_set_input_signed(task);
+  neureka_v2_task_set_activation_signed(task);
 #else
-  neureka_task_set_input_unsigned(task);
+  neureka_v2_task_set_activation_unsigned(task);
+#endif
+#if OUTPUT_SIGNED == 1
+  neureka_v2_task_set_outfeat_signed(task);
+#else
+  neureka_v2_task_set_outfeat_unsigned(task);
+#endif
+#if defined WMEM_SRAM || defined WMEM_MRAM
+  neureka_v2_task_set_weight_source(task, neurekaV2WeightSourceWmem);
+#else
+  neureka_v2_task_set_weight_source(task, neurekaV2WeightSourceTcdm);
 #endif
 #endif
 
@@ -202,7 +266,7 @@ static void task_prepare(nnx_task_t *task) {
 }
 
 static void task_execute(nnx_task_t *task) {
-  nnx_dev_t *dev = nnx_bsp_get_dev();
+  const nnx_dev_t *dev = nnx_bsp_get_dev();
 
 #if __PLATFORM__ == ARCHI_PLATFORM_GVSOC
   nnx_gvsoc_log_activate(dev, NNX_GVSOC_LOG_LEVEL, NNX_GVSOC_LOG_FORMAT);
