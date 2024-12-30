@@ -50,12 +50,6 @@ void neureka_v2_task_set_op_to_conv(neureka_v2_task_t *task,
                                     const uint8_t depthwise) {
   task->depthwise = depthwise;
   task->kernel_shape = kernel_shape;
-  task->subtile_output_channel = depthwise
-                                     ? NEUREKA_V2_SUBTILE_INPUT_CHANNEL_3x3
-                                     : NEUREKA_V2_SUBTILE_OUTPUT_CHANNEL;
-  task->subtile_input_channel = kernel_shape == 3
-                                    ? NEUREKA_V2_SUBTILE_INPUT_CHANNEL_3x3
-                                    : NEUREKA_V2_SUBTILE_INPUT_CHANNEL_1x1;
 
   const int flag_mode = kernel_shape == 1 ? NEUREKA_V2_FLAG_MODE_1x1
                         : depthwise == 1  ? NEUREKA_V2_FLAG_MODE_3x3_DW
@@ -181,8 +175,8 @@ void neureka_v2_task_set_strides(neureka_v2_task_t *task, const uint32_t k_in,
                                  const uint32_t w_in_stride,
                                  const uint32_t h_out_stride,
                                  const uint32_t w_out_stride) {
-  const uint32_t num_k_in =
-      nnx_calculate_number_of_tiles(k_in, task->subtile_input_channel);
+  const uint32_t num_k_in = nnx_calculate_number_of_tiles(
+      k_in, NEUREKA_V2_SUBTILE_INPUT_OUTPUT_CHANNEL);
 
   const neureka_v2_stride_t input_stride = {
       .d0 = w_in_stride, .d1 = h_in_stride, .d2 = 0};
@@ -197,7 +191,7 @@ void neureka_v2_task_set_strides(neureka_v2_task_t *task, const uint32_t k_in,
   task->data.cfg.weights_stride.d0 = NEUREKA_V2_WEIGHT_BANDWIDTH_BYTES;
   if (task->kernel_shape == 1) { // 1x1
     task->data.cfg.weights_stride.d1 =
-        num_k_in * task->qw * NEUREKA_V2_SUBTILE_INPUT_CHANNEL_1x1 / 8;
+        num_k_in * task->qw * NEUREKA_V2_SUBTILE_INPUT_OUTPUT_CHANNEL / 8;
   } else if (!task->depthwise) { // 3x3
     task->data.cfg.weights_stride.d1 =
         NEUREKA_V2_WEIGHT_BANDWIDTH_BYTES * task->qw * num_k_in;
@@ -212,19 +206,19 @@ void neureka_v2_task_set_counters(neureka_v2_task_t *task, const uint32_t k_in,
                                   const uint32_t k_out,
                                   const uint8_t padding_bottom,
                                   const uint8_t padding_right) {
-  const uint16_t num_Ko =
-      nnx_calculate_number_of_tiles(k_out, task->subtile_output_channel);
-  const uint16_t num_Ki =
-      nnx_calculate_number_of_tiles(k_in, task->subtile_input_channel);
+  const uint16_t num_Ko = nnx_calculate_number_of_tiles(
+      k_out, NEUREKA_V2_SUBTILE_INPUT_OUTPUT_CHANNEL);
+  const uint16_t num_Ki = nnx_calculate_number_of_tiles(
+      k_in, NEUREKA_V2_SUBTILE_INPUT_OUTPUT_CHANNEL);
   const uint16_t num_Ho =
       nnx_calculate_number_of_tiles(h_out, NEUREKA_V2_SUBTILE_OUTPUT_HEIGHT);
   const uint16_t num_Wo =
       nnx_calculate_number_of_tiles(w_out, NEUREKA_V2_SUBTILE_OUTPUT_WIDTH);
 
-  const uint16_t rem_Ko =
-      nnx_calculate_last_tile_size(k_out, task->subtile_output_channel);
-  const uint16_t rem_Ki =
-      nnx_calculate_last_tile_size(k_in, task->subtile_input_channel);
+  const uint16_t rem_Ko = nnx_calculate_last_tile_size(
+      k_out, NEUREKA_V2_SUBTILE_INPUT_OUTPUT_CHANNEL);
+  const uint16_t rem_Ki = nnx_calculate_last_tile_size(
+      k_in, NEUREKA_V2_SUBTILE_INPUT_OUTPUT_CHANNEL);
   const uint16_t rem_Ho =
       nnx_calculate_last_tile_size(h_out, NEUREKA_V2_SUBTILE_OUTPUT_HEIGHT);
   const uint16_t rem_Wo =

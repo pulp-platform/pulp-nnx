@@ -109,8 +109,6 @@ typedef struct neureka_v2_task_data_t {
 typedef struct neureka_v2_task_t {
   neureka_v2_task_data_t data;
   uint8_t qw;
-  uint8_t subtile_output_channel;
-  uint8_t subtile_input_channel;
   uint8_t kernel_shape;
   uint8_t depthwise;
   uint8_t id;
