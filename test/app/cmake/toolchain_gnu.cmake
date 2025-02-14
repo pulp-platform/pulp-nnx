@@ -15,8 +15,6 @@ set(CMAKE_AR ${TOOLCHAIN_PREFIX}-ar)
 set(SIZE ${TOOLCHAIN_PREFIX}-size)
 
 set(ISA rv32imc_zfinx_xpulpv3)
-set(PE 8)
-set(FC 1)
 
 set(CMAKE_EXECUTABLE_SUFFIX ".elf")
 
@@ -28,7 +26,6 @@ add_compile_options(
   -fno-jump-tables
   -fno-tree-loop-distribute-patterns
   -O3
-  -DNUM_CORES=${NUM_CORES}
   -MMD
   -MP
 )
