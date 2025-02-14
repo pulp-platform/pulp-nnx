@@ -58,6 +58,3 @@ bias_type = "int32"
 has_norm_quant = true
 has_bias = true
 has_relu = true
-
-# Weight memory source
-wmem = "tcdm"
