@@ -28,16 +28,16 @@ typedef struct hwpe_dev_t {
   volatile uint32_t *base_addr;
 } hwpe_dev_t;
 
-void hwpe_reg_write(hwpe_dev_t *dev, int reg, uint32_t value);
-uint32_t hwpe_reg_read(hwpe_dev_t *dev, int reg);
-void hwpe_task_reg_write(hwpe_dev_t *dev, int reg, uint32_t value);
-uint32_t hwpe_task_reg_read(hwpe_dev_t *dev, int reg);
-void hwpe_soft_clear(hwpe_dev_t *dev);
-uint32_t hwpe_task_queue_status(hwpe_dev_t *dev);
-int hwpe_task_queue_acquire_task(hwpe_dev_t *dev, uint8_t *id);
-void hwpe_task_queue_write_task(hwpe_dev_t *dev, uint32_t *data, int len);
-void hwpe_task_queue_release_and_run(hwpe_dev_t *dev);
-void hwpe_task_queue_release(hwpe_dev_t *dev);
-uint8_t hwpe_last_task_id(hwpe_dev_t *dev);
+void hwpe_reg_write(const hwpe_dev_t *dev, int reg, uint32_t value);
+uint32_t hwpe_reg_read(const hwpe_dev_t *dev, int reg);
+void hwpe_task_reg_write(const hwpe_dev_t *dev, int reg, uint32_t value);
+uint32_t hwpe_task_reg_read(const hwpe_dev_t *dev, int reg);
+void hwpe_soft_clear(const hwpe_dev_t *dev);
+uint32_t hwpe_task_queue_status(const hwpe_dev_t *dev);
+int hwpe_task_queue_acquire_task(const hwpe_dev_t *dev, uint8_t *id);
+void hwpe_task_queue_write_task(const hwpe_dev_t *dev, uint32_t *data, int len);
+void hwpe_task_queue_release_and_run(const hwpe_dev_t *dev);
+void hwpe_task_queue_release(const hwpe_dev_t *dev);
+uint8_t hwpe_last_task_id(const hwpe_dev_t *dev);
 
 #endif // !__HWPE_H__
