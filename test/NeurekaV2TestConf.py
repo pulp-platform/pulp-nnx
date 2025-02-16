@@ -72,7 +72,7 @@ class NeurekaV2TestConf(NnxTestConf):
     @classmethod
     def check_valid_scale_type(cls, v: Optional[IntegerType]) -> Optional[IntegerType]:
         if v is not None:
-            NeurekaV2TestConf._check_type("scale_type", v, ["int8"])
+            NeurekaV2TestConf._check_type("scale_type", v, ["int8", "int32"])
         return v
 
     @field_validator("bias_type")
