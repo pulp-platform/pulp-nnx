@@ -34,6 +34,10 @@ class NeuralEngineFunctionalModel:
         tensor = tensor * scale
         assert tensor.dtype == torch.int64
 
+        tensor = NeuralEngineFunctionalModel._cast(
+            tensor, IntegerType(name="int48"), saturate=True
+        )
+
         if verbose:
             print("INTERMEDIATE RESULTS (after scale):")
             print(tensor)
@@ -60,6 +64,10 @@ class NeuralEngineFunctionalModel:
             tensor = F.relu(tensor)
 
         tensor = tensor >> global_shift
+
+        if verbose:
+            print("INTERMEDIATE RESULTS (after shift):")
+            print(tensor)
 
         # Saturate into out_type
         tensor = NeuralEngineFunctionalModel._cast(tensor, out_type, saturate=True)
