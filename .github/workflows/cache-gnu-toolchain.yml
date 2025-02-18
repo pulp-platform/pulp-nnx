@@ -1,0 +1,57 @@
+name: Cache Gnu Toolchain
+on: workflow_dispatch
+
+jobs:
+  build-and-cache-job:
+    runs-on: ubuntu-latest
+
+    env:
+      INSTALL_DIR: $GITHUB_WORKSPACE/install
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          name: pulp-platform/riscv-gnu-toolchain
+          ref: v2.6.0
+          submodules: recursive
+
+      - name: Install Apt Packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+            autoconf \
+            automake \
+            autotools-dev \
+            bc \
+            bison \
+            build-essential \
+            ca-certificates \
+            curl \
+            cmake \
+            flex \
+            gawk \
+            git \
+            gperf \
+            libexpat-dev \
+            libgmp-dev \
+            libmpc-dev \
+            libmpfr-dev \
+            libtool \
+            patchutils \
+            python3 \
+            python3-pip \
+            texinfo \
+            zlib1g-dev
+
+      - name: Build
+        run: |
+          cd riscv-gnu-toolchain
+          ./configure --prefix=$INSTALL_DIR --with-arch=rv32imfcxpulpv3 --with-abi=ilp32 --enable-multilib
+          make -j 8
+
+      - name: Cache
+        uses: actions/cache/save@v4
+        with:
+          path: $INSTALL_DIR
+          key: gnu-toolchain
