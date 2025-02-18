@@ -1,16 +1,41 @@
 name: Test Neureka
 on: push
 jobs:
-  test:
+  test-neureka:
     runs-on: ubuntu-latest
-    container: ghcr.io/pulp-platform/pulp-nnx:main-test
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          path: pulp-nnx
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+          cache-dependency-path:
+            - pulp-nnx/test/requirements.txt
+            - pulp-nnx/test/workflow-requirements/requirements-run-pulp-sdk.txt
+
+      - name: Restore Cached Gnu Toolchain
+        uses: actions/cache/restore@v4
+        with:
+          path: toolchain/gnu
+          key: gnu-toolchain
+          fail-on-cache-miss: true
+
+      - name: Restore Cached PULP-SDK
+        uses: actions/cache/restore@v4
+        with:
+          path: pulp-sdk
+          key: pulp-sdk
+          fail-on-cache-miss: true
+
       - name: Run test
-        shell: bash
-        working-directory: test
         run: |
-          source /pulp-sdk/configs/siracusa.sh
+          export PULP_RISCV_GCC_TOOLCHAIN=$GITHUB_WORKSPACE/toolchain/gnu
+          source pulp-sdk/configs/siracusa.sh
+          cd pulp-nnx/test
           pytest test.py -T tests -R -A neureka --build-flow=make --wmem=tcdm
           pytest test.py -T tests -R -A neureka --build-flow=make --wmem=sram

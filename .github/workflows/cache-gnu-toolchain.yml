@@ -2,19 +2,18 @@ name: Cache Gnu Toolchain
 on: workflow_dispatch
 
 jobs:
-  build-and-cache-job:
+  cache-gnu-toolchain:
     runs-on: ubuntu-latest
-
-    env:
-      INSTALL_DIR: $GITHUB_WORKSPACE/install
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          name: pulp-platform/riscv-gnu-toolchain
+          repository: pulp-platform/riscv-gnu-toolchain
           ref: v2.6.0
-          submodules: recursive
+
+      - name: Fetch Submodules
+        run: git submodule update --init --recursive --depth=1 --recommend-shallow riscv-*
 
       - name: Install Apt Packages
         run: |
@@ -46,12 +45,11 @@ jobs:
 
       - name: Build
         run: |
-          cd riscv-gnu-toolchain
-          ./configure --prefix=$INSTALL_DIR --with-arch=rv32imfcxpulpv3 --with-abi=ilp32 --enable-multilib
+          ./configure --prefix=$GITHUB_WORKSPACE/toolchain/gnu --with-arch=rv32imfcxpulpv3 --with-abi=ilp32 --enable-multilib
           make -j 8
 
       - name: Cache
         uses: actions/cache/save@v4
         with:
-          path: $INSTALL_DIR
-          key: gnu-toolchain
+          path: toolchain/gnu
+          key: toolchain-gnu
