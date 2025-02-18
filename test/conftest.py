@@ -22,7 +22,7 @@ from typing import Union
 import pydantic
 import pytest
 
-from NnxBuildFlow import CmakeBuildFlow, NnxBuildFlowName
+from NnxBuildFlow import CmakeBuildFlow, NnxBuildFlowName, NnxToolchain
 from NnxMapping import NnxMapping, NnxName
 from NnxTestClasses import NnxTest, NnxTestGenerator, NnxWmem
 from TestClasses import implies
@@ -69,6 +69,14 @@ def pytest_addoption(parser):
         help="Choose the build flow. Default: make",
     )
     parser.addoption(
+        "--toolchain",
+        dest="toolchainName",
+        type=NnxToolchain,
+        choices=list(NnxToolchain),
+        default=NnxToolchain.gnu,
+        help="Choose the toolchain for the cmake build flow. Default: gnu",
+    )
+    parser.addoption(
         "--wmem",
         dest="wmem",
         type=NnxWmem,
@@ -84,16 +92,22 @@ def nnxName(request) -> NnxName:
 
 
 @pytest.fixture
+def nnxToolchain(request) -> NnxToolchain:
+    return request.config.getoption("toolchainName")
+
+
+@pytest.fixture
 def buildFlowName(request) -> NnxBuildFlowName:
     nnxName = request.config.getoption("--accelerator")
     buildFlowName = request.config.getoption("buildFlowName")
+    toolchainName = request.config.getoption("toolchainName")
 
     assert implies(
         buildFlowName == NnxBuildFlowName.cmake, nnxName == NnxName.neureka_v2
     ), "The cmake build flow has been tested only with the neureka_v2 accelerator"
 
     if buildFlowName == NnxBuildFlowName.cmake:
-        CmakeBuildFlow(nnxName).prepare()
+        CmakeBuildFlow(nnxName, toolchainName).prepare()
 
     return buildFlowName
 

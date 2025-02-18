@@ -18,7 +18,7 @@
 
 import re
 
-from NnxBuildFlow import NnxBuildFlowClsMapping, NnxBuildFlowName
+from NnxBuildFlow import NnxBuildFlowClsMapping, NnxBuildFlowName, NnxToolchain
 from NnxMapping import NnxMapping, NnxName
 from NnxTestClasses import NnxTest, NnxTestHeaderGenerator, NnxWmem
 
@@ -36,6 +36,7 @@ def assert_message(msg: str, test_name: str, stdout: str):
 def test(
     nnxName: NnxName,
     buildFlowName: NnxBuildFlowName,
+    nnxToolchain: NnxToolchain,
     wmem: NnxWmem,
     nnxTestName: str,
 ):
@@ -46,7 +47,7 @@ def test(
 
     NnxTestHeaderGenerator(weightCls(wmem)).generate(nnxTestName, nnxTest)
 
-    buildFlow = NnxBuildFlowClsMapping[buildFlowName](nnxName)
+    buildFlow = NnxBuildFlowClsMapping[buildFlowName](nnxName, nnxToolchain)
     buildFlow.build()
     stdout = buildFlow.run()
 
