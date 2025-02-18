@@ -1,0 +1,43 @@
+name: Cache GVSoC
+on: workflow_dispatch
+
+jobs:
+  build-and-cache-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: lukamac/gvsoc
+          ref: siracusa-mac
+          submodules: recursive
+
+      - name: Install Apt Packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            build-essential \
+            curl \
+            cmake \
+            libtool \
+            texinfo
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Python Packages
+        run: pip install -r requirements.txt -r gapy/requirements.txt -r core/requirements.txt
+
+      - name: Build
+        run: make all TARGETS=siracusa
+
+      - name: Cache
+        uses: actions/cache/save@v4
+        with:
+          path: install
+          key: gvsoc

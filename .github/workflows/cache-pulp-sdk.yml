@@ -1,0 +1,56 @@
+name: Cache PULP-SDK
+on: workflow_dispatch
+
+jobs:
+  cache-pulp-sdk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: Scheremo/pulp-sdk
+          ref: scheremo
+          path: pulp-sdk
+
+      - name: Install Apt Packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            build-essential \
+            curl \
+            cmake \
+            libtool \
+            texinfo
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install Python Packages
+        run: pip install argcomplete pyelftools six scons
+
+      - name: Restore Cached Gnu Toolchain
+        uses: actions/cache/restore@v4
+        with:
+          path: toolchain/gnu
+          key: gnu-toolchain
+          fail-on-cache-miss: true
+
+      - name: Build
+        run: |
+          export CC=gcc-12
+          export CXX=g++-12
+          cd pulp-sdk
+          export PULP_RISCV_GCC_TOOLCHAIN=$GITHUB_WORKSPACE/toolchain/gnu
+          source configs/siracusa.sh
+          make all
+
+      - name: Cache
+        uses: actions/cache/save@v4
+        with:
+          path: pulp-sdk
+          key: pulp-sdk
