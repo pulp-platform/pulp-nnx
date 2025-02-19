@@ -1,3 +1,6 @@
+argcomplete
+six
+pexpect
+pyelftools
 prettytable
 rich
-pexpect
