@@ -37,7 +37,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: toolchain/gnu
-          key: gnu-toolchain
+          key: toolchain-gnu
           fail-on-cache-miss: true
 
       - name: Build
