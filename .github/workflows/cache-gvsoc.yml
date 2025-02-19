@@ -12,6 +12,7 @@ jobs:
           repository: lukamac/gvsoc
           ref: siracusa-mac
           submodules: recursive
+          path: gvsoc
 
       - name: Install Apt Packages
         run: |
@@ -31,13 +32,15 @@ jobs:
           python-version: '3.10'
 
       - name: Install Python Packages
-        run: pip install -r requirements.txt -r gapy/requirements.txt -r core/requirements.txt
+        run: pip install -r gvsoc/requirements.txt -r gvsoc/gapy/requirements.txt -r gvsoc/core/requirements.txt
 
       - name: Build
-        run: make all TARGETS=siracusa
+        run: |
+          cd gvsoc
+          make all TARGETS=siracusa
 
       - name: Cache
         uses: actions/cache/save@v4
         with:
-          path: install
+          path: gvsoc/install
           key: gvsoc
