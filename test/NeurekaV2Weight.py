@@ -32,7 +32,7 @@ class NeurekaV2Weight(NnxWeight):
 
     @classmethod
     def supported_wmem(cls) -> List[NnxWmem]:
-        return [NnxWmem.sram, NnxWmem.mram]
+        return [NnxWmem.sram, NnxWmem.mram, NnxWmem.tcdm]
 
     def encode(
         self, weight: npt.NDArray[np.uint8], bits: int, depthwise: bool = False
@@ -135,17 +135,29 @@ class NeurekaV2Weight(NnxWeight):
         else:
             assert False, f"Unsupported weight memory destination {self.wmem}"
 
-        header_writer.generate_vector_files(
-            "weight",
-            _type="uint8_t",
-            size=init.size,
-            section=section,
-        )
+        if self.wmem == NnxWmem.tcdm:
+            # No memcpy from l2 when weights are in tcdm
+            header_writer.generate_vector_files(
+                "weight",
+                _type="uint8_t",
+                size=init.size,
+                init=init,
+                section=section,
+            )
+        else:
+            # Memcpy from l2 to wmem but statically allocate the wmem array
+            # for the linker to check the available space in wmem.
+            header_writer.generate_vector_files(
+                "weight",
+                _type="uint8_t",
+                size=init.size,
+                section=section,
+            )
 
-        header_writer.generate_vector_files(
-            "weight_l2",
-            _type="uint8_t",
-            size=init.size,
-            init=init,
-            section="PI_L2",
-        )
+            header_writer.generate_vector_files(
+                "weight_l2",
+                _type="uint8_t",
+                size=init.size,
+                init=init,
+                section="PI_L2",
+            )
