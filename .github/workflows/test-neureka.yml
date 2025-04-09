@@ -1,5 +1,5 @@
 name: Test Neureka
-on: push
+on: [push, pull_request]
 jobs:
   test-neureka:
     runs-on: ubuntu-latest
