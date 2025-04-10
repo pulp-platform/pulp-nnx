@@ -22,8 +22,8 @@
 #define __NEUREKA_DEFS_H__
 
 /* ARCHITECTURE */
-// The definitions wrapped in #ifndefs can be overwritten with compiler flags for
-// different parametrizations of the Neureka architecture
+// The definitions wrapped in #ifndefs can be overwritten with compiler flags
+// for different parametrizations of the Neureka architecture
 #ifndef NNX_NEUREKA_PE_H
 #define NNX_NEUREKA_PE_H (6)
 #endif
@@ -36,10 +36,10 @@
 #define NNX_NEUREKA_BANDWIDTH_3x3 (256)
 
 #define NEUREKA_SUBTILE_INPUT_HEIGHT_1x1 (NNX_NEUREKA_PE_H)
-#define NEUREKA_SUBTILE_INPUT_WIDTH_1x1  (NNX_NEUREKA_PE_W)
+#define NEUREKA_SUBTILE_INPUT_WIDTH_1x1 (NNX_NEUREKA_PE_W)
 #define NEUREKA_SUBTILE_INPUT_CHANNEL_1x1 (32)
 
-#define NEUREKA_SUBTILE_INPUT_HEIGHT_3x3 (NNX_NEUREKA_PE_H+2)
+#define NEUREKA_SUBTILE_INPUT_HEIGHT_3x3 (NNX_NEUREKA_PE_H + 2)
 #define NEUREKA_SUBTILE_INPUT_WIDTH_3x3 (NNX_NEUREKA_PE_W + 2)
 #ifndef NEUREKA_SUBTILE_INPUT_CHANNEL_3x3
 #define NEUREKA_SUBTILE_INPUT_CHANNEL_3x3 (28)
@@ -50,8 +50,8 @@
 #define NEUREKA_SUBTILE_OUTPUT_CHANNEL (32)
 
 #define NEUREKA_OUTPUT_BANDWIDTH_BYTES (32)
-#define NEUREKA_WEIGHT_BANDWIDTH_BYTES_1x1 (NNX_NEUREKA_BANDWIDTH_1x1/8)
-#define NEUREKA_WEIGHT_BANDWIDTH_BYTES_3x3 (NNX_NEUREKA_BANDWIDTH_3x3/8)
+#define NEUREKA_WEIGHT_BANDWIDTH_BYTES_1x1 (NNX_NEUREKA_BANDWIDTH_1x1 / 8)
+#define NEUREKA_WEIGHT_BANDWIDTH_BYTES_3x3 (NNX_NEUREKA_BANDWIDTH_3x3 / 8)
 
 /* TASK REGISTERS */
 

@@ -38,7 +38,8 @@ inline uint32_t hwpe_reg_read(const hwpe_dev_t *dev, int reg) {
   return dev->base_addr[reg];
 }
 
-inline void hwpe_task_reg_write(const hwpe_dev_t *dev, int reg, uint32_t value) {
+inline void hwpe_task_reg_write(const hwpe_dev_t *dev, int reg,
+                                uint32_t value) {
   hwpe_reg_write(dev, HWPE_TASK_REG_OFFSET + reg, value);
 }
 
@@ -66,7 +67,8 @@ int hwpe_task_queue_acquire_task(const hwpe_dev_t *dev, uint8_t *id) {
   }
 }
 
-void hwpe_task_queue_write_task(const hwpe_dev_t *dev, uint32_t *data, int len) {
+void hwpe_task_queue_write_task(const hwpe_dev_t *dev, uint32_t *data,
+                                int len) {
   for (int i = 0; i < len; i++) {
     hwpe_task_reg_write(dev, i, data[i]);
   }

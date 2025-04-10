@@ -166,17 +166,17 @@ void neureka_task_set_strides(neureka_task_t *task, const uint32_t k_in,
   task->data.cfg.output_stride = output_stride;
 
   if (task->kernel_shape == 1) { // 1x1
-       task->data.cfg.weights_stride.d0 = NEUREKA_WEIGHT_BANDWIDTH_BYTES_1x1;
-       task->data.cfg.weights_stride.d1 =
-         (NEUREKA_WEIGHT_BANDWIDTH_BYTES_1x1 / 8) * task->qw * num_k_in;
+    task->data.cfg.weights_stride.d0 = NEUREKA_WEIGHT_BANDWIDTH_BYTES_1x1;
+    task->data.cfg.weights_stride.d1 =
+        (NEUREKA_WEIGHT_BANDWIDTH_BYTES_1x1 / 8) * task->qw * num_k_in;
   } else if (!task->depthwise) { // 3x3
-          task->data.cfg.weights_stride.d0 = NEUREKA_WEIGHT_BANDWIDTH_BYTES_3x3;
-          task->data.cfg.weights_stride.d1 =
-            NEUREKA_WEIGHT_BANDWIDTH_BYTES_3x3 * task->qw * num_k_in;
+    task->data.cfg.weights_stride.d0 = NEUREKA_WEIGHT_BANDWIDTH_BYTES_3x3;
+    task->data.cfg.weights_stride.d1 =
+        NEUREKA_WEIGHT_BANDWIDTH_BYTES_3x3 * task->qw * num_k_in;
 
   } else { // 3x3 depthwise
-          task->data.cfg.weights_stride.d0 = NEUREKA_WEIGHT_BANDWIDTH_BYTES_3x3;
-          task->data.cfg.weights_stride.d1 = 0;
+    task->data.cfg.weights_stride.d0 = NEUREKA_WEIGHT_BANDWIDTH_BYTES_3x3;
+    task->data.cfg.weights_stride.d1 = 0;
   }
   task->data.cfg.weights_stride.d2 = 0;
 }
