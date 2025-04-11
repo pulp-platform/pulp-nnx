@@ -30,7 +30,9 @@ class Toolchain(Enum):
 class NnxBuildFlow(ABC):
 
     @abstractmethod
-    def __init__(self, nnxName: NnxName, appName: AppName, toolchain: Toolchain) -> None:
+    def __init__(
+        self, nnxName: NnxName, appName: AppName, toolchain: Toolchain
+    ) -> None:
         self.nnxName = nnxName
         self.appName = appName
         self.toolchain = toolchain
@@ -53,7 +55,9 @@ class NnxBuildFlow(ABC):
 
 
 class MakeBuildFlow(NnxBuildFlow):
-    def __init__(self, nnxName: NnxName, appName: AppName, toolchain: Toolchain) -> None:
+    def __init__(
+        self, nnxName: NnxName, appName: AppName, toolchain: Toolchain
+    ) -> None:
         super().__init__(nnxName, appName, toolchain)
 
     def env(self) -> os._Environ:
@@ -63,10 +67,14 @@ class MakeBuildFlow(NnxBuildFlow):
 
     def build(self) -> None:
         Path(f"{self.appName.path()}/src/nnx_layer.c").touch()
-        _ = NnxBuildFlow.cmd_run(f"make -C {self.appName.path()} all platform=gvsoc", self.env())
+        _ = NnxBuildFlow.cmd_run(
+            f"make -C {self.appName.path()} all platform=gvsoc", self.env()
+        )
 
     def run(self) -> str:
-        return NnxBuildFlow.cmd_run(f"make -C {self.appName.path()} run platform=gvsoc", self.env())
+        return NnxBuildFlow.cmd_run(
+            f"make -C {self.appName.path()} run platform=gvsoc", self.env()
+        )
 
     def __str__(self) -> str:
         return "make"
@@ -76,9 +84,13 @@ class CmakeBuildFlow(NnxBuildFlow):
     BINARY_NAME = "test-pulp-nnx"
     GVSOC_TARGET = "siracusa"
 
-    def __init__(self, nnxName: NnxName, appName: AppName, toolchain: Toolchain) -> None:
+    def __init__(
+        self, nnxName: NnxName, appName: AppName, toolchain: Toolchain
+    ) -> None:
         super().__init__(nnxName, appName, toolchain)
-        self.build_dir = os.path.abspath(f"{self.appName.path()}/build_{nnxName}_{toolchain}")
+        self.build_dir = os.path.abspath(
+            f"{self.appName.path()}/build_{nnxName}_{toolchain}"
+        )
         self.gvsoc_workdir = os.path.join(self.build_dir, "gvsoc_workdir")
         assert "GVSOC" in os.environ, "The GVSOC environment variable is not set."
         self.toolchain_file = f"cmake/toolchain_{self.toolchain}.cmake"

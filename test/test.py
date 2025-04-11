@@ -46,7 +46,9 @@ def test(
     # conftest.py makes sure the test is valid and generated
     nnxTest = NnxTest.load(testConfCls, nnxTestName)
 
-    NnxTestHeaderGenerator(weightCls(wmem), f"{appName.path()}/gen").generate(nnxTestName, nnxTest)
+    NnxTestHeaderGenerator(weightCls(wmem), f"{appName.path()}/gen").generate(
+        nnxTestName, nnxTest
+    )
 
     buildFlow = NnxBuildFlowClsMapping[buildFlowName](nnxName, appName, toolchain)
     buildFlow.build()
