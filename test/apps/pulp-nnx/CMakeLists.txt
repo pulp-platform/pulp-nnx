@@ -33,7 +33,7 @@ else()
 	message(FATAL_ERROR "Unrecognized accelerator detected: \"${ACCELERATOR}\"")
 endif()
 
-add_subdirectory(../.. pulp-nnx)
+add_subdirectory(../../.. pulp-nnx)
 target_link_libraries(pulp-nnx PUBLIC pulp-sdk)
 target_include_directories(pulp-nnx SYSTEM PUBLIC ${PULP_SDK_INCLUDES})
 target_link_libraries(test-pulp-nnx PRIVATE pulp-nnx)

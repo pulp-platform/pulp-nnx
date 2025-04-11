@@ -2,7 +2,7 @@
 
 ## Repository structure
 
-- app: test application
+- app_*: test application
     - inc: test application headers
     - src: test application sources
     - gen_inc: generated test headers for data and test information
@@ -36,6 +36,7 @@ $ pytest test.py --help
 
 For more information you can run the script with the `-h` flag.
 
-## Application
+## Applications
 
-For information on the testing application and how to build it, take a look in its [README.md](app/README.md).
+There are 2 applications provided, one testing the more abstract pulp_nnx interface and another one just the hardware abstraction layer, called `app_pulp_nnx` and `app_pulp_nnx_hal`.
+For information on the testing applications and how to build them, take a look in their dedicated readmes: [app_pulp_nnx/README.md](app_pulp_nnx/README.md) and [app_pulp_nnx_hal/README.md](app_pulp_nnx_hal/README.md).

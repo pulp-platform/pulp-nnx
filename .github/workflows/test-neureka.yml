@@ -49,5 +49,5 @@ jobs:
           export PULP_RISCV_GCC_TOOLCHAIN=$GITHUB_WORKSPACE/toolchain/gnu
           source pulp-sdk/configs/siracusa.sh
           cd pulp-nnx/test
-          pytest test.py -T tests -R -A neureka --build-flow=make --wmem=tcdm
-          pytest test.py -T tests -R -A neureka --build-flow=make --wmem=sram
+          pytest test.py --test-dir tests --recursive --accelerator neureka --build-flow=make --wmem=tcdm
+          pytest test.py --test-dir tests --recursive --accelerator neureka --build-flow=make --wmem=sram

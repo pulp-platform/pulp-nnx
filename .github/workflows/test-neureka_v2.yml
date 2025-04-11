@@ -57,4 +57,5 @@ jobs:
           export TOOLCHAIN_GNU_INSTALL_DIR=$GITHUB_WORKSPACE/toolchain/gnu
           export GVSOC=$GITHUB_WORKSPACE/gvsoc/install/bin/gvsoc
           cd pulp-nnx/test
-          pytest test.py -T tests -R -A neureka_v2 --build-flow=cmake --wmem=mram
+          pytest test.py --test-dir=tests --recursive --accelerator=neureka_v2 --build-flow=cmake --wmem=mram --app=pulp-nnx
+          pytest test.py --test-dir=tests --recursive --accelerator=neureka_v2 --build-flow=cmake --wmem=mram --app=pulp-nnx-hal

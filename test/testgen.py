@@ -24,6 +24,7 @@ from typing import Optional, Set, Type, Union
 
 import toml
 
+from NnxBuildFlow import AppName
 from NnxMapping import NnxMapping, NnxName
 from NnxTestClasses import (
     NnxTest,
@@ -46,7 +47,7 @@ def headers_gen(
     assert test is not None
     if not test.is_valid():
         test = NnxTestGenerator.from_conf(test.conf)
-    NnxTestHeaderGenerator(nnxWeight).generate(args.test_dir, test)
+    NnxTestHeaderGenerator(nnxWeight, args.app).generate(args.test_dir, test)
 
 
 def print_tensors(test: NnxTest):
@@ -164,6 +165,13 @@ def add_common_arguments(parser: argparse.ArgumentParser):
         choices=list(NnxWmem),
         default=NnxWmem.tcdm,
         help="Choose the weight memory destination. Default: tcdm",
+    )
+    parser.add_argument(
+        "--app",
+        type=AppName,
+        choices=list(AppName),
+        default=AppName.pulp_nnx,
+        help="Choose an app to test. Default: pulp-nnx",
     )
 
 

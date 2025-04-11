@@ -7,8 +7,7 @@ project(pulp-nnx
 
 add_library(pulp-nnx STATIC)
 
-target_sources(pulp-nnx PRIVATE util/pulp_nnx_util.c util/hwpe.c)
-target_include_directories(pulp-nnx PUBLIC inc util)
+target_include_directories(pulp-nnx PUBLIC inc)
 
 option(USE_NE16 "Use the NE16 accelerator.")
 option(USE_NEUREKA "Use the N-EUREKA accelerator.")
@@ -20,6 +19,8 @@ endif()
 
 if (${USE_NE16})
 	message(STATUS "[PULP-NNX] Using the NE16 accelerator.")
+	add_subdirectory(ne16/hal)
+	target_link_libraries(pulp-nnx PUBLIC pulp-nnx-hal-ne16)
 	target_sources(pulp-nnx
 		PRIVATE
 			ne16/bsp/ne16_pulp_bsp.c
@@ -37,34 +38,32 @@ endif()
 
 if (${USE_NEUREKA})
 	message(STATUS "[PULP-NNX] Using the N-EUREKA accelerator.")
+	add_subdirectory(neureka/hal)
+	target_link_libraries(pulp-nnx PUBLIC pulp-nnx-hal-neureka)
 	target_sources(pulp-nnx
 		PRIVATE
 			neureka/bsp/neureka_siracusa_bsp.c
-			neureka/hal/neureka.c
-			neureka/hal/neureka_task.c
 			src/pulp_nnx_neureka.c
 		)
 	target_include_directories(pulp-nnx
 		PUBLIC
 			neureka/bsp
-			neureka/hal
 			neureka/gvsoc
 		)
 endif()
 
 if (${USE_NEUREKA_V2})
 	message(STATUS "[PULP-NNX] Using the N-EUREKA v2 accelerator.")
+	add_subdirectory(neureka_v2/hal)
+	target_link_libraries(pulp-nnx PUBLIC pulp-nnx-hal-neureka-v2)
 	target_sources(pulp-nnx
 		PRIVATE
 			neureka_v2/bsp/neureka_v2_siracusa_bsp.c
-			neureka_v2/hal/neureka_v2.c
-			neureka_v2/hal/neureka_v2_task.c
 			src/pulp_nnx_neureka_v2.c
 		)
 	target_include_directories(pulp-nnx
 		PUBLIC
 			neureka_v2/bsp
-			neureka_v2/hal
 			neureka_v2/gvsoc
 		)
 endif()
