@@ -18,7 +18,7 @@
 
 import re
 
-from NnxBuildFlow import NnxBuildFlowClsMapping, NnxBuildFlowName
+from NnxBuildFlow import AppName, NnxBuildFlowClsMapping, NnxBuildFlowName
 from NnxMapping import NnxMapping, NnxName
 from NnxTestClasses import NnxTest, NnxTestHeaderGenerator, NnxWmem
 
@@ -38,15 +38,16 @@ def test(
     buildFlowName: NnxBuildFlowName,
     wmem: NnxWmem,
     nnxTestName: str,
+    appName: AppName,
 ):
     testConfCls, weightCls = NnxMapping[nnxName]
 
     # conftest.py makes sure the test is valid and generated
     nnxTest = NnxTest.load(testConfCls, nnxTestName)
 
-    NnxTestHeaderGenerator(weightCls(wmem)).generate(nnxTestName, nnxTest)
+    NnxTestHeaderGenerator(weightCls(wmem), f"{appName.path()}/gen").generate(nnxTestName, nnxTest)
 
-    buildFlow = NnxBuildFlowClsMapping[buildFlowName](nnxName)
+    buildFlow = NnxBuildFlowClsMapping[buildFlowName](nnxName, appName)
     buildFlow.build()
     stdout = buildFlow.run()
 

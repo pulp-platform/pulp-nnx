@@ -1,10 +1,10 @@
 BUILD
 build
-app/build*
+apps/**/build*
+apps/**/gen
 __pycache__
 .cache
 .pytest_cache
-app/gen
 **/compile_commands.json
 **/*.log
 **/*.pt

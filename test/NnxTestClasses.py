@@ -406,15 +406,11 @@ class NnxWeight(ABC):
 
 
 class NnxTestHeaderGenerator:
-    DEFAULT_HEADERS_DIR = "app/gen"
-
     def __init__(
         self,
         nnxWeight: NnxWeight,
-        headers_dir: Optional[Union[str, os.PathLike]] = None,
+        headers_dir: Union[str, os.PathLike],
     ):
-        if headers_dir is None:
-            headers_dir = NnxTestHeaderGenerator.DEFAULT_HEADERS_DIR
         self.header_writer = HeaderWriter(headers_dir)
         # function that takes the weights in CoutCinK format, bitwidth, and a depthwise flag,
         # and returns a numpy array of dtype=np.uint8 of data in a layout correct for the accelerator

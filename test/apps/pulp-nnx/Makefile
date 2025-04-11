@@ -21,7 +21,7 @@
 ACCELERATOR ?= ne16
 
 APP := main
-LIBDIR := $(abspath ../..)
+LIBDIR := $(abspath ../../..)
 ACC_DIR := $(LIBDIR)/$(ACCELERATOR)
 
 

@@ -22,7 +22,7 @@ from typing import Union
 import pydantic
 import pytest
 
-from NnxBuildFlow import CmakeBuildFlow, NnxBuildFlowName
+from NnxBuildFlow import AppName, CmakeBuildFlow, NnxBuildFlowName
 from NnxMapping import NnxMapping, NnxName
 from NnxTestClasses import NnxTest, NnxTestGenerator, NnxWmem
 from TestClasses import implies
@@ -76,6 +76,13 @@ def pytest_addoption(parser):
         default=NnxWmem.tcdm,
         help="Choose the weight memory destination. Default: tcdm",
     )
+    parser.addoption(
+        "--app",
+        type=AppName,
+        choices=list(AppName),
+        default=AppName.pulp_nnx,
+        help="Choose an app to test. Default: pulp-nnx",
+    )
 
 
 @pytest.fixture
@@ -86,14 +93,19 @@ def nnxName(request) -> NnxName:
 @pytest.fixture
 def buildFlowName(request) -> NnxBuildFlowName:
     nnxName = request.config.getoption("--accelerator")
+    appName = request.config.getoption("app")
     buildFlowName = request.config.getoption("buildFlowName")
 
     assert implies(
         buildFlowName == NnxBuildFlowName.cmake, nnxName == NnxName.neureka_v2
     ), "The cmake build flow has been tested only with the neureka_v2 accelerator"
 
+    assert implies(
+        buildFlowName == NnxBuildFlowName.make, appName == AppName.pulp_nnx
+    ), "The make build flow is only tested by the app_pulp_nnx"
+
     if buildFlowName == NnxBuildFlowName.cmake:
-        CmakeBuildFlow(nnxName).prepare()
+        CmakeBuildFlow(nnxName, appName).prepare()
 
     return buildFlowName
 
@@ -107,6 +119,11 @@ def wmem(request) -> NnxWmem:
         _wmem
     ), f"Unsupported weight memory destination: {_wmem}. Supported: {weightCls.supported_wmem()}"
     return _wmem
+
+
+@pytest.fixture
+def appName(request) -> AppName:
+    return request.config.getoption("--app")
 
 
 def _find_test_dirs(path: Union[str, os.PathLike]):
