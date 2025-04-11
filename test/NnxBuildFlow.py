@@ -19,12 +19,21 @@ class AppName(Enum):
         return f"apps/{self}"
 
 
+class Toolchain(Enum):
+    gnu = "gnu"
+    llvm = "llvm"
+
+    def __str__(self):
+        return self.value
+
+
 class NnxBuildFlow(ABC):
 
     @abstractmethod
-    def __init__(self, nnxName: NnxName, appName: AppName) -> None:
+    def __init__(self, nnxName: NnxName, appName: AppName, toolchain: Toolchain) -> None:
         self.nnxName = nnxName
         self.appName = appName
+        self.toolchain = toolchain
 
     @abstractmethod
     def build(self) -> None: ...
@@ -44,8 +53,8 @@ class NnxBuildFlow(ABC):
 
 
 class MakeBuildFlow(NnxBuildFlow):
-    def __init__(self, nnxName: NnxName, appName: AppName) -> None:
-        super().__init__(nnxName, appName)
+    def __init__(self, nnxName: NnxName, appName: AppName, toolchain: Toolchain) -> None:
+        super().__init__(nnxName, appName, toolchain)
 
     def env(self) -> os._Environ:
         _env = os.environ
@@ -65,19 +74,19 @@ class MakeBuildFlow(NnxBuildFlow):
 
 class CmakeBuildFlow(NnxBuildFlow):
     BINARY_NAME = "test-pulp-nnx"
-    TOOLCHAIN_FILE = "cmake/toolchain_gnu.cmake"
     GVSOC_TARGET = "siracusa"
 
-    def __init__(self, nnxName: NnxName, appName: AppName) -> None:
-        super().__init__(nnxName, appName)
-        self.build_dir = os.path.abspath(f"{self.appName.path()}/build_{nnxName}")
+    def __init__(self, nnxName: NnxName, appName: AppName, toolchain: Toolchain) -> None:
+        super().__init__(nnxName, appName, toolchain)
+        self.build_dir = os.path.abspath(f"{self.appName.path()}/build_{nnxName}_{toolchain}")
         self.gvsoc_workdir = os.path.join(self.build_dir, "gvsoc_workdir")
         assert "GVSOC" in os.environ, "The GVSOC environment variable is not set."
+        self.toolchain_file = f"cmake/toolchain_{self.toolchain}.cmake"
 
     def prepare(self) -> None:
         os.makedirs(self.gvsoc_workdir, exist_ok=True)
         subprocess.run(
-            f"cmake -S{self.appName.path()} -B{self.build_dir} -GNinja -DCMAKE_TOOLCHAIN_FILE={CmakeBuildFlow.TOOLCHAIN_FILE} -DACCELERATOR={self.nnxName}".split(),
+            f"cmake -S{self.appName.path()} -B{self.build_dir} -GNinja -DCMAKE_TOOLCHAIN_FILE={self.toolchain_file} -DACCELERATOR={self.nnxName}".split(),
             check=True,
         )
 

@@ -22,7 +22,7 @@ from typing import Union
 import pydantic
 import pytest
 
-from NnxBuildFlow import AppName, CmakeBuildFlow, NnxBuildFlowName
+from NnxBuildFlow import AppName, CmakeBuildFlow, NnxBuildFlowName, Toolchain
 from NnxMapping import NnxMapping, NnxName
 from NnxTestClasses import NnxTest, NnxTestGenerator, NnxWmem
 from TestClasses import implies
@@ -83,6 +83,13 @@ def pytest_addoption(parser):
         default=AppName.pulp_nnx,
         help="Choose an app to test. Default: pulp-nnx",
     )
+    parser.addoption(
+        "--toolchain",
+        type=Toolchain,
+        choices=list(Toolchain),
+        default=Toolchain.gnu,
+        help="Choose an app to test. Default: gnu",
+    )
 
 
 @pytest.fixture
@@ -95,6 +102,7 @@ def buildFlowName(request) -> NnxBuildFlowName:
     nnxName = request.config.getoption("--accelerator")
     appName = request.config.getoption("app")
     buildFlowName = request.config.getoption("buildFlowName")
+    toolchain = request.config.getoption("--toolchain")
 
     assert implies(
         buildFlowName == NnxBuildFlowName.cmake, nnxName == NnxName.neureka_v2
@@ -104,8 +112,12 @@ def buildFlowName(request) -> NnxBuildFlowName:
         buildFlowName == NnxBuildFlowName.make, appName == AppName.pulp_nnx
     ), "The make build flow is only tested by the app_pulp_nnx"
 
+    assert implies(
+        buildFlowName == NnxBuildFlowName.make, toolchain == Toolchain.gnu
+    ), "The make build flow has only been tested with the gnu toolchain"
+
     if buildFlowName == NnxBuildFlowName.cmake:
-        CmakeBuildFlow(nnxName, appName).prepare()
+        CmakeBuildFlow(nnxName, appName, toolchain).prepare()
 
     return buildFlowName
 
@@ -124,6 +136,11 @@ def wmem(request) -> NnxWmem:
 @pytest.fixture
 def appName(request) -> AppName:
     return request.config.getoption("--app")
+
+
+@pytest.fixture
+def toolchain(request) -> Toolchain:
+    return request.config.getoption("--toolchain")
 
 
 def _find_test_dirs(path: Union[str, os.PathLike]):

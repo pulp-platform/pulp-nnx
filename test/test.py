@@ -18,7 +18,7 @@
 
 import re
 
-from NnxBuildFlow import AppName, NnxBuildFlowClsMapping, NnxBuildFlowName
+from NnxBuildFlow import AppName, NnxBuildFlowClsMapping, NnxBuildFlowName, Toolchain
 from NnxMapping import NnxMapping, NnxName
 from NnxTestClasses import NnxTest, NnxTestHeaderGenerator, NnxWmem
 
@@ -39,6 +39,7 @@ def test(
     wmem: NnxWmem,
     nnxTestName: str,
     appName: AppName,
+    toolchain: Toolchain,
 ):
     testConfCls, weightCls = NnxMapping[nnxName]
 
@@ -47,7 +48,7 @@ def test(
 
     NnxTestHeaderGenerator(weightCls(wmem), f"{appName.path()}/gen").generate(nnxTestName, nnxTest)
 
-    buildFlow = NnxBuildFlowClsMapping[buildFlowName](nnxName, appName)
+    buildFlow = NnxBuildFlowClsMapping[buildFlowName](nnxName, appName, toolchain)
     buildFlow.build()
     stdout = buildFlow.run()
 
