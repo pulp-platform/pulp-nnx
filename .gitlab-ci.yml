@@ -26,4 +26,4 @@ run_ne16_test:
   artifacts:
     untracked: true
   script:
-    - cd test && pytest test.py --test-dir tests --recursive -A ne16
+    - cd test && pytest test.py --test-dir tests --recursive --accelerator ne16
