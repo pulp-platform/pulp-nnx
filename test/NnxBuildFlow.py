@@ -93,7 +93,7 @@ class CmakeBuildFlow(NnxBuildFlow):
         )
         self.gvsoc_workdir = os.path.join(self.build_dir, "gvsoc_workdir")
         assert "GVSOC" in os.environ, "The GVSOC environment variable is not set."
-        self.toolchain_file = f"cmake/toolchain_{self.toolchain}.cmake"
+        self.toolchain_file = f"../../cmake/toolchain_{self.toolchain}.cmake"
 
     def prepare(self) -> None:
         os.makedirs(self.gvsoc_workdir, exist_ok=True)

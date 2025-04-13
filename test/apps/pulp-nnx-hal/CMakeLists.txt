@@ -20,7 +20,7 @@ set_property(CACHE ACCELERATOR PROPERTY STRINGS neureka neureka_v2)
 
 add_compile_options(-DNUM_CORES=${NUM_CORES})
 
-include(cmake/pulp-sdk-siracusa.cmake)
+include(../../cmake/pulp-sdk-siracusa.cmake)
 target_link_libraries(test-pulp-nnx PRIVATE pulp-sdk)
 
 if(${ACCELERATOR} STREQUAL neureka)
