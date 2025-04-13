@@ -2,9 +2,17 @@ if (NOT DEFINED ENV{TOOLCHAIN_LLVM_INSTALL_DIR})
   message(FATAL_ERROR "Environment variable TOOLCHAIN_LLVM_INSTALL_DIR not defined.")
 endif()
 
+if (NOT DEFINED ENV{TOOLCHAIN_LLVM_LIBC_DIR})
+  message(FATAL_ERROR "Environemnt variable TOOLCHAIN_LLVM_LIBC_DIR not defined.")
+endif()
+
+if (NOT DEFINED ENV{TOOLCHAIN_LLVM_COMPILER_RT_DIR})
+  message(FATAL_ERROR "Environemnt variable TOOLCHAIN_LLVM_COMPILER_RT_DIR not defined.")
+endif()
+
 set(TOOLCHAIN_BIN $ENV{TOOLCHAIN_LLVM_INSTALL_DIR}/bin)
-set(PICOLIBC $ENV{TOOLCHAIN_LLVM_INSTALL_DIR}/picolibc/riscv)
-set(COMPILER_RT $ENV{TOOLCHAIN_LLVM_INSTALL_DIR}/lib/clang/15.0.0/lib/baremetal/rv32imc/)
+set(LIBC $ENV{TOOLCHAIN_LLVM_LIBC_DIR})
+set(COMPILER_RT $ENV{TOOLCHAIN_LLVM_COMPILER_RT_DIR})
 
 set(CMAKE_SYSTEM_NAME Generic)
 
@@ -29,7 +37,7 @@ add_compile_options(
   -DNUM_CORES=${NUM_CORES}
   -MMD
   -MP
-  --sysroot=${PICOLIBC}
+  --sysroot=${LIBC}
   -fno-builtin-memcpy
   -fno-builtin-memset
 )
@@ -40,7 +48,7 @@ add_link_options(
   -MP
   -nostartfiles
   -march=${ISA}
-  --sysroot=${PICOLIBC}
+  --sysroot=${LIBC}
   -L${COMPILER_RT}
   -z norelro
   -fno-builtin-memcpy
