@@ -35,7 +35,9 @@ typedef ne16_task_flag_e nnx_task_flag_e;
 typedef ne16_task_data_t nnx_task_data_t;
 
 // Minimal copy from ne16/bsp/ne16_pulp_bsp.c
+#ifndef NE16_PULP_BASE_ADDR
 #define NE16_PULP_BASE_ADDR (0x00201000)
+#endif
 static const ne16_dev_t nnx_dev = {
     .hwpe_dev = (struct hwpe_dev_t){
         .base_addr = (volatile uint32_t *)NE16_PULP_BASE_ADDR}};
@@ -69,7 +71,9 @@ typedef neureka_task_flag_e nnx_task_flag_e;
 typedef neureka_task_data_t nnx_task_data_t;
 
 // Minimal copy from neureka/bsp/neureka_siracusa_bsp.c
+#ifndef NEUREKA_SIRACUSA_BASE_ADDR
 #define NEUREKA_SIRACUSA_BASE_ADDR (0x00201000)
+#endif
 static const neureka_dev_t nnx_dev = {
     .hwpe_dev = (struct hwpe_dev_t){
         .base_addr = (volatile uint32_t *)NEUREKA_SIRACUSA_BASE_ADDR}};
@@ -102,7 +106,9 @@ typedef neureka_v2_task_flag_e nnx_task_flag_e;
 typedef neureka_v2_task_data_t nnx_task_data_t;
 
 // Minimal copy from neureka_v2/bsp/neureka_v2_siracusa_bsp.c
+#ifndef NEUREKA_V2_SIRACUSA_BASE_ADDR
 #define NEUREKA_V2_SIRACUSA_BASE_ADDR (0x00201000)
+#endif
 static const neureka_v2_dev_t nnx_dev = {
     .hwpe_dev = (struct hwpe_dev_t){
         .base_addr = (volatile uint32_t *)NEUREKA_V2_SIRACUSA_BASE_ADDR}};
