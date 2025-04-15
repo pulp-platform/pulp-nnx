@@ -38,15 +38,16 @@ if (${USE_NE16})
     ne16/gvsoc
   )
   if(${ENABLE_BSP})
-  target_sources(pulp-nnx-bsp
-    PRIVATE
-    ne16/bsp/ne16_pulp_bsp.c
-    src/pulp_nnx_ne16.c
-  )
-  target_include_directories(pulp-nnx-bsp
-    PUBLIC
-    ne16/bsp
-  )
+    target_sources(pulp-nnx-bsp
+      PRIVATE
+      ne16/bsp/ne16_pulp_bsp.c
+      src/pulp_nnx_ne16.c
+    )
+    target_include_directories(pulp-nnx-bsp
+      PUBLIC
+      ne16/bsp
+    )
+    target_link_libraries(pulp-nnx-bsp PUBLIC pulp-nnx-hal)
   endif()
 
 endif()
@@ -64,15 +65,16 @@ if (${USE_NEUREKA})
     neureka/gvsoc
   )
   if(${ENABLE_BSP})
-  target_sources(pulp-nnx-bsp
-    PRIVATE
-    neureka/bsp/neureka_siracusa_bsp.c
-    src/pulp_nnx_neureka.c
-  )
-  target_include_directories(pulp-nnx-bsp
-    PUBLIC
-    neureka/bsp
-  )
+    target_sources(pulp-nnx-bsp
+      PRIVATE
+      neureka/bsp/neureka_siracusa_bsp.c
+      src/pulp_nnx_neureka.c
+    )
+    target_include_directories(pulp-nnx-bsp
+      PUBLIC
+      neureka/bsp
+    )
+    target_link_libraries(pulp-nnx-bsp PUBLIC pulp-nnx-hal)
   endif()
 
 endif()
@@ -90,15 +92,16 @@ if (${USE_NEUREKA_V2})
     neureka_v2/gvsoc
   )
   if(${ENABLE_BSP})
-  target_sources(pulp-nnx-bsp
-    PRIVATE
-    neureka_v2/bsp/neureka_v2_pulp_bsp.c
-    src/pulp_nnx_neureka_v2.c
-  )
-  target_include_directories(pulp-nnx-bsp
-    PUBLIC
-    neureka_v2/bsp
-  )
+    target_sources(pulp-nnx-bsp
+      PRIVATE
+      neureka_v2/bsp/neureka_v2_siracusa_bsp.c
+      src/pulp_nnx_neureka_v2.c
+    )
+    target_include_directories(pulp-nnx-bsp
+      PUBLIC
+      neureka_v2/bsp
+    )
+    target_link_libraries(pulp-nnx-bsp PUBLIC pulp-nnx-hal)
   endif()
 
 endif()
