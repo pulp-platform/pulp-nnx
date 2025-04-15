@@ -19,6 +19,7 @@
  */
 
 #include "neureka.h"
+#include "neureka_siracusa_bsp.h"
 #include "neureka_task.h"
 #include <stdint.h>
 
