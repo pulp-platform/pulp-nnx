@@ -1,0 +1,30 @@
+# Job to keep github from removing the caches after 2 weeks of unuse
+name: Cache reheat
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+
+jobs:
+  cache-reheat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restore Cached Gnu Toolchain
+        uses: actions/cache/restore@v4
+        with:
+          path: toolchain/gnu
+          key: toolchain-gnu
+          fail-on-cache-miss: true
+
+      - name: Restore Cached PULP-SDK
+        uses: actions/cache/restore@v4
+        with:
+          path: pulp-sdk
+          key: pulp-sdk
+          fail-on-cache-miss: true
+
+      - name: Restore Cached GVSoC
+        uses: actions/cache/restore@v4
+        with:
+          path: gvsoc/install
+          key: gvsoc
+          fail-on-cache-miss: true
