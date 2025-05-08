@@ -30,33 +30,34 @@
 #define HWPE_SWSYNC 6
 #define HWPE_TASK_REG_OFFSET 8
 
-inline void hwpe_reg_write(hwpe_dev_t *dev, int reg, uint32_t value) {
+inline void hwpe_reg_write(const hwpe_dev_t *dev, int reg, uint32_t value) {
   dev->base_addr[reg] = value;
 }
 
-inline uint32_t hwpe_reg_read(hwpe_dev_t *dev, int reg) {
+inline uint32_t hwpe_reg_read(const hwpe_dev_t *dev, int reg) {
   return dev->base_addr[reg];
 }
 
-inline void hwpe_task_reg_write(hwpe_dev_t *dev, int reg, uint32_t value) {
+inline void hwpe_task_reg_write(const hwpe_dev_t *dev, int reg,
+                                uint32_t value) {
   hwpe_reg_write(dev, HWPE_TASK_REG_OFFSET + reg, value);
 }
 
-inline uint32_t hwpe_task_reg_read(hwpe_dev_t *dev, int reg) {
+inline uint32_t hwpe_task_reg_read(const hwpe_dev_t *dev, int reg) {
   return hwpe_reg_read(dev, HWPE_TASK_REG_OFFSET + reg);
 }
 
-void hwpe_soft_clear(hwpe_dev_t *dev) {
+void hwpe_soft_clear(const hwpe_dev_t *dev) {
   hwpe_reg_write(dev, HWPE_SOFT_CLEAR, 0);
   for (volatile int i = 0; i < 10; i++)
     ;
 }
 
-uint32_t hwpe_task_queue_status(hwpe_dev_t *dev) {
+uint32_t hwpe_task_queue_status(const hwpe_dev_t *dev) {
   return hwpe_reg_read(dev, HWPE_STATUS);
 }
 
-int hwpe_task_queue_acquire_task(hwpe_dev_t *dev, uint8_t *id) {
+int hwpe_task_queue_acquire_task(const hwpe_dev_t *dev, uint8_t *id) {
   uint32_t read_value = (int32_t)hwpe_reg_read(dev, HWPE_ACQUIRE);
   if (read_value >= 256) {
     return 1;
@@ -66,20 +67,21 @@ int hwpe_task_queue_acquire_task(hwpe_dev_t *dev, uint8_t *id) {
   }
 }
 
-void hwpe_task_queue_write_task(hwpe_dev_t *dev, uint32_t *data, int len) {
+void hwpe_task_queue_write_task(const hwpe_dev_t *dev, uint32_t *data,
+                                int len) {
   for (int i = 0; i < len; i++) {
     hwpe_task_reg_write(dev, i, data[i]);
   }
 }
 
-void hwpe_task_queue_release_and_run(hwpe_dev_t *dev) {
+void hwpe_task_queue_release_and_run(const hwpe_dev_t *dev) {
   hwpe_reg_write(dev, HWPE_TRIGGER, 0);
 }
 
-void hwpe_task_queue_release(hwpe_dev_t *dev) {
+void hwpe_task_queue_release(const hwpe_dev_t *dev) {
   hwpe_reg_write(dev, HWPE_TRIGGER, 1);
 }
 
-uint8_t hwpe_last_task_id(hwpe_dev_t *dev) {
+uint8_t hwpe_last_task_id(const hwpe_dev_t *dev) {
   return (uint8_t)hwpe_reg_read(dev, HWPE_RUNNING_JOB);
 }
