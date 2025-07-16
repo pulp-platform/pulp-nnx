@@ -141,6 +141,8 @@ void neureka_task_set_input_signed(neureka_task_t *task);
 void neureka_task_set_input_unsigned(neureka_task_t *task);
 void neureka_task_set_weight_source(neureka_task_t *task,
                                     neureka_weight_source_e weight_source);
+void neureka_task_set_activation_prefetch(neureka_task_t *task,
+                                          neureka_activation_prefetch_e activation_prefetch);
 uint32_t neureka_get_tile_padding(uint32_t padding, uint32_t i_height,
                                   uint32_t i_width, uint32_t n_height,
                                   uint32_t n_width);

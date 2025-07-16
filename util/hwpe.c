@@ -50,8 +50,7 @@ inline uint32_t hwpe_task_reg_read(hwpe_dev_t *dev, int reg) {
 
 void hwpe_soft_clear(hwpe_dev_t *dev) {
   hwpe_reg_write(dev, HWPE_SOFT_CLEAR, 0);
-  for (volatile int i = 0; i < 10; i++)
-    ;
+  for (int i = 0; i < 5; i++) asm volatile("nop;");
 }
 
 uint32_t hwpe_task_queue_status(hwpe_dev_t *dev) {
