@@ -56,6 +56,14 @@ int neureka_nnx_dispatch(neureka_dev_t *dev, neureka_task_t *task) {
   return 0;
 }
 
+int neureka_nnx_acquire_and_run(neureka_dev_t *dev, neureka_task_t *task) {
+  if (hwpe_task_queue_acquire_task(&dev->hwpe_dev, &task->id)) {
+    return 1;
+  }
+  hwpe_task_queue_release_and_run(&dev->hwpe_dev);
+  return 0;
+}
+
 int neureka_nnx_resolve_check(neureka_dev_t *dev, neureka_task_t *task) {
 #if __PLATFORM__ == ARCHI_PLATFORM_GVSOC
   // GVSOC model has a broken running_id so resolve_check
