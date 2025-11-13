@@ -108,6 +108,10 @@ void neureka_task_set_input_unsigned(neureka_task_t *task) {
   task->data.cfg.conf0 &= ~NEUREKA_FLAG_INPUT_SIGNED;
 }
 
+void neureka_task_set_resilience_mode(neureka_task_t *task) {
+  task->data.cfg.conf0 |= NEUREKA_FLAG_RESILIENCE_MODE;
+}
+
 void neureka_task_set_weight_source(neureka_task_t *task,
                                     neureka_weight_source_e weight_source) {
   task->data.cfg.conf0 &= ~NEUREKA_MASK_FLAG_WEIGHT_SOURCE;

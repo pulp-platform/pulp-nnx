@@ -139,6 +139,7 @@ void neureka_task_set_weight_offset(
     const int32_t weight_offset);
 void neureka_task_set_input_signed(neureka_task_t *task);
 void neureka_task_set_input_unsigned(neureka_task_t *task);
+void neureka_task_set_resilience_mode(neureka_task_t *task);
 void neureka_task_set_weight_source(neureka_task_t *task,
                                     neureka_weight_source_e weight_source);
 uint32_t neureka_get_tile_padding(uint32_t padding, uint32_t i_height,
