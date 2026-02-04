@@ -97,10 +97,10 @@ class HeaderWriter:
         return retval
 
     def check_declaration(self, name):
-        return f"void check_{name}();\n\n"
+        return f"int check_{name}();\n\n"
 
     def check(self, name):
-        return f"""void check_{name}() {{
+        return f"""int check_{name}() {{
         printf("Checking the {name} vector:\\n");
 
         int n_err = 0;
@@ -115,6 +115,7 @@ class HeaderWriter:
             printf("> Success! No errors found.\\n");
         else
             printf("> Failure! Found %d/%d errors.\\n", n_err, {name.upper()}_SIZE);
+        return n_err;
     }}
 
     """
