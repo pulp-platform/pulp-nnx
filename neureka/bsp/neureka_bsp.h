@@ -16,6 +16,12 @@
     #define neureka_bsp_open neureka_pulp_cluster_open
     #define neureka_bsp_close neureka_pulp_cluster_close
     #define neureka_bsp_event_wait_and_clear neureka_pulp_cluster_event_wait_and_clear
+#elif NNX_NEUREKA_SCARV
+    #include "neureka_scarv_bsp.h"
+    #define neureka_bsp_conf_t neureka_scarv_conf_t
+    #define neureka_bsp_open neureka_scarv_open
+    #define neureka_bsp_close neureka_scarv_close
+    #define neureka_bsp_event_wait_and_clear neureka_scarv_event_wait_and_clear
 #else
     #include "neureka_siracusa_bsp.h"
     #define neureka_bsp_conf_t neureka_siracusa_conf_t
