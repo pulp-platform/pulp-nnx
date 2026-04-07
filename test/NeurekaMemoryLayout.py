@@ -22,9 +22,10 @@ import numpy.typing as npt
 
 
 class NeurekaMemoryLayout:
-    _WEIGHT_BANDWIDTH = 256
+    _WEIGHT_BANDWIDTH_1x1 = 256
+    _WEIGHT_BANDWIDTH_3x3 = 288
     _CIN_SUBTILE_1x1 = 32
-    _CIN_SUBTILE_3x3 = 28
+    _CIN_SUBTILE_3x3 = 32
 
     @staticmethod
     def weightEncode(
@@ -79,35 +80,19 @@ class NeurekaMemoryLayout:
             # (-1, Weight Bandwidth)
             weight = np.pad(
                 weight,
-                ((0, 0), (0, NeurekaMemoryLayout._WEIGHT_BANDWIDTH - weight.shape[-1])),
+                ((0, 0), (0, NeurekaMemoryLayout._WEIGHT_BANDWIDTH_3x3 - weight.shape[-1])),
                 "constant",
                 constant_values=0,
             )
+            weightBandwidthBytes = int(np.ceil(NeurekaMemoryLayout._WEIGHT_BANDWIDTH_3x3 / 8))
         elif height == 1 and width == 1:
-            # Tile cinSubtile into tiles of size 4
-            # (cout, cinMajor, Bits, Flattened spatial, cinSubtileMajor, cinSubtileTile)
-            weight = weight.reshape(
-                cout, cinMajor, bits, height * width, cinSubtile // 4, 4
-            )  # cout, cinMajor, bits, 1, 8, 4
-            # Pad bits to 8
-            if bits < 8:
-                # (cout, cinMajor, PaddedBits, Flattened spatial, cinSubtileMajor, cinSubtileTile)
-                weight = np.pad(
-                    weight,
-                    ((0, 0), (0, 0), (0, 8 - bits), (0, 0), (0, 0), (0, 0)),
-                    mode="constant",
-                    constant_values=0,
-                )
-            # (cout, cinMajor, Flattened spatial, cinSubtileMajor, PaddedBits, cinSubtileTile)
-            weight = weight.transpose(0, 1, 3, 4, 2, 5)
-            # (-1, Weight Bandwidth)
-            weight = weight.reshape(
-                cout * cinMajor, NeurekaMemoryLayout._WEIGHT_BANDWIDTH
-            )  # cout*cinMajor, 256b
+            # (cout * cinMajor, Bits * cinSubtile)
+            weight = weight.reshape(-1, bits * cinSubtile)
+            # No padding needed here
+            weightBandwidthBytes = int(np.ceil(bits * cinSubtile / 8))
 
         # Prepare for packing
         # (-1, Weight Bandwidth Bytes, 8)
-        weightBandwidthBytes = int(np.ceil(NeurekaMemoryLayout._WEIGHT_BANDWIDTH / 8))
         weight = np.stack(np.split(weight, weightBandwidthBytes, axis=-1), axis=-2)
 
         # Pack bits

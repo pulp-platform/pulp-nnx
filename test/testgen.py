@@ -20,6 +20,8 @@ import argparse
 import json
 import os
 from typing import Optional, Set, Type, Union
+import numpy as np
+import sys
 
 import toml
 
@@ -52,6 +54,7 @@ def headers_gen(
 
 
 def print_tensors(test: NnxTest):
+    np.set_printoptions(threshold=sys.maxsize)
     print("INPUT TENSOR:")
     print(test.input)
     print("WEIGHT TENSOR:")

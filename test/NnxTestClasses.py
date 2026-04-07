@@ -48,6 +48,8 @@ class NnxTestConf(BaseModel):
     has_norm_quant: bool
     has_bias: bool
     has_relu: bool
+    synthetic_weights: bool
+    synthetic_inputs: bool
 
     @model_validator(mode="after")  # type: ignore
     def check_valid_depthwise_channels(self) -> NnxTestConf:
@@ -116,6 +118,8 @@ class NnxTest:
         scale: Optional[torch.Tensor] = None,
         bias: Optional[torch.Tensor] = None,
         global_shift: Optional[torch.Tensor] = torch.Tensor([0]),
+        synthetic_weights: Optional[bool] = False,
+        synthetic_inputs: Optional[bool] = False,
     ) -> None:
         self.conf = conf
         self.input = input
@@ -124,6 +128,8 @@ class NnxTest:
         self.scale = scale
         self.bias = bias
         self.global_shift = global_shift
+        self.synthetic_weights = synthetic_weights
+        self.synthetic_inputs = synthetic_inputs
 
     def is_valid(self) -> bool:
         return all(
@@ -193,6 +199,12 @@ class NnxTest:
 
 class NnxTestGenerator:
     _DEFAULT_SEED = 0
+    _DEFAULT_WEIGHT_MEAN = 0.5 # as we use torch.floor(), this makes the generation unbiased
+    _DEFAULT_WEIGHT_STDEV = 0.27
+    _DEFAULT_SCALE_MAX_BIT_32BIT = 17
+    _DEFAULT_SCALE_MAX_BIT_16BIT = 11
+    _DEFAULT_SCALE_MAX_BIT_8BIT = 5
+    _DEFAULT_BIAS_MAX_BIT = 18
 
     @staticmethod
     def _calculate_global_shift(
@@ -201,11 +213,22 @@ class NnxTestGenerator:
         """Calculate global shift so that the output values are in the range of out_type"""
         s = tensor.type(torch.float64).std()
         target_s = 2 ** (out_type._bits - 1)
-        return torch.ceil(torch.log2(s / target_s)).type(torch.int32)
+        shift = torch.ceil(torch.log2(s / target_s)).type(torch.int32)
+        if shift < 1:
+            return torch.zeros((1,)).type(torch.int32)
+        else:
+            return shift
 
     @staticmethod
-    def _random_data(_type: IntegerType, shape: Tuple):
-        return torch.randint(_type.min, _type.max, size=shape)
+    def _random_data(_type: IntegerType, shape: Tuple, extremes: Tuple = None):
+        if extremes is None:
+            return torch.randint(_type.min, _type.max, size=shape)
+        else:
+            return torch.randint(max(_type.min, extremes[0]), min(_type.max, extremes[1]), size=shape)
+
+    @staticmethod
+    def _random_data_normal(_type: IntegerType, shape: Tuple, mean: float64 = 0.5, std: float64=0.27):
+        return torch.floor(torch.clip(torch.normal(mean, std, size=shape), _type.min, _type.max)).type(torch.int64)
 
     @staticmethod
     def from_conf(
@@ -230,27 +253,47 @@ class NnxTestGenerator:
         bias_shape = (1, conf.out_channel, 1, 1)
 
         if input is None:
-            input = NnxTestGenerator._random_data(
-                _type=conf.in_type,
-                shape=input_shape,
-            )
+            if conf.synthetic_inputs:
+                inputs = torch.zeros((1, conf.in_channel, conf.in_height, conf.in_width), dtype=torch.int64)
+                for i in range(conf.in_channel):
+                    inputs[:, i,0,0] = i
+            else:
+                input = NnxTestGenerator._random_data(
+                    _type=conf.in_type,
+                    shape=input_shape,
+                )
 
         if weight is None:
-            weight = NnxTestGenerator._random_data(
-                _type=conf.weight_type,
-                shape=weight_shape,
-            )
+            if conf.synthetic_weights:
+                weight = torch.zeros((conf.out_channel, 1 if conf.depthwise else conf.in_channel, conf.kernel_shape.height, conf.kernel_shape.width), dtype=torch.int64)
+                for i in range(0, min(weight.shape[0], weight.shape[1])):
+                    weight[i,i,0,0] = 1
+            else:
+                weight_mean = NnxTestGenerator._DEFAULT_WEIGHT_MEAN
+                weight_std  = NnxTestGenerator._DEFAULT_WEIGHT_STDEV * (1<<(conf.weight_type._bits-1)-1)
+                weight = NnxTestGenerator._random_data_normal(
+                    mean = weight_mean,
+                    std = weight_std,
+                    _type=conf.weight_type,
+                    shape=weight_shape,
+                )
 
         if conf.has_norm_quant:
             if scale is None:
                 assert conf.scale_type is not None
+                # same limits as in old NE16 generator
+                scale_extremes = (1, (1<<NnxTestGenerator._DEFAULT_SCALE_MAX_BIT_32BIT)-1) if conf.scale_type._bits == 32 else \
+                                 (1, (1<<NnxTestGenerator._DEFAULT_SCALE_MAX_BIT_16BIT)-1) if conf.scale_type._bits == 16 else \
+                                 (1, (1<<NnxTestGenerator._DEFAULT_SCALE_MAX_BIT_8BIT)-1)  if conf.scale_type._bits == 8  else (1, (1<<18)-1)
                 scale = NnxTestGenerator._random_data(
-                    conf.scale_type, shape=scale_shape
+                    conf.scale_type, shape=scale_shape, extremes=scale_extremes
                 )
             if conf.has_bias and bias is None:
                 assert conf.bias_type is not None
+                # same limits as in old NE16 generator
+                bias_extremes = (-(1<<NnxTestGenerator._DEFAULT_BIAS_MAX_BIT), (1<<NnxTestGenerator._DEFAULT_BIAS_MAX_BIT)-1)
                 bias = NnxTestGenerator._random_data(
-                    conf.bias_type, shape=bias_shape
+                    conf.bias_type, shape=bias_shape, extremes=bias_extremes
                 ).type(torch.int32)
             if global_shift is None:
                 global_shift = torch.Tensor([0]).type(torch.int32)
@@ -283,6 +326,8 @@ class NnxTestGenerator:
             scale=scale,
             bias=bias,
             global_shift=global_shift,
+            synthetic_inputs=conf.synthetic_inputs,
+            synthetic_weights=conf.synthetic_weights,
         )
 
     @staticmethod
@@ -338,7 +383,10 @@ class NnxTestHeaderGenerator:
         weight_type = test.conf.weight_type
         weight_bits = weight_type._bits
         assert weight_bits > 1 and weight_bits <= 8
-        weight_offset = -(2 ** (weight_bits - 1))
+        if test.synthetic_weights:
+            weight_offset = 0
+        else:
+            weight_offset = -(2 ** (weight_bits - 1))
         weight_out_ch, weight_in_ch, weight_ks_h, weight_ks_w = test.weight.shape
         weight_data: np.ndarray = test.weight.numpy() - weight_offset
         weight_init = self.weightEncode(
